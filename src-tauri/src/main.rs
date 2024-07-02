@@ -7,7 +7,9 @@ fn main() {
     tauri::Builder::default()
         .setup(|app| {
             let window = app.get_window("main").expect("Failed to get main window");
-            let _ = window.set_ignore_cursor_events(true);
+            window
+                .set_ignore_cursor_events(true)
+                .expect("Failed to set ignore cursor events on main window");
 
             Ok(())
         })
