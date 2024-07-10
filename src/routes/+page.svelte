@@ -5,6 +5,6 @@
 
 <style>
   .container {
-    box-shadow: 0 0 0 99999px rgba(0, 0, 0, 0.0);
+    box-shadow: 0 0 0 99999px rgba(0, 0, 0, 0.2);
   }
 </style>
