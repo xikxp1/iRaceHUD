@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use iracehud::connect;
 use log::info;
 use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
 use tauri_plugin_log::LogTarget;
@@ -21,6 +22,10 @@ fn main() {
             window
                 .set_ignore_cursor_events(true)
                 .expect("Failed to set ignore cursor events on main window");
+
+            tauri::async_runtime::spawn(async move {
+                connect().expect("Error connecting");
+            });
 
             Ok(())
         })
