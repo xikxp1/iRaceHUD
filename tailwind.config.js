@@ -9,5 +9,6 @@ export default {
   ],
   daisyui: {
     base: false,
+    themes: ["bumblebee"],
   },
 }
