@@ -1,4 +1,5 @@
-
+<script>
+    import "../app.css";
+</script>
 
 <slot></slot>
-<slot></slot><slot></slot><script>import "../app.css";</script>

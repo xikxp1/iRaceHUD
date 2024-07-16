@@ -1,17 +1,14 @@
 <script lang="ts">
-    import { Card } from "flowbite-svelte";
 </script>
 
-<Card>
-    <div class="container rounded-xl outline outline-1 outline-orange-500">
-        <div class="gear">
-            <b>6</b>
-        </div>
-        <div class="speed">
-            <b>156</b>
-        </div>
+<div class="container">
+    <div class="gear">
+        <b>6</b>
     </div>
-</Card>
+    <div class="speed">
+        <b>156</b>
+    </div>
+</div>
 
 <style>
     .container {
