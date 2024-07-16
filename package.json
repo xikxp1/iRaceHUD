@@ -21,9 +21,11 @@
     "@sveltejs/vite-plugin-svelte": "^3.0.0",
     "@tauri-apps/cli": "^1",
     "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38",
+    "daisyui": "^4.12.10",
+    "postcss": "^8.4.39",
     "svelte": "^4.2.7",
     "svelte-check": "^3.6.0",
+    "tailwindcss": "^3.4.6",
     "tslib": "^2.4.1",
     "typescript": "^5.0.0",
     "vite": "^5.0.3"
