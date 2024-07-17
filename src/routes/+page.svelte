@@ -30,6 +30,6 @@
     margin-right: auto;
     margin-top: 200px;
     align-items: center;
-    width: 50px;
+    /* width: 50px; */
   }
 </style>
