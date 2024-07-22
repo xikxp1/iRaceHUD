@@ -13,7 +13,10 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@tauri-apps/api": "^1"
+    "@tauri-apps/api": "^1",
+    "chart.js": "^4.4.3",
+    "svelte-chartjs": "^3.1.5",
+    "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.1",

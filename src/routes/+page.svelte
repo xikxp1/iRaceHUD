@@ -1,11 +1,27 @@
 <script lang="ts">
   import Main from "../components/Main.svelte";
+  import Telemetery from "../components/Telemetry.svelte";
+  import Timer from "../components/Timer.svelte";
 </script>
 
 <div class="outer">
   <div class="middle">
     <div class="main">
       <Main />
+    </div>
+  </div>
+</div>
+<div class="outer">
+  <div class="middle">
+    <div class="telemetry">
+      <Telemetery />
+    </div>
+  </div>
+</div>
+<div class="outer">
+  <div class="middle">
+    <div class="timer">
+      <Timer />
     </div>
   </div>
 </div>
@@ -28,8 +44,24 @@
   .main {
     margin-left: auto;
     margin-right: auto;
-    margin-top: 200px;
+    margin-top: 280px;
+    margin-bottom: auto;
     align-items: center;
-    /* width: 50px; */
+  }
+
+  .telemetry {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 454px;
+    margin-bottom: auto;
+    align-items: center;
+  }
+
+  .timer {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: -335px;
+    margin-bottom: auto;
+    align-items: center;
   }
 </style>
