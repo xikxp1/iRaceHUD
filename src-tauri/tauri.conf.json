@@ -12,6 +12,7 @@
   "tauri": {
     "windows": [
       {
+        "label": "main",
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "fileDropEnabled": false,

@@ -1,4 +1,16 @@
 <script lang="ts">
+    import {listen} from "@tauri-apps/api/event";
+
+    let gear = "N";
+    let speed = 0;
+
+    listen("gear", (event) => {
+        gear = event.payload as string;
+    });
+
+    listen("speed", (event) => {
+        speed = event.payload as number;
+    });
 </script>
 
 <div class="flex flex-row items-center justify-center opacity-80">
@@ -6,8 +18,8 @@
         <div
             class="join-item flex flex-col items-center justify-center rounded-md w-1/4"
         >
-            <div class="text-primary text-6xl">6</div>
-            <div class="text-primary text-2xl">156</div>
+            <div class="text-primary text-6xl">{gear}</div>
+            <div class="text-primary text-2xl">{speed}</div>
         </div>
         <div
             class="join-item flex flex-col items-center justify-evenly rounded-md w-3/4"
