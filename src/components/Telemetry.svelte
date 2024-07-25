@@ -81,9 +81,9 @@
 </script>
 
 <div class="flex flex-row items-center justify-center opacity-80">
-    <div class="join w-[14%] outline-1 outline-dotted outline-accent">
+    <div class="join w-[14%] outline-1 bg-accent-content outline-dotted outline-accent">
         <div
-            class="join-item flex flex-row bg-accent-content items-center justify-center rounded-md w-[82%] h-20"
+            class="join-item flex flex-row items-center justify-center rounded-md w-[82%] h-20"
         >
             <div class="flex flex-col items-end justify-evenly w-[96%] h-[90%]">
                 <div class="flex flex-row w-[98%] h-[70%]">
@@ -94,13 +94,13 @@
             </div>
         </div>
         <div
-            class="join-item flex flex-row bg-accent-content items-center justify-evenly rounded-md w-[18%] h-20"
+            class="join-item flex flex-rowitems-center justify-evenly rounded-md w-[18%] h-20"
         >
             <div
                 class="flex flex-col items-center justify-evenly w-2/5 h-[90%]"
             >
                 <ProgressBar
-                    value="42"
+                    value={42}
                     cls="flex flex-col flex-nowrap justify-end w-1.5 h-[70%] rounded-full overflow-hidden outline outline-2 outline-offset-2 outline-primary"
                     elem_cls="rounded-full overflow-hidden bg-error"
                 ></ProgressBar>
@@ -110,28 +110,13 @@
                 class="flex flex-col items-center justify-evenly w-2/5 h-[90%]"
             >
                 <ProgressBar
-                    value="86"
+                    value={86}
                     cls="flex flex-col flex-nowrap justify-end w-1.5 h-[70%] rounded-full overflow-hidden outline outline-2 outline-offset-2 outline-primary"
                     elem_cls="rounded-full overflow-hidden bg-success"
                 ></ProgressBar>
                 <div class="text-primary text-sm h-[15%]">86</div>
             </div>
         </div>
-        <!-- <div
-            class="join-item flex flex-row bg-accent-content items-center justify-center rounded-md w-[18%]"
-        >
-            <progress
-                class="progress progress-error outline outline-2 outline-offset-2 outline-primary transform -rotate-90"
-                value="20"
-                max="100"
-            ></progress>
-        </div>
-        <div
-            class="join-item flex flex-row bg-accent-content items-center justify-center rounded-md w-[64%]"
-        >
-            <div class="text-primary text-6xl">6</div>
-            <div class="text-primary text-2xl">156</div>
-        </div> -->
     </div>
 </div>
 
