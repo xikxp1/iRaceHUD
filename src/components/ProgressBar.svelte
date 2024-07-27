@@ -14,10 +14,7 @@
     aria-valuemin={min}
     aria-valuemax={max}
 >
-    <div
-        class={elem_cls}
-        style="height: {value}%"
-    ></div>
+    <div class={elem_cls} style="height: {value}%"></div>
 </div>
 
 <style>
