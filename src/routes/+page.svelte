@@ -1,30 +1,39 @@
 <script lang="ts">
+  import { listen } from "@tauri-apps/api/event";
   import Main from "../components/Main.svelte";
   import Telemetery from "../components/Telemetry.svelte";
   import Timer from "../components/Timer.svelte";
+
+  let active: boolean = true;
+
+  listen("active", (event) => {
+    active = event.payload as boolean;
+  });
 </script>
 
-<div class="outer">
-  <div class="middle">
-    <div class="main">
-      <Main />
+{#if active}
+  <div class="outer">
+    <div class="middle">
+      <div class="main">
+        <Main />
+      </div>
     </div>
   </div>
-</div>
-<div class="outer">
-  <div class="middle">
-    <div class="telemetry">
-      <Telemetery />
+  <div class="outer">
+    <div class="middle">
+      <div class="telemetry">
+        <Telemetery />
+      </div>
     </div>
   </div>
-</div>
-<div class="outer">
-  <div class="middle">
-    <div class="timer">
-      <Timer />
+  <div class="outer">
+    <div class="middle">
+      <div class="timer">
+        <Timer />
+      </div>
     </div>
   </div>
-</div>
+{/if}
 
 <style>
   .outer {

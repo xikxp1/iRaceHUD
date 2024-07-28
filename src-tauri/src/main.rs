@@ -61,7 +61,7 @@ fn main() {
             _ => {}
         })
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("Error while running tauri application");
 }
 
 pub fn connect() -> Result<(), iracing_telem::Error> {
@@ -80,13 +80,19 @@ pub fn connect() -> Result<(), iracing_telem::Error> {
                         gear: String::from("N"),
                         speed: 0,
                         rpm: 0,
-                        lap: 1,
+                        lap: 0,
                         lap_time: Duration::new(0, 0),
                         brake: 0,
                         throttle: 0,
                         position: 1,
                         incidents: 0,
                     };
+                    let is_on_track = s
+                        .find_var("IsOnTrack")
+                        .expect("IsOnTrack variable not found");
+                    let is_on_track_car = s
+                        .find_var("IsOnTrackCar")
+                        .expect("IsOnTrackCar variable not found");
                     let gear = s.find_var("Gear").expect("Gear variable not found");
                     let speed = s.find_var("Speed").expect("Speed variable not found");
                     let rpm = s.find_var("RPM").expect("RPM variable not found");
@@ -114,6 +120,22 @@ pub fn connect() -> Result<(), iracing_telem::Error> {
 
                                 let window = window_opt.expect("Window is none");
 
+                                // active
+                                let raw_is_on_track_value: bool = s.value(&is_on_track)?;
+                                let raw_is_on_track_car_value: bool = s.value(&is_on_track_car)?;
+
+                                let active = raw_is_on_track_value && raw_is_on_track_car_value;
+                                let _ = window.emit("active", active);
+
+                                if active != data.active {
+                                    info!("Session state changed to {}", active);
+                                    data.active = active;
+                                }
+
+                                if !active {
+                                    continue;
+                                }
+
                                 // gear
                                 let raw_gear_value: i32 = s.value(&gear)?;
                                 let gear_value = match raw_gear_value {
@@ -121,34 +143,26 @@ pub fn connect() -> Result<(), iracing_telem::Error> {
                                     0 => String::from("N"),
                                     _ => raw_gear_value.to_string(),
                                 };
-                                if gear_value != data.gear {
-                                    let _ = window.emit("gear", gear_value.clone());
-                                    data.gear = gear_value;
-                                }
+                                let _ = window.emit("gear", gear_value.clone());
+                                data.gear = gear_value;
 
                                 // speed
                                 let raw_speed_value: f32 = s.value(&speed)?;
                                 let speed_value = (raw_speed_value * 3.6).round() as u32;
-                                if speed_value != data.speed {
-                                    let _ = window.emit("speed", speed_value);
-                                    data.speed = speed_value;
-                                }
+                                let _ = window.emit("speed", speed_value);
+                                data.speed = speed_value;
 
                                 // rpm
                                 let raw_rpm_value: f32 = s.value(&rpm)?;
                                 let rpm_value = raw_rpm_value.round() as u32;
-                                if rpm_value != data.rpm {
-                                    let _ = window.emit("rpm", rpm_value);
-                                    data.rpm = rpm_value;
-                                }
+                                let _ = window.emit("rpm", rpm_value);
+                                data.rpm = rpm_value;
 
                                 // lap
                                 let raw_lap_value: i32 = s.value(&lap)?;
                                 let lap_value = raw_lap_value as u32;
-                                if lap_value != data.lap {
-                                    let _ = window.emit("lap", lap_value);
-                                    data.lap = lap_value;
-                                }
+                                let _ = window.emit("lap", lap_value);
+                                data.lap = lap_value;
 
                                 // lap_time
                                 let raw_lap_time_value: f64 = s.value(&lap_time)?;
@@ -179,18 +193,14 @@ pub fn connect() -> Result<(), iracing_telem::Error> {
                                 // position
                                 let raw_position_value: i32 = s.value(&position)?;
                                 let position_value = raw_position_value as u32;
-                                if position_value != data.position {
-                                    let _ = window.emit("position", position_value);
-                                    data.position = position_value;
-                                }
+                                let _ = window.emit("position", position_value);
+                                data.position = position_value;
 
                                 // incidents
                                 let raw_incidents_value: i32 = s.value(&incidents)?;
                                 let incidents_value = raw_incidents_value as u32;
-                                if incidents_value != data.incidents {
-                                    let _ = window.emit("incident_count", incidents_value);
-                                    data.incidents = incidents_value;
-                                }
+                                let _ = window.emit("incidents", incidents_value);
+                                data.incidents = incidents_value;
                             }
                             DataUpdateResult::NoUpdate => {
                                 debug!("No update")
