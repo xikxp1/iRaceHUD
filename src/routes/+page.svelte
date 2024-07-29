@@ -4,7 +4,7 @@
   import Telemetery from "../components/Telemetry.svelte";
   import Timer from "../components/Timer.svelte";
 
-  let active: boolean = true;
+  let active: boolean = false;
 
   listen("active", (event) => {
     active = event.payload as boolean;

@@ -4,7 +4,7 @@
     let gear = "N";
     let speed = 0;
     let rpm = 0;
-    let lap = 1;
+    let lap = 0;
     let position = 1;
     let incidents = 0;
 

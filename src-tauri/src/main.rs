@@ -1,11 +1,10 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{sync::OnceLock, time::Duration};
-
-use anyhow::Result;
+use eyre::{OptionExt, Result};
 use iracing_telem::{Client, DataUpdateResult};
 use log::{debug, error, info};
+use std::{sync::OnceLock, time::Duration};
 use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
 use tauri_plugin_log::LogTarget;
 
@@ -24,7 +23,9 @@ struct TelemetryData {
     incidents: u32,
 }
 
-fn main() {
+fn main() -> Result<()> {
+    color_eyre::install()?;
+
     let quit = CustomMenuItem::new("quit".to_string(), "Quit");
     let tray_menu = SystemTrayMenu::new().add_item(quit);
     let system_tray = SystemTray::new().with_menu(tray_menu);
@@ -36,18 +37,16 @@ fn main() {
                 .build(),
         )
         .setup(|app| {
-            let window = app.get_window("main").expect("Failed to get main window");
+            let window = app
+                .get_window("main")
+                .ok_or_eyre("Failed to get main window")?;
 
-            window
-                .set_ignore_cursor_events(true)
-                .expect("Failed to set ignore cursor events on main window");
+            window.set_ignore_cursor_events(true)?;
 
-            WINDOW
-                .set(window)
-                .expect("Failed to save main window reference");
+            WINDOW.set(window).ok();
 
             tauri::async_runtime::spawn(async move {
-                connect().expect("Error connecting");
+                connect().ok();
             });
 
             Ok(())
@@ -60,11 +59,12 @@ fn main() {
             }
             _ => {}
         })
-        .run(tauri::generate_context!())
-        .expect("Error while running tauri application");
+        .run(tauri::generate_context!())?;
+
+    Ok(())
 }
 
-pub fn connect() -> Result<(), iracing_telem::Error> {
+pub fn connect() -> Result<()> {
     let mut c = Client::new();
     loop {
         info!("Start iRacing");
@@ -89,25 +89,27 @@ pub fn connect() -> Result<(), iracing_telem::Error> {
                     };
                     let is_on_track = s
                         .find_var("IsOnTrack")
-                        .expect("IsOnTrack variable not found");
+                        .ok_or_eyre("IsOnTrack variable not found")?;
                     let is_on_track_car = s
                         .find_var("IsOnTrackCar")
-                        .expect("IsOnTrackCar variable not found");
-                    let gear = s.find_var("Gear").expect("Gear variable not found");
-                    let speed = s.find_var("Speed").expect("Speed variable not found");
-                    let rpm = s.find_var("RPM").expect("RPM variable not found");
-                    let lap = s.find_var("Lap").expect("Lap variable not found");
+                        .ok_or_eyre("IsOnTrackCar variable not found")?;
+                    let gear = s.find_var("Gear").ok_or_eyre("Gear variable not found")?;
+                    let speed = s.find_var("Speed").ok_or_eyre("Speed variable not found")?;
+                    let rpm = s.find_var("RPM").ok_or_eyre("RPM variable not found")?;
+                    let lap = s.find_var("Lap").ok_or_eyre("Lap variable not found")?;
                     let lap_time = s
                         .find_var("SessionTime")
-                        .expect("SessionTime variable not found");
-                    let brake = s.find_var("Brake").expect("Brake variable not found");
-                    let throttle = s.find_var("Throttle").expect("Throttle variable not found");
+                        .ok_or_eyre("SessionTime variable not found")?;
+                    let brake = s.find_var("Brake").ok_or_eyre("Brake variable not found")?;
+                    let throttle = s
+                        .find_var("Throttle")
+                        .ok_or_eyre("Throttle variable not found")?;
                     let position = s
                         .find_var("PlayerCarClassPosition")
-                        .expect("PlayerCarClassPosition variable not found");
+                        .ok_or_eyre("PlayerCarClassPosition variable not found")?;
                     let incidents = s
                         .find_var("PlayerCarMyIncidentCount")
-                        .expect("PlayerCarMyIncidentCount variable not found");
+                        .ok_or_eyre("PlayerCarMyIncidentCount variable not found")?;
                     loop {
                         match s.wait_for_data(Duration::from_millis(20)) {
                             DataUpdateResult::Updated => {
@@ -118,17 +120,33 @@ pub fn connect() -> Result<(), iracing_telem::Error> {
                                     break;
                                 }
 
-                                let window = window_opt.expect("Window is none");
+                                let window = window_opt.ok_or_eyre("Window is none")?;
 
                                 // active
-                                let raw_is_on_track_value: bool = s.value(&is_on_track)?;
-                                let raw_is_on_track_car_value: bool = s.value(&is_on_track_car)?;
+                                let raw_is_on_track_value: bool = match s.value(&is_on_track) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get IsOnTrack value: {:?}", err);
+                                        continue;
+                                    }
+                                };
+                                let raw_is_on_track_car_value: bool =
+                                    match s.value(&is_on_track_car) {
+                                        Ok(value) => value,
+                                        Err(err) => {
+                                            error!("Failed to get IsOnTrackCar value: {:?}", err);
+                                            continue;
+                                        }
+                                    };
 
                                 let active = raw_is_on_track_value && raw_is_on_track_car_value;
                                 let _ = window.emit("active", active);
 
                                 if active != data.active {
-                                    info!("Session state changed to {}", active);
+                                    info!(
+                                        "Session state changed to {}",
+                                        if active { "active" } else { "inactive" }
+                                    );
                                     data.active = active;
                                 }
 
@@ -137,7 +155,13 @@ pub fn connect() -> Result<(), iracing_telem::Error> {
                                 }
 
                                 // gear
-                                let raw_gear_value: i32 = s.value(&gear)?;
+                                let raw_gear_value: i32 = match s.value(&gear) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get Gear value: {:?}", err);
+                                        continue;
+                                    }
+                                };
                                 let gear_value = match raw_gear_value {
                                     -1 => String::from("R"),
                                     0 => String::from("N"),
@@ -147,25 +171,49 @@ pub fn connect() -> Result<(), iracing_telem::Error> {
                                 data.gear = gear_value;
 
                                 // speed
-                                let raw_speed_value: f32 = s.value(&speed)?;
+                                let raw_speed_value: f32 = match s.value(&speed) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get Speed value: {:?}", err);
+                                        continue;
+                                    }
+                                };
                                 let speed_value = (raw_speed_value * 3.6).round() as u32;
                                 let _ = window.emit("speed", speed_value);
                                 data.speed = speed_value;
 
                                 // rpm
-                                let raw_rpm_value: f32 = s.value(&rpm)?;
+                                let raw_rpm_value: f32 = match s.value(&rpm) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get RPM value: {:?}", err);
+                                        continue;
+                                    }
+                                };
                                 let rpm_value = raw_rpm_value.round() as u32;
                                 let _ = window.emit("rpm", rpm_value);
                                 data.rpm = rpm_value;
 
                                 // lap
-                                let raw_lap_value: i32 = s.value(&lap)?;
+                                let raw_lap_value: i32 = match s.value(&lap) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get Lap value: {:?}", err);
+                                        continue;
+                                    }
+                                };
                                 let lap_value = raw_lap_value as u32;
                                 let _ = window.emit("lap", lap_value);
                                 data.lap = lap_value;
 
                                 // lap_time
-                                let raw_lap_time_value: f64 = s.value(&lap_time)?;
+                                let raw_lap_time_value: f64 = match s.value(&lap_time) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get LapTime value: {:?}", err);
+                                        continue;
+                                    }
+                                };
                                 let lap_time_value = Duration::from_secs_f64(raw_lap_time_value);
                                 let _ = window.emit(
                                     "lap_time",
@@ -179,25 +227,55 @@ pub fn connect() -> Result<(), iracing_telem::Error> {
                                 data.lap_time = lap_time_value;
 
                                 // brake
-                                let raw_brake_value: f32 = s.value(&brake)?;
+                                let raw_brake_value: f32 = match s.value(&brake) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get Brake value: {:?}", err);
+                                        continue;
+                                    }
+                                };
                                 let brake_value = (raw_brake_value * 100.0).round() as u32;
                                 let _ = window.emit("brake", brake_value);
                                 data.brake = brake_value;
 
                                 // throttle
-                                let raw_throttle_value: f32 = s.value(&throttle)?;
+                                let raw_throttle_value: f32 = match s.value(&throttle) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get Throttle value: {:?}", err);
+                                        continue;
+                                    }
+                                };
                                 let throttle_value = (raw_throttle_value * 100.0).round() as u32;
                                 let _ = window.emit("throttle", throttle_value);
                                 data.throttle = throttle_value;
 
                                 // position
-                                let raw_position_value: i32 = s.value(&position)?;
+                                let raw_position_value: i32 = match s.value(&position) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!(
+                                            "Failed to get PlayerCarClassPosition value: {:?}",
+                                            err
+                                        );
+                                        continue;
+                                    }
+                                };
                                 let position_value = raw_position_value as u32;
                                 let _ = window.emit("position", position_value);
                                 data.position = position_value;
 
                                 // incidents
-                                let raw_incidents_value: i32 = s.value(&incidents)?;
+                                let raw_incidents_value: i32 = match s.value(&incidents) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!(
+                                            "Failed to get PlayerCarMyIncidentCount value: {:?}",
+                                            err
+                                        );
+                                        continue;
+                                    }
+                                };
                                 let incidents_value = raw_incidents_value as u32;
                                 let _ = window.emit("incidents", incidents_value);
                                 data.incidents = incidents_value;
