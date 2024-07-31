@@ -4,7 +4,7 @@
 use eyre::{OptionExt, Result};
 use iracing_telem::{Client, DataUpdateResult};
 use log::{debug, error, info};
-use std::{sync::OnceLock, time::Duration};
+use std::{collections::HashMap, sync::OnceLock, time::Duration};
 use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
 use tauri_plugin_log::LogTarget;
 use yaml_rust2::YamlLoader;
@@ -29,9 +29,22 @@ struct TelemetryData {
     incidents: u32,
     incident_limit: u32,
     gear_shift_rpm: u32,
-    gear_last_rpm: u32,
     gear_blink_rpm: u32,
     session_info_update: i32,
+    player_car_id: u32,
+    player_car_class: u32,
+    drivers: HashMap<u32, Driver>,
+}
+
+struct Driver {
+    position: u32,
+    laps_completed: u32,
+    lap_dist_pct: f32,
+    total_completed: f32,
+    user_name: String,
+    car_number: String,
+    car_class_id: u32,
+    irating: u32,
 }
 
 impl TelemetryData {
@@ -53,9 +66,11 @@ impl TelemetryData {
             incidents: 0,
             incident_limit: 0,
             gear_shift_rpm: 0,
-            gear_last_rpm: 0,
             gear_blink_rpm: 0,
             session_info_update: 0,
+            player_car_id: 0,
+            player_car_class: 0,
+            drivers: HashMap::new(),
         }
     }
 }
@@ -124,9 +139,6 @@ pub fn connect() -> Result<()> {
                     let lap_current_lap_time = s
                         .find_var("LapCurrentLapTime")
                         .ok_or_eyre("LapCurrentLapTime variable not found")?;
-                    let lap_dist_pct = s
-                        .find_var("LapDistPct")
-                        .ok_or_eyre("LapDistPct variable not found")?;
                     let gear = s.find_var("Gear").ok_or_eyre("Gear variable not found")?;
                     let speed = s.find_var("Speed").ok_or_eyre("Speed variable not found")?;
                     let rpm = s.find_var("RPM").ok_or_eyre("RPM variable not found")?;
@@ -135,41 +147,47 @@ pub fn connect() -> Result<()> {
                     let throttle = s
                         .find_var("Throttle")
                         .ok_or_eyre("Throttle variable not found")?;
-                    let position = s
-                        .find_var("PlayerCarClassPosition")
-                        .ok_or_eyre("PlayerCarClassPosition variable not found")?;
                     let session_time_total = s
                         .find_var("SessionTimeTotal")
                         .ok_or_eyre("SessionTimeTotal variable not found")?;
                     let session_laps_total = s
                         .find_var("SessionLapsTotal")
                         .ok_or_eyre("SessionLapsTotal variable not found")?;
-                    let incidents = s
+                    let player_car_my_incident_count = s
                         .find_var("PlayerCarMyIncidentCount")
                         .ok_or_eyre("PlayerCarMyIncidentCount variable not found")?;
-                    // let incident_limit = s
-                    //     .find_var("IncidentLimit")
-                    //     .ok_or_eyre("IncidentLimit variable not found")?;
-                    // let cars = s.find_var("Cars").ok_or_eyre("Cars variable not found")?;
                     let player_car_sl_shift_rpm = s
                         .find_var("PlayerCarSLShiftRPM")
                         .ok_or_eyre("PlayerCarSLShiftRPM variable not found")?;
                     let player_car_sl_blink_rpm = s
                         .find_var("PlayerCarSLBlinkRPM")
                         .ok_or_eyre("PlayerCarSLBlinkRPM variable not found")?;
+                    let player_car_idx = s
+                        .find_var("PlayerCarIdx")
+                        .ok_or_eyre("PlayerCarIdx variable not found")?;
+                    let player_car_class = s
+                        .find_var("PlayerCarClass")
+                        .ok_or_eyre("PlayerCarClass variable not found")?;
+                    let car_idx_lap_dist_pct = s
+                        .find_var("CarIdxLapDistPct")
+                        .ok_or_eyre("CarIdxLapDistPct variable not found")?;
+                    let car_idx_lap_completed = s
+                        .find_var("CarIdxLapCompleted")
+                        .ok_or_eyre("CarIdxLapCompleted variable not found")?;
                     let mut slow_var_ticks: u32 = 0;
                     loop {
-                        match s.wait_for_data(Duration::from_millis(20)) {
+                        let window_opt = WINDOW.get();
+
+                        if window_opt.is_none() {
+                            error!("Window is none");
+                            break;
+                        }
+
+                        let window = window_opt.ok_or_eyre("Window is none")?;
+
+                        match s.wait_for_data(Duration::from_millis(25)) {
                             DataUpdateResult::Updated => {
                                 slow_var_ticks += 1;
-                                let window_opt = WINDOW.get();
-
-                                if window_opt.is_none() {
-                                    error!("Window is none");
-                                    break;
-                                }
-
-                                let window = window_opt.ok_or_eyre("Window is none")?;
 
                                 // active
                                 let raw_is_on_track_value: bool = match s.value(&is_on_track) {
@@ -222,6 +240,26 @@ pub fn connect() -> Result<()> {
                                     ),
                                 );
                                 data.session_time = session_time_value;
+
+                                // player_car_idx
+                                let player_car_idx_value: i32 = match s.value(&player_car_idx) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get PlayerCarIdx value: {:?}", err);
+                                        continue;
+                                    }
+                                };
+                                data.player_car_id = player_car_idx_value as u32;
+
+                                // player_car_class
+                                let player_car_class_value: i32 = match s.value(&player_car_class) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get PlayerCarClass value: {:?}", err);
+                                        continue;
+                                    }
+                                };
+                                data.player_car_class = player_car_class_value as u32;
 
                                 // lap
                                 let raw_lap_value: i32 = match s.value(&lap) {
@@ -322,20 +360,46 @@ pub fn connect() -> Result<()> {
                                 let _ = window.emit("throttle", throttle_value);
                                 data.throttle = throttle_value;
 
-                                // position
-                                let raw_position_value: i32 = match s.value(&position) {
+                                let lap_dist_pct: &[f32] = match s.value(&car_idx_lap_dist_pct) {
                                     Ok(value) => value,
                                     Err(err) => {
-                                        error!(
-                                            "Failed to get PlayerCarClassPosition value: {:?}",
-                                            err
-                                        );
+                                        error!("Failed to get CarIdxLapDistPct value: {:?}", err);
                                         continue;
                                     }
                                 };
-                                let position_value = raw_position_value as u32;
-                                let _ = window.emit("position", position_value);
-                                data.position = position_value;
+
+                                let lap_completed: &[i32] = match s.value(&car_idx_lap_completed) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get CarIdxLapCompleted value: {:?}", err);
+                                        continue;
+                                    }
+                                };
+
+                                for (car_id, driver) in data.drivers.iter_mut() {
+                                    let lap_dist_pct_value = lap_dist_pct[*car_id as usize];
+                                    let lap_completed_value =
+                                        lap_completed[*car_id as usize] as u32;
+
+                                    driver.lap_dist_pct = lap_dist_pct_value;
+                                    driver.laps_completed = lap_completed_value;
+                                    driver.total_completed =
+                                        lap_completed_value as f32 + lap_dist_pct_value;
+                                }
+
+                                if data.drivers.contains_key(&data.player_car_id) {
+                                    let player = data.drivers.get(&data.player_car_id).unwrap();
+                                    let position =
+                                        data.drivers
+                                            .iter()
+                                            .filter(|(_, driver)| {
+                                                driver.total_completed > player.total_completed
+                                            })
+                                            .count() as u32
+                                            + 1;
+                                    let _ = window.emit("position", position);
+                                    data.position = position;
+                                }
 
                                 if slow_var_ticks < SLOW_VAR_RESET_TICKS {
                                     continue;
@@ -383,43 +447,20 @@ pub fn connect() -> Result<()> {
                                 data.laps_total = laps_total_value;
 
                                 // incidents
-                                let raw_incidents_value: i32 = match s.value(&incidents) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!(
+                                let raw_incidents_value: i32 =
+                                    match s.value(&player_car_my_incident_count) {
+                                        Ok(value) => value,
+                                        Err(err) => {
+                                            error!(
                                             "Failed to get PlayerCarMyIncidentCount value: {:?}",
                                             err
                                         );
-                                        continue;
-                                    }
-                                };
+                                            continue;
+                                        }
+                                    };
                                 let incidents_value = raw_incidents_value as u32;
                                 let _ = window.emit("incidents", incidents_value);
                                 data.incidents = incidents_value;
-
-                                // incident_limit
-                                // let raw_incident_limit_value: i32 = match s.value(&incident_limit) {
-                                //     Ok(value) => value,
-                                //     Err(err) => {
-                                //         error!("Failed to get IncidentLimit value: {:?}", err);
-                                //         continue;
-                                //     }
-                                // };
-                                // let incident_limit_value = raw_incident_limit_value as u32;
-                                // let _ = window.emit("incident_limit", incident_limit_value);
-                                // data.incident_limit = incident_limit_value;
-
-                                // positions_total
-                                // let raw_cars_value: i32 = match s.value(&cars) {
-                                //     Ok(value) => value,
-                                //     Err(err) => {
-                                //         error!("Failed to get Cars value: {:?}", err);
-                                //         continue;
-                                //     }
-                                // };
-                                // let positions_total_value = raw_cars_value as u32;
-                                // let _ = window.emit("positions_total", positions_total_value);
-                                // data.positions_total = positions_total_value;
 
                                 // gear_shift_rpm
                                 let raw_player_car_sl_shift_rpm_value: f32 =
@@ -468,12 +509,67 @@ pub fn connect() -> Result<()> {
                                 break;
                             }
                         }
-                        // s.dump_vars();
+
                         let session_info_update = s.session_info_update();
                         if data.session_info_update != session_info_update {
                             debug!("Session info updated");
                             let session_info = YamlLoader::load_from_str(&s.session_info())?;
-                            // debug!("{:#?}", session_info);
+                            let session = &session_info[0];
+
+                            // incident_limit
+                            let incident_limit =
+                                &session["WeekendInfo"]["WeekendOptions"]["IncidentLimit"];
+                            let incident_limit_value = match incident_limit.as_str() {
+                                Some(_) => 0u32,
+                                None => match incident_limit.as_i64() {
+                                    Some(value) => value as u32,
+                                    None => 0u32,
+                                },
+                            };
+                            let _ = window.emit("incident_limit", incident_limit_value);
+                            data.incident_limit = incident_limit_value;
+
+                            let drivers = &session["DriverInfo"]["Drivers"].as_vec();
+                            if drivers.is_none() {
+                                error!("No drivers found");
+                                continue;
+                            }
+                            let drivers = drivers.unwrap();
+                            for driver in drivers {
+                                let car_id = driver["CarIdx"].as_i64().unwrap() as u32;
+                                let user_name = driver["UserName"].as_str().unwrap().to_string();
+                                let car_number = driver["CarNumber"].as_str().unwrap().to_string();
+                                let car_class_id = driver["CarClassID"].as_i64().unwrap() as u32;
+                                let irating = driver["IRating"].as_i64().unwrap() as u32;
+
+                                if data.drivers.contains_key(&car_id) {
+                                    continue;
+                                }
+
+                                if car_class_id != data.player_car_class {
+                                    continue;
+                                }
+
+                                let driver = Driver {
+                                    position: 0,
+                                    laps_completed: 0,
+                                    lap_dist_pct: 0.0,
+                                    total_completed: 0.0,
+                                    user_name,
+                                    car_number,
+                                    car_class_id,
+                                    irating,
+                                };
+
+                                data.drivers.insert(car_id, driver);
+                            }
+
+                            if !data.drivers.is_empty() {
+                                let positions_total = data.drivers.len() as u32;
+                                let _ = window.emit("positions_total", positions_total);
+                                data.positions_total = positions_total;
+                            }
+
                             data.session_info_update = session_info_update;
                         }
                     }
