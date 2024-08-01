@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use eyre::{OptionExt, Result};
-use iracing_telem::{Client, DataUpdateResult};
+use iracing_telem::{Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME};
 use log::{debug, error, info};
 use std::{collections::HashMap, sync::OnceLock, time::Duration};
 use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
@@ -411,6 +411,7 @@ pub fn connect() -> Result<()> {
                                 let raw_session_time_total_value: f64 = match s
                                     .value(&session_time_total)
                                 {
+                                    Ok(value) if value >= IRSDK_UNLIMITED_TIME => 0.0,
                                     Ok(value) => value,
                                     Err(err) => {
                                         error!("Failed to get SessionTimeTotal value: {:?}", err);
@@ -433,16 +434,14 @@ pub fn connect() -> Result<()> {
                                 let raw_session_laps_total_value: i32 = match s
                                     .value(&session_laps_total)
                                 {
+                                    Ok(value) if value >= IRSDK_UNLIMITED_LAPS => 0,
                                     Ok(value) => value,
                                     Err(err) => {
                                         error!("Failed to get SessionLapsTotal value: {:?}", err);
                                         continue;
                                     }
                                 };
-                                let mut laps_total_value = raw_session_laps_total_value as u32;
-                                if laps_total_value >= i16::MAX as u32 {
-                                    laps_total_value = 0;
-                                }
+                                let laps_total_value = raw_session_laps_total_value as u32;
                                 let _ = window.emit("laps_total", laps_total_value);
                                 data.laps_total = laps_total_value;
 
