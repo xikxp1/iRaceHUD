@@ -2,7 +2,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use eyre::{OptionExt, Result};
-use iracing_telem::{Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME};
+use iracing_telem::{
+    flags::Flags, Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME,
+};
 use log::{debug, error, info};
 use std::{collections::HashMap, sync::OnceLock, time::Duration};
 use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
@@ -15,6 +17,10 @@ const SLOW_VAR_RESET_TICKS: u32 = 50;
 struct TelemetryData {
     active: bool,
     session_time: Duration,
+    player_car_id: u32,
+    player_car_class: u32,
+    session_flags: Flags,
+    player_flags: Flags,
     lap: u32,
     lap_time: Duration,
     gear: String,
@@ -31,8 +37,6 @@ struct TelemetryData {
     gear_shift_rpm: u32,
     gear_blink_rpm: u32,
     session_info_update: i32,
-    player_car_id: u32,
-    player_car_class: u32,
     drivers: HashMap<u32, Driver>,
 }
 
@@ -52,6 +56,10 @@ impl TelemetryData {
         Self {
             active: false,
             session_time: Duration::new(0, 0),
+            player_car_id: 0,
+            player_car_class: 0,
+            session_flags: Flags::empty(),
+            player_flags: Flags::empty(),
             lap: 0,
             lap_time: Duration::new(0, 0),
             gear: String::from("N"),
@@ -68,8 +76,6 @@ impl TelemetryData {
             gear_shift_rpm: 0,
             gear_blink_rpm: 0,
             session_info_update: 0,
-            player_car_id: 0,
-            player_car_class: 0,
             drivers: HashMap::new(),
         }
     }
@@ -136,6 +142,9 @@ pub fn connect() -> Result<()> {
                     let session_time = s
                         .find_var("SessionTime")
                         .ok_or_eyre("SessionTime variable not found")?;
+                    let session_flags = s
+                        .find_var("SessionFlags")
+                        .ok_or_eyre("SessionFlags variable not found")?;
                     let lap_current_lap_time = s
                         .find_var("LapCurrentLapTime")
                         .ok_or_eyre("LapCurrentLapTime variable not found")?;
@@ -174,6 +183,9 @@ pub fn connect() -> Result<()> {
                     let car_idx_lap_completed = s
                         .find_var("CarIdxLapCompleted")
                         .ok_or_eyre("CarIdxLapCompleted variable not found")?;
+                    let car_idx_session_flags = s
+                        .find_var("CarIdxSessionFlags")
+                        .ok_or_eyre("CarIdxSessionFlags variable not found")?;
                     let mut slow_var_ticks: u32 = 0;
                     loop {
                         let window_opt = WINDOW.get();
@@ -260,6 +272,51 @@ pub fn connect() -> Result<()> {
                                     }
                                 };
                                 data.player_car_class = player_car_class_value as u32;
+
+                                // session_flags
+                                let session_flags_value: Flags = match s.value(&session_flags) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get SessionFlags value: {:?}", err);
+                                        continue;
+                                    }
+                                };
+                                data.session_flags = session_flags_value;
+
+                                // player_flags
+                                // let car_idx_session_flags: &[i32] = match s
+                                //     .value(&car_idx_session_flags)
+                                // {
+                                //     Ok(value) => value,
+                                //     Err(err) => {
+                                //         error!("Failed to get CarIdxSessionFlags value: {:?}", err);
+                                //         continue;
+                                //     }
+                                // };
+                                // let player_flags_value =
+                                //     car_idx_session_flags[player_car_idx_value as usize];
+                                // data.player_flags =
+                                //     Flags::from_bits_truncate(player_flags_value as u32);
+
+                                let flags = data.session_flags | data.player_flags;
+                                let mut flag_value: String = "".to_string();
+                                if flags.contains(Flags::CHECKERED) {
+                                    flag_value = "CHECKERED".to_string();
+                                } else if flags.contains(Flags::GREEN) {
+                                    flag_value = "GREEN".to_string();
+                                } else if flags.contains(Flags::YELLOW) {
+                                    flag_value = "YELLOW".to_string();
+                                } else if flags.contains(Flags::RED) {
+                                    flag_value = "RED".to_string();
+                                } else if flags.contains(Flags::WHITE) {
+                                    flag_value = "WHITE".to_string();
+                                } else if flags.contains(Flags::BLUE) {
+                                    flag_value = "BLUE".to_string();
+                                } else if flags.contains(Flags::BLACK) {
+                                    flag_value = "BLACK".to_string();
+                                }
+
+                                let _ = window.emit("flag", flag_value);
 
                                 // lap
                                 let raw_lap_value: i32 = match s.value(&lap) {

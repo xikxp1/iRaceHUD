@@ -6,6 +6,7 @@ export default {
   },
   plugins: [
     require('daisyui'),
+    require("@designbycode/tailwindcss-stripes"),
   ],
   daisyui: {
     base: false,

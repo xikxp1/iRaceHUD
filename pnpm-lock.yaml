@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@designbycode/tailwindcss-stripes':
+        specifier: ^1.0.5
+        version: 1.0.5(tailwindcss@3.4.6)
       '@tauri-apps/api':
         specifier: ^1
         version: 1.6.0
@@ -67,6 +70,11 @@ packages:
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
+
+  '@designbycode/tailwindcss-stripes@1.0.5':
+    resolution: {integrity: sha512-MXDe6ml+LelPRjnauXl4v7J3pPfRNyqB7msgRvdcRDau2rKEGXZ7/wIK16OEFqKtU93NiAvIzb8Va4/t5iXXcg==}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || >=3.0.0-alpha.1'
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -1169,6 +1177,10 @@ snapshots:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
+
+  '@designbycode/tailwindcss-stripes@1.0.5(tailwindcss@3.4.6)':
+    dependencies:
+      tailwindcss: 3.4.6
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true

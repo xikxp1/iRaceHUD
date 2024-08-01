@@ -13,6 +13,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@designbycode/tailwindcss-stripes": "^1.0.5",
     "@tauri-apps/api": "^1",
     "chart.js": "^4.4.3",
     "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1"

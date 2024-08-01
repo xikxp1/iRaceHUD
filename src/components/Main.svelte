@@ -87,7 +87,8 @@
         <div
             class="join-item flex flex-col items-center justify-evenly rounded-md w-3/4"
         >
-            <progress bind:this={rpm_incidator}
+            <progress
+                bind:this={rpm_incidator}
                 class="progress progress-accent w-5/6 outline outline-2 outline-offset-2 outline-primary"
                 value={rpm}
                 max={gear_blink_rpm}
