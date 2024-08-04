@@ -183,6 +183,9 @@ pub fn connect() -> Result<()> {
                     let car_idx_lap_completed = s
                         .find_var("CarIdxLapCompleted")
                         .ok_or_eyre("CarIdxLapCompleted variable not found")?;
+                    let car_idx_lap = s
+                        .find_var("CarIdxLap")
+                        .ok_or_eyre("CarIdxLap variable not found")?;
                     let car_idx_session_flags = s
                         .find_var("CarIdxSessionFlags")
                         .ok_or_eyre("CarIdxSessionFlags variable not found")?;
@@ -425,7 +428,7 @@ pub fn connect() -> Result<()> {
                                     }
                                 };
 
-                                let lap_completed: &[i32] = match s.value(&car_idx_lap_completed) {
+                                let laps_completed: &[i32] = match s.value(&car_idx_lap_completed) {
                                     Ok(value) => value,
                                     Err(err) => {
                                         error!("Failed to get CarIdxLapCompleted value: {:?}", err);
@@ -433,15 +436,34 @@ pub fn connect() -> Result<()> {
                                     }
                                 };
 
+                                let laps_started: &[i32] = match s.value(&car_idx_lap) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get CarIdxLap value: {:?}", err);
+                                        continue;
+                                    }
+                                };
+
                                 for (car_id, driver) in data.drivers.iter_mut() {
                                     let lap_dist_pct_value = lap_dist_pct[*car_id as usize];
-                                    let lap_completed_value =
-                                        lap_completed[*car_id as usize] as u32;
-
+                                    let laps_completed_value = match laps_completed
+                                        [*car_id as usize]
+                                    {
+                                        value if value >= IRSDK_UNLIMITED_LAPS || value <= 0 => 0,
+                                        value => value,
+                                    }
+                                        as u32;
+                                    let laps_started_value = match laps_started[*car_id as usize] {
+                                        value if value >= IRSDK_UNLIMITED_LAPS || value <= 0 => 0,
+                                        value => value,
+                                    }
+                                        as u32;
                                     driver.lap_dist_pct = lap_dist_pct_value;
-                                    driver.laps_completed = lap_completed_value;
-                                    driver.total_completed =
-                                        lap_completed_value as f32 + lap_dist_pct_value;
+                                    driver.laps_completed = laps_completed_value;
+                                    driver.total_completed = laps_completed_value as f32;
+                                    if laps_started_value > 0 {
+                                        driver.total_completed += lap_dist_pct_value;
+                                    }
                                 }
 
                                 if data.drivers.contains_key(&data.player_car_id) {
