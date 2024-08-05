@@ -1,12 +1,17 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use chrono::Local;
 use eyre::{OptionExt, Result};
 use iracing_telem::{
     flags::Flags, Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME,
 };
 use log::{debug, error, info};
-use std::{collections::HashMap, sync::OnceLock, time::Duration};
+use std::{
+    collections::HashMap,
+    sync::OnceLock,
+    time::{Duration, SystemTime},
+};
 use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
 use tauri_plugin_log::LogTarget;
 use yaml_rust2::YamlLoader;
@@ -22,6 +27,7 @@ struct TelemetryData {
     session_flags: Flags,
     player_flags: Flags,
     lap: u32,
+    race_laps: u32,
     lap_time: Duration,
     gear: String,
     speed: u32,
@@ -61,6 +67,7 @@ impl TelemetryData {
             session_flags: Flags::empty(),
             player_flags: Flags::empty(),
             lap: 0,
+            race_laps: 0,
             lap_time: Duration::new(0, 0),
             gear: String::from("N"),
             speed: 0,
@@ -152,6 +159,9 @@ pub fn connect() -> Result<()> {
                     let speed = s.find_var("Speed").ok_or_eyre("Speed variable not found")?;
                     let rpm = s.find_var("RPM").ok_or_eyre("RPM variable not found")?;
                     let lap = s.find_var("Lap").ok_or_eyre("Lap variable not found")?;
+                    let race_laps = s
+                        .find_var("RaceLaps")
+                        .ok_or_eyre("RaceLaps variable not found")?;
                     let brake = s.find_var("Brake").ok_or_eyre("Brake variable not found")?;
                     let throttle = s
                         .find_var("Throttle")
@@ -204,6 +214,12 @@ pub fn connect() -> Result<()> {
                             DataUpdateResult::Updated => {
                                 slow_var_ticks += 1;
 
+                                // current_time
+                                let current_time = Local::now();
+                                let current_time = current_time.format("%H:%M");
+                                SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?;
+                                let _ = window.emit("current_time", current_time.to_string());
+
                                 // active
                                 let raw_is_on_track_value: bool = match s.value(&is_on_track) {
                                     Ok(value) => value,
@@ -246,13 +262,12 @@ pub fn connect() -> Result<()> {
                                 };
                                 let session_time_value =
                                     Duration::from_secs_f64(raw_session_time_value);
+                                let ss = session_time_value.as_secs();
+                                let (hh, ss) = (ss / 3600, ss % 3600);
+                                let (mm, ss) = (ss / 60, ss % 60);
                                 let _ = window.emit(
                                     "session_time",
-                                    format!(
-                                        "{}:{:02}",
-                                        session_time_value.as_secs() / 60,
-                                        session_time_value.as_secs() % 60,
-                                    ),
+                                    format!("{:0>2}:{:02}:{:02}", hh, mm, ss),
                                 );
                                 data.session_time = session_time_value;
 
@@ -333,6 +348,18 @@ pub fn connect() -> Result<()> {
                                 let _ = window.emit("lap", lap_value);
                                 data.lap = lap_value;
 
+                                //race_laps
+                                let raw_race_laps_value: i32 = match s.value(&race_laps) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get RaceLaps value: {:?}", err);
+                                        continue;
+                                    }
+                                };
+                                let race_laps_value = raw_race_laps_value as u32;
+                                let _ = window.emit("race_laps", race_laps_value);
+                                data.race_laps = race_laps_value;
+
                                 // lap_time
                                 let raw_lap_current_lap_time_value: f32 = match s
                                     .value(&lap_current_lap_time)
@@ -348,7 +375,7 @@ pub fn connect() -> Result<()> {
                                 let _ = window.emit(
                                     "lap_time",
                                     format!(
-                                        "{}:{:02}:{:03}",
+                                        "{}:{:02}.{:03}",
                                         lap_time_value.as_secs() / 60,
                                         lap_time_value.as_secs() % 60,
                                         lap_time_value.subsec_millis()
@@ -499,13 +526,12 @@ pub fn connect() -> Result<()> {
                                 };
                                 let session_time_total_value =
                                     Duration::from_secs_f64(raw_session_time_total_value);
+                                let ss = session_time_total_value.as_secs();
+                                let (hh, ss) = (ss / 3600, ss % 3600);
+                                let (mm, ss) = (ss / 60, ss % 60);
                                 let _ = window.emit(
                                     "session_time_total",
-                                    format!(
-                                        "{}:{:02}",
-                                        session_time_total_value.as_secs() / 60,
-                                        session_time_total_value.as_secs() % 60,
-                                    ),
+                                    format!("{:0>2}:{:02}:{:02}", hh, mm, ss),
                                 );
                                 data.session_time_total = session_time_total_value;
 

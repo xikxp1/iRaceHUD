@@ -4,6 +4,7 @@
   import Telemetery from "../components/Telemetry.svelte";
   import Timer from "../components/Timer.svelte";
   import Flags from "../components/Flags.svelte";
+  import Session from "../components/Session.svelte";
 
   let active: boolean = false;
 
@@ -38,6 +39,13 @@
     <div class="middle">
       <div class="flags">
         <Flags />
+      </div>
+    </div>
+  </div>
+  <div class="outer">
+    <div class="middle">
+      <div class="session">
+        <Session />
       </div>
     </div>
   </div>
@@ -86,6 +94,14 @@
     margin-left: auto;
     margin-right: auto;
     margin-top: -293px;
+    margin-bottom: auto;
+    align-items: center;
+  }
+
+  .session {
+    margin-left: -1400px;
+    margin-right: auto;
+    margin-top: -520px;
     margin-bottom: auto;
     align-items: center;
   }
