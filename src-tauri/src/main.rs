@@ -526,12 +526,12 @@ pub fn connect() -> Result<()> {
                                 };
                                 let session_time_total_value =
                                     Duration::from_secs_f64(raw_session_time_total_value);
-                                let ss = session_time_total_value.as_secs();
-                                let (hh, ss) = (ss / 3600, ss % 3600);
-                                let (mm, ss) = (ss / 60, ss % 60);
                                 let _ = window.emit(
                                     "session_time_total",
-                                    format!("{:0>2}:{:02}:{:02}", hh, mm, ss),
+                                    format!(
+                                        "{}",
+                                        humantime::format_duration(session_time_total_value)
+                                    ),
                                 );
                                 data.session_time_total = session_time_total_value;
 

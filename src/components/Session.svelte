@@ -1,11 +1,16 @@
 <script lang="ts">
     import { listen } from "@tauri-apps/api/event";
 
+    let stength_of_field = 1125; // TODO: get from telemetry
     let race_laps = 0;
     let laps_total = 0;
     let session_time = "00:00:00";
-    let session_time_total = "00:00:00";
+    let session_time_total = "";
     let current_time = "00:00";
+
+    listen("strength_of_field", (event) => {
+        stength_of_field = event.payload as number;
+    });
 
     listen("race_laps", (event) => {
         race_laps = event.payload as number;
@@ -30,23 +35,34 @@
 
 <div class="flex flex-row items-center justify-center opacity-80">
     <div
-        class="flex flex-row w-[350px] items-center justify-center rounded-md bg-accent-content outline-1 outline-dotted outline-accent"
+        class="flex flex-row w-[370px] items-center justify-center rounded-md bg-accent-content outline-1 outline-dotted outline-accent"
     >
         <div class="flex flex-col w-[40px] items-center justify-center">
+            <div class="text-primary text-xl">{stength_of_field}</div>
+            <div class="text-accent text-xs">SoF</div>
+        </div>
+        <div class="divider divider-horizontal divider-primary w-[2px]"></div>
+        <div class="flex flex-col w-[60px] items-center justify-center">
             <div class="text-primary text-xl">
                 {race_laps}{#if laps_total > 0}/{laps_total}{/if}
             </div>
             <div class="text-accent text-xs">race lap</div>
         </div>
-        <div class="divider divider-horizontal divider-primary"></div>
-        <div class="flex flex-col w-[140px] items-center justify-center">
+        <div class="divider divider-horizontal divider-primary w-[2px]"></div>
+        <div class="flex flex-col w-[100px] items-center justify-center">
             <div class="text-primary text-xl">
-                {session_time}{#if session_time_total != "00:00"}/{session_time_total}{/if}
+                {session_time}
             </div>
-            <div class="text-accent text-xs">session time</div>
+            {#if laps_total == 0 && session_time_total != ""}
+                <div class="text-accent text-xs">
+                    of {session_time_total} session time
+                </div>
+            {:else}
+                <div class="text-accent text-xs">session time</div>
+            {/if}
         </div>
-        <div class="divider divider-horizontal divider-primary"></div>
-        <div class="flex flex-col w-[45px] items-center justify-center">
+        <div class="divider divider-horizontal divider-primary w-[2px]"></div>
+        <div class="flex flex-col w-[40px] items-center justify-center">
             <div class="text-primary text-xl">
                 {current_time}
             </div>
