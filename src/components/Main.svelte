@@ -1,4 +1,5 @@
 <script lang="ts">
+    // TODO: Activate via tauri command upon mount
     import { listen } from "@tauri-apps/api/event";
 
     let gear = "N";

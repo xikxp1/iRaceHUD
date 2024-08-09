@@ -90,7 +90,8 @@
     });
 
     listen("throttle", (event) => {
-        throttle = event.payload as number;
+        let payload = event.payload as { ts: number; value: number };
+        throttle = payload.value;
         throttleData.push(throttle);
         currentThrottlePoints = throttleData.length;
         if (currentThrottlePoints > maxPoints) {
@@ -100,7 +101,8 @@
     });
 
     listen("brake", (event) => {
-        brake = event.payload as number;
+        let payload = event.payload as { ts: number; value: number };
+        brake = payload.value;
         brakeData.push(brake);
         currentBrakePoints = brakeData.length;
         if (currentBrakePoints > maxPoints) {

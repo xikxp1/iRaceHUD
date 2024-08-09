@@ -1,23 +1,21 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use chrono::Local;
+use chrono::{DateTime, Local, TimeDelta};
 use eyre::{OptionExt, Result};
 use iracing_telem::{
     flags::Flags, Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME,
 };
 use log::{debug, error, info};
-use std::{
-    collections::HashMap,
-    sync::OnceLock,
-    time::{Duration, SystemTime},
-};
+use serde_json::{json, Value};
+use std::{collections::HashMap, sync::OnceLock, time::Duration};
 use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
 use tauri_plugin_log::LogTarget;
 use yaml_rust2::YamlLoader;
 
 static WINDOW: OnceLock<tauri::Window> = OnceLock::new();
 const SLOW_VAR_RESET_TICKS: u32 = 50;
+const FORCED_EMITTER_DURATION_SECS: i64 = 10;
 
 struct TelemetryData {
     active: bool,
@@ -57,6 +55,13 @@ struct Driver {
     irating: u32,
 }
 
+#[derive(Debug)]
+struct Emitter {
+    events: HashMap<String, Value>,
+    activation_time: Option<DateTime<Local>>,
+    forced_emitter_duration: TimeDelta,
+}
+
 impl TelemetryData {
     fn new() -> Self {
         Self {
@@ -88,6 +93,54 @@ impl TelemetryData {
     }
 }
 
+impl Emitter {
+    fn new(forced_emitter_duration: TimeDelta) -> Self {
+        Self {
+            events: HashMap::new(),
+            activation_time: None,
+            forced_emitter_duration,
+        }
+    }
+
+    fn activate(&mut self, activation_time: DateTime<Local>) {
+        self.activation_time = Some(activation_time);
+    }
+
+    fn deactivate(&mut self) {
+        self.activation_time = None;
+    }
+
+    fn emit(&mut self, event: &str, value: Value) -> Result<()> {
+        if event != "active" && self.activation_time.is_none() {
+            error!("Emitter is not activated");
+            return Ok(());
+        }
+
+        let mut is_forced = false;
+
+        if let Some(activation_time) = self.activation_time {
+            let current_time = Local::now();
+            let elapsed = current_time.signed_duration_since(activation_time);
+            if elapsed < self.forced_emitter_duration {
+                is_forced = true;
+            }
+        }
+
+        if !is_forced && self.events.contains_key(event) && self.events[event] == value {
+            return Ok(());
+        }
+
+        let window = WINDOW.get().expect("Failed to get window");
+
+        match window.emit(event, value.clone()) {
+            Ok(_) => {}
+            Err(err) => error!("Failed to emit event {}: {:?}", event, err),
+        }
+        self.events.insert(event.to_string(), value);
+        Ok(())
+    }
+}
+
 fn main() {
     let _ = color_eyre::install();
 
@@ -110,8 +163,10 @@ fn main() {
 
             WINDOW.set(window).expect("Failed to set window");
 
+            let emitter = Emitter::new(TimeDelta::seconds(FORCED_EMITTER_DURATION_SECS));
+
             tauri::async_runtime::spawn(async move {
-                connect().expect("Error while connecting to iRacing");
+                connect(emitter).expect("Error while connecting to iRacing");
             });
 
             Ok(())
@@ -128,7 +183,7 @@ fn main() {
         .expect("Error while running tauri application");
 }
 
-pub fn connect() -> Result<()> {
+fn connect(mut emitter: Emitter) -> Result<()> {
     let mut c = Client::new();
     loop {
         info!("Start iRacing");
@@ -201,24 +256,11 @@ pub fn connect() -> Result<()> {
                         .ok_or_eyre("CarIdxSessionFlags variable not found")?;
                     let mut slow_var_ticks: u32 = 0;
                     loop {
-                        let window_opt = WINDOW.get();
-
-                        if window_opt.is_none() {
-                            error!("Window is none");
-                            break;
-                        }
-
-                        let window = window_opt.ok_or_eyre("Window is none")?;
-
                         match s.wait_for_data(Duration::from_millis(25)) {
                             DataUpdateResult::Updated => {
                                 slow_var_ticks += 1;
 
-                                // current_time
                                 let current_time = Local::now();
-                                let current_time = current_time.format("%H:%M");
-                                SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?;
-                                let _ = window.emit("current_time", current_time.to_string());
 
                                 // active
                                 let raw_is_on_track_value: bool = match s.value(&is_on_track) {
@@ -238,19 +280,29 @@ pub fn connect() -> Result<()> {
                                     };
 
                                 let active = raw_is_on_track_value && raw_is_on_track_car_value;
-                                let _ = window.emit("active", active);
+                                emitter.emit("active", json!(active))?;
 
                                 if active != data.active {
                                     info!(
                                         "Session state changed to {}",
                                         if active { "active" } else { "inactive" }
                                     );
+                                    if active {
+                                        emitter.activate(current_time);
+                                    } else {
+                                        emitter.deactivate();
+                                    }
                                     data.active = active;
                                 }
 
                                 if !active {
                                     continue;
                                 }
+
+                                // current_time
+                                let current_time_value = current_time.format("%H:%M");
+                                emitter
+                                    .emit("current_time", json!(current_time_value.to_string()))?;
 
                                 // session_time
                                 let raw_session_time_value: f64 = match s.value(&session_time) {
@@ -265,10 +317,10 @@ pub fn connect() -> Result<()> {
                                 let ss = session_time_value.as_secs();
                                 let (hh, ss) = (ss / 3600, ss % 3600);
                                 let (mm, ss) = (ss / 60, ss % 60);
-                                let _ = window.emit(
+                                emitter.emit(
                                     "session_time",
-                                    format!("{:0>2}:{:02}:{:02}", hh, mm, ss),
-                                );
+                                    json!(format!("{:0>2}:{:02}:{:02}", hh, mm, ss)),
+                                )?;
                                 data.session_time = session_time_value;
 
                                 // player_car_idx
@@ -334,7 +386,7 @@ pub fn connect() -> Result<()> {
                                     flag_value = "BLACK".to_string();
                                 }
 
-                                let _ = window.emit("flag", flag_value);
+                                emitter.emit("flag", json!(flag_value))?;
 
                                 // lap
                                 let raw_lap_value: i32 = match s.value(&lap) {
@@ -345,7 +397,7 @@ pub fn connect() -> Result<()> {
                                     }
                                 };
                                 let lap_value = raw_lap_value as u32;
-                                let _ = window.emit("lap", lap_value);
+                                emitter.emit("lap", json!(lap_value))?;
                                 data.lap = lap_value;
 
                                 //race_laps
@@ -357,7 +409,7 @@ pub fn connect() -> Result<()> {
                                     }
                                 };
                                 let race_laps_value = raw_race_laps_value as u32;
-                                let _ = window.emit("race_laps", race_laps_value);
+                                emitter.emit("race_laps", json!(race_laps_value))?;
                                 data.race_laps = race_laps_value;
 
                                 // lap_time
@@ -372,15 +424,15 @@ pub fn connect() -> Result<()> {
                                 };
                                 let lap_time_value =
                                     Duration::from_secs_f32(raw_lap_current_lap_time_value);
-                                let _ = window.emit(
+                                emitter.emit(
                                     "lap_time",
-                                    format!(
+                                    json!(format!(
                                         "{}:{:02}.{:03}",
                                         lap_time_value.as_secs() / 60,
                                         lap_time_value.as_secs() % 60,
                                         lap_time_value.subsec_millis()
-                                    ),
-                                );
+                                    )),
+                                )?;
                                 data.lap_time = lap_time_value;
 
                                 // gear
@@ -396,7 +448,7 @@ pub fn connect() -> Result<()> {
                                     0 => String::from("N"),
                                     _ => raw_gear_value.to_string(),
                                 };
-                                let _ = window.emit("gear", gear_value.clone());
+                                emitter.emit("gear", json!(gear_value))?;
                                 data.gear = gear_value;
 
                                 // speed
@@ -408,7 +460,7 @@ pub fn connect() -> Result<()> {
                                     }
                                 };
                                 let speed_value = (raw_speed_value * 3.6).round() as u32;
-                                let _ = window.emit("speed", speed_value);
+                                emitter.emit("speed", json!(speed_value))?;
                                 data.speed = speed_value;
 
                                 // rpm
@@ -420,7 +472,7 @@ pub fn connect() -> Result<()> {
                                     }
                                 };
                                 let rpm_value = raw_rpm_value.round() as u32;
-                                let _ = window.emit("rpm", rpm_value);
+                                emitter.emit("rpm", json!(rpm_value))?;
                                 data.rpm = rpm_value;
 
                                 // brake
@@ -432,7 +484,7 @@ pub fn connect() -> Result<()> {
                                     }
                                 };
                                 let brake_value = (raw_brake_value * 100.0).round() as u32;
-                                let _ = window.emit("brake", brake_value);
+                                emitter.emit("brake", json!({"ts": data.session_time.as_secs_f64(), "value": brake_value}))?;
                                 data.brake = brake_value;
 
                                 // throttle
@@ -444,7 +496,7 @@ pub fn connect() -> Result<()> {
                                     }
                                 };
                                 let throttle_value = (raw_throttle_value * 100.0).round() as u32;
-                                let _ = window.emit("throttle", throttle_value);
+                                emitter.emit("throttle", json!({"ts": data.session_time.as_secs_f64(), "value": throttle_value}))?;
                                 data.throttle = throttle_value;
 
                                 let lap_dist_pct: &[f32] = match s.value(&car_idx_lap_dist_pct) {
@@ -503,7 +555,7 @@ pub fn connect() -> Result<()> {
                                             })
                                             .count() as u32
                                             + 1;
-                                    let _ = window.emit("position", position);
+                                    emitter.emit("position", json!(position))?;
                                     data.position = position;
                                 }
 
@@ -526,13 +578,11 @@ pub fn connect() -> Result<()> {
                                 };
                                 let session_time_total_value =
                                     Duration::from_secs_f64(raw_session_time_total_value);
-                                let _ = window.emit(
+                                emitter.emit(
                                     "session_time_total",
-                                    format!(
-                                        "{}",
-                                        humantime::format_duration(session_time_total_value)
-                                    ),
-                                );
+                                    json!(humantime::format_duration(session_time_total_value)
+                                        .to_string()),
+                                )?;
                                 data.session_time_total = session_time_total_value;
 
                                 // session_laps_total
@@ -547,7 +597,7 @@ pub fn connect() -> Result<()> {
                                     }
                                 };
                                 let laps_total_value = raw_session_laps_total_value as u32;
-                                let _ = window.emit("laps_total", laps_total_value);
+                                emitter.emit("laps_total", json!(laps_total_value))?;
                                 data.laps_total = laps_total_value;
 
                                 // incidents
@@ -563,7 +613,7 @@ pub fn connect() -> Result<()> {
                                         }
                                     };
                                 let incidents_value = raw_incidents_value as u32;
-                                let _ = window.emit("incidents", incidents_value);
+                                emitter.emit("incidents", json!(incidents_value))?;
                                 data.incidents = incidents_value;
 
                                 // gear_shift_rpm
@@ -580,7 +630,7 @@ pub fn connect() -> Result<()> {
                                     };
                                 let gear_shift_rpm_value =
                                     raw_player_car_sl_shift_rpm_value.round() as u32;
-                                let _ = window.emit("gear_shift_rpm", gear_shift_rpm_value);
+                                emitter.emit("gear_shift_rpm", json!(gear_shift_rpm_value))?;
                                 data.gear_shift_rpm = gear_shift_rpm_value;
 
                                 // gear_blink_rpm
@@ -597,7 +647,7 @@ pub fn connect() -> Result<()> {
                                     };
                                 let gear_blink_rpm_value =
                                     raw_player_car_sl_blink_rpm_value.round() as u32;
-                                let _ = window.emit("gear_blink_rpm", gear_blink_rpm_value);
+                                emitter.emit("gear_blink_rpm", json!(gear_blink_rpm_value))?;
                                 data.gear_blink_rpm = gear_blink_rpm_value;
 
                                 slow_var_ticks = 0;
@@ -617,7 +667,13 @@ pub fn connect() -> Result<()> {
                         let session_info_update = s.session_info_update();
                         if data.session_info_update != session_info_update {
                             debug!("Session info updated");
-                            let session_info = YamlLoader::load_from_str(&s.session_info())?;
+                            let session_info = match YamlLoader::load_from_str(&s.session_info()) {
+                                Ok(value) => value,
+                                Err(err) => {
+                                    error!("Failed to load session info: {:?}", err);
+                                    continue;
+                                }
+                            };
                             let session = &session_info[0];
 
                             // incident_limit
@@ -630,7 +686,7 @@ pub fn connect() -> Result<()> {
                                     None => 0u32,
                                 },
                             };
-                            let _ = window.emit("incident_limit", incident_limit_value);
+                            emitter.emit("incident_limit", json!(incident_limit_value))?;
                             data.incident_limit = incident_limit_value;
 
                             let drivers = &session["DriverInfo"]["Drivers"].as_vec();
@@ -670,7 +726,7 @@ pub fn connect() -> Result<()> {
 
                             if !data.drivers.is_empty() {
                                 let positions_total = data.drivers.len() as u32;
-                                let _ = window.emit("positions_total", positions_total);
+                                emitter.emit("positions_total", json!(positions_total))?;
                                 data.positions_total = positions_total;
                             }
 
