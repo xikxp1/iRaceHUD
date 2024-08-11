@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use chrono::{DateTime, Local, TimeDelta};
-use eyre::{OptionExt, Result};
+use eyre::{eyre, OptionExt, Result};
 use iracing_telem::{
     flags::Flags, Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME,
 };
@@ -130,7 +130,7 @@ impl Emitter {
             return Ok(());
         }
 
-        let window = WINDOW.get().expect("Failed to get window");
+        let window = WINDOW.get().ok_or_eyre("Failed to get window")?;
 
         match window.emit(event, value.clone()) {
             Ok(_) => {}
@@ -155,18 +155,20 @@ fn main() {
                 .build(),
         )
         .setup(|app| {
-            let window = app.get_window("main").expect("Failed to get main window");
+            let window = app.get_window("main").ok_or_eyre("Failed to get window")?;
 
             window
                 .set_ignore_cursor_events(true)
-                .expect("Failed to set ignore cursor events");
+                .map_err(|err| eyre!("Failed to set ignore cursor events: {:?}", err))?;
 
-            WINDOW.set(window).expect("Failed to set window");
+            WINDOW
+                .set(window)
+                .map_err(|err| eyre!("Failed to set window: {:?}", err))?;
 
             let emitter = Emitter::new(TimeDelta::seconds(FORCED_EMITTER_DURATION_SECS));
 
             tauri::async_runtime::spawn(async move {
-                connect(emitter).expect("Error while connecting to iRacing");
+                connect(emitter).map_err(|err| eyre!("Error while connecting: {:?}", err))
             });
 
             Ok(())
