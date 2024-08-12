@@ -356,36 +356,50 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 data.session_flags = session_flags_value;
 
                                 // player_flags
-                                // let car_idx_session_flags: &[i32] = match s
-                                //     .value(&car_idx_session_flags)
-                                // {
-                                //     Ok(value) => value,
-                                //     Err(err) => {
-                                //         error!("Failed to get CarIdxSessionFlags value: {:?}", err);
-                                //         continue;
-                                //     }
-                                // };
-                                // let player_flags_value =
-                                //     car_idx_session_flags[player_car_idx_value as usize];
-                                // data.player_flags =
-                                //     Flags::from_bits_truncate(player_flags_value as u32);
+                                let car_idx_session_flags: &[i32] = match s
+                                    .value(&car_idx_session_flags)
+                                {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        error!("Failed to get CarIdxSessionFlags value: {:?}", err);
+                                        continue;
+                                    }
+                                };
+                                let player_flags_value =
+                                    car_idx_session_flags[player_car_idx_value as usize];
+                                data.player_flags =
+                                    Flags::from_bits_truncate(player_flags_value as u32);
 
                                 let flags = data.session_flags | data.player_flags;
                                 let mut flag_value: String = "".to_string();
-                                if flags.contains(Flags::CHECKERED) {
-                                    flag_value = "CHECKERED".to_string();
-                                } else if flags.contains(Flags::GREEN) {
-                                    flag_value = "GREEN".to_string();
-                                } else if flags.contains(Flags::YELLOW) {
-                                    flag_value = "YELLOW".to_string();
+                                if flags.contains(Flags::DISQUALIFY) {
+                                    flag_value = "DISQUALIFY".to_string();
                                 } else if flags.contains(Flags::RED) {
                                     flag_value = "RED".to_string();
-                                } else if flags.contains(Flags::WHITE) {
-                                    flag_value = "WHITE".to_string();
-                                } else if flags.contains(Flags::BLUE) {
-                                    flag_value = "BLUE".to_string();
                                 } else if flags.contains(Flags::BLACK) {
                                     flag_value = "BLACK".to_string();
+                                } else if flags.contains(Flags::CHECKERED) {
+                                    flag_value = "CHECKERED".to_string();
+                                } else if flags.contains(Flags::REPAIR) {
+                                    flag_value = "REPAIR".to_string();
+                                } else if flags.contains(Flags::FURLED) {
+                                    flag_value = "FURLED".to_string();
+                                } else if flags.contains(Flags::CAUTION_WAVING) {
+                                    flag_value = "CAUTION_WAVING".to_string();
+                                } else if flags.contains(Flags::CAUTION) {
+                                    flag_value = "CAUTION".to_string();
+                                } else if flags.contains(Flags::YELLOW_WAVING) {
+                                    flag_value = "YELLOW_WAVING".to_string();
+                                } else if flags.contains(Flags::YELLOW) {
+                                    flag_value = "YELLOW".to_string();
+                                } else if flags.contains(Flags::BLUE) {
+                                    flag_value = "BLUE".to_string();
+                                } else if flags.contains(Flags::WHITE) {
+                                    flag_value = "WHITE".to_string();
+                                } else if flags.contains(Flags::GREEN_HELD)
+                                    || flags.contains(Flags::GREEN)
+                                {
+                                    flag_value = "GREEN".to_string();
                                 }
 
                                 emitter.emit("flag", json!(flag_value))?;

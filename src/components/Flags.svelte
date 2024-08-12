@@ -11,7 +11,7 @@
 <div class="flex flex-row items-center justify-center opacity-80">
     {#if flag !== ""}
         <div
-            class="flex flex-col bg-accent-content items-center justify-center rounded-md w-[8%] outline-1 outline-dotted outline-accent stripes stripes-amber-300 stripes-size-lg stripes-reverse stripes-opacity-30"
+            class="flex flex-col bg-accent-content items-center justify-center rounded-md w-[8%] outline-1 outline-dotted outline-accent stripes stripes-primary stripes-size-lg stripes-reverse stripes-opacity-30"
         >
             <div class="text-primary text-2xl">{flag}</div>
         </div>
