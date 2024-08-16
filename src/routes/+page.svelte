@@ -3,7 +3,6 @@
   import Main from "../components/Main.svelte";
   import Telemetery from "../components/Telemetry.svelte";
   import Timer from "../components/Timer.svelte";
-  import Flags from "../components/Flags.svelte";
   import Session from "../components/Session.svelte";
 
   let active: boolean = false;
@@ -32,13 +31,6 @@
     <div class="middle">
       <div class="timer">
         <Timer />
-      </div>
-    </div>
-  </div>
-  <div class="outer">
-    <div class="middle">
-      <div class="flags">
-        <Flags />
       </div>
     </div>
   </div>
@@ -86,14 +78,6 @@
     margin-left: auto;
     margin-right: auto;
     margin-top: -335px;
-    margin-bottom: auto;
-    align-items: center;
-  }
-
-  .flags {
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: -293px;
     margin-bottom: auto;
     align-items: center;
   }

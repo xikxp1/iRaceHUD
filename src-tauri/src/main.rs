@@ -3,11 +3,8 @@
 
 use chrono::{DateTime, Local, TimeDelta};
 use eyre::{eyre, OptionExt, Result};
-use iracing_telem::{
-    flags::Flags, Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME,
-};
+use iracing_telem::{Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME};
 use log::{debug, error, info};
-use serde::Serialize;
 use serde_json::{json, Value};
 use std::{collections::HashMap, sync::OnceLock, time::Duration};
 use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
@@ -23,8 +20,6 @@ struct TelemetryData {
     session_time: Duration,
     player_car_id: u32,
     player_car_class: u32,
-    session_flags: Flags,
-    player_flags: Flags,
     lap: u32,
     race_laps: u32,
     lap_time: Duration,
@@ -63,12 +58,6 @@ struct Emitter {
     forced_emitter_duration: TimeDelta,
 }
 
-#[derive(Serialize)]
-struct Flag {
-    name: String,
-    color: String,
-}
-
 impl TelemetryData {
     fn new() -> Self {
         Self {
@@ -76,8 +65,6 @@ impl TelemetryData {
             session_time: Duration::new(0, 0),
             player_car_id: 0,
             player_car_class: 0,
-            session_flags: Flags::empty(),
-            player_flags: Flags::empty(),
             lap: 0,
             race_laps: 0,
             lap_time: Duration::new(0, 0),
@@ -148,15 +135,6 @@ impl Emitter {
     }
 }
 
-impl Flag {
-    fn new(name: &str, color: &str) -> Self {
-        Self {
-            name: name.to_string(),
-            color: color.to_string(),
-        }
-    }
-}
-
 fn main() {
     let _ = color_eyre::install();
 
@@ -222,9 +200,6 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                     let session_time = s
                         .find_var("SessionTime")
                         .ok_or_eyre("SessionTime variable not found")?;
-                    let session_flags = s
-                        .find_var("SessionFlags")
-                        .ok_or_eyre("SessionFlags variable not found")?;
                     let lap_current_lap_time = s
                         .find_var("LapCurrentLapTime")
                         .ok_or_eyre("LapCurrentLapTime variable not found")?;
@@ -269,9 +244,6 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                     let car_idx_lap = s
                         .find_var("CarIdxLap")
                         .ok_or_eyre("CarIdxLap variable not found")?;
-                    let car_idx_session_flags = s
-                        .find_var("CarIdxSessionFlags")
-                        .ok_or_eyre("CarIdxSessionFlags variable not found")?;
                     let mut slow_var_ticks: u32 = SLOW_VAR_RESET_TICKS;
                     loop {
                         match s.wait_for_data(Duration::from_millis(25)) {
@@ -360,80 +332,6 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     }
                                 };
                                 data.player_car_class = player_car_class_value as u32;
-
-                                // session_flags
-                                let session_flags_value: Flags = match s.value(&session_flags) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get SessionFlags value: {:?}", err);
-                                        continue;
-                                    }
-                                };
-                                data.session_flags = session_flags_value;
-
-                                // player_flags
-                                let car_idx_session_flags: &[i32] = match s
-                                    .value(&car_idx_session_flags)
-                                {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get CarIdxSessionFlags value: {:?}", err);
-                                        continue;
-                                    }
-                                };
-                                let player_flags_value =
-                                    car_idx_session_flags[player_car_idx_value as usize];
-                                data.player_flags =
-                                    Flags::from_bits_truncate(player_flags_value as u32);
-
-                                let flags = data.session_flags | data.player_flags;
-                                let mut flag_value = Flag::new("", "");
-                                if flags.contains(Flags::DISQUALIFY) {
-                                    flag_value.name = "DISQUALIFIED".to_string();
-                                    flag_value.color = "error-content".to_string();
-                                } else if flags.contains(Flags::RED) {
-                                    flag_value.name = "RED".to_string();
-                                    flag_value.color = "error".to_string();
-                                } else if flags.contains(Flags::BLACK) {
-                                    flag_value.name = "BLACK".to_string();
-                                    flag_value.color = "error-content".to_string();
-                                } else if flags.contains(Flags::CHECKERED) {
-                                    flag_value.name = "RACE FINISHED".to_string();
-                                    flag_value.color = "base-100".to_string();
-                                } else if flags.contains(Flags::REPAIR) {
-                                    flag_value.name = "REPAIR".to_string();
-                                    flag_value.color = "error-content".to_string();
-                                } else if flags.contains(Flags::FURLED) {
-                                    flag_value.name = "ATTENTION!".to_string();
-                                    flag_value.color = "warning".to_string();
-                                } else if flags.contains(Flags::CAUTION_WAVING)
-                                    || flags.contains(Flags::CAUTION)
-                                {
-                                    flag_value.name = "CAUTION".to_string();
-                                    flag_value.color = "warning".to_string();
-                                } else if flags.contains(Flags::YELLOW_WAVING)
-                                    || flags.contains(Flags::YELLOW)
-                                {
-                                    if flags.contains(Flags::BLUE) {
-                                        flag_value.name = "BLUE+YELLOW".to_string();
-                                        flag_value.color = "info".to_string();
-                                    } else {
-                                        flag_value.name = "YELLOW".to_string();
-                                        flag_value.color = "warning".to_string();
-                                    }
-                                } else if flags.contains(Flags::BLUE) {
-                                    flag_value.name = "BLUE".to_string();
-                                    flag_value.color = "info".to_string();
-                                } else if flags.contains(Flags::WHITE) {
-                                    flag_value.name = "WHITE".to_string();
-                                    flag_value.color = "base-100".to_string();
-                                } else if flags.contains(Flags::GREEN_HELD)
-                                    || flags.contains(Flags::GREEN)
-                                {
-                                    flag_value.name = "GREEN".to_string();
-                                    flag_value.color = "success".to_string();
-                                }
-                                emitter.emit("flag", json!(flag_value))?;
 
                                 // lap
                                 let raw_lap_value: i32 = match s.value(&lap) {
