@@ -256,7 +256,7 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                     let car_idx_session_flags = s
                         .find_var("CarIdxSessionFlags")
                         .ok_or_eyre("CarIdxSessionFlags variable not found")?;
-                    let mut slow_var_ticks: u32 = 0;
+                    let mut slow_var_ticks: u32 = SLOW_VAR_RESET_TICKS;
                     loop {
                         match s.wait_for_data(Duration::from_millis(25)) {
                             DataUpdateResult::Updated => {
@@ -562,7 +562,10 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 }
 
                                 if data.drivers.contains_key(&data.player_car_id) {
-                                    let player = data.drivers.get(&data.player_car_id).unwrap();
+                                    let player = data
+                                        .drivers
+                                        .get(&data.player_car_id)
+                                        .ok_or_eyre("Player not found")?;
                                     let position =
                                         data.drivers
                                             .iter()
@@ -705,39 +708,58 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                             emitter.emit("incident_limit", json!(incident_limit_value))?;
                             data.incident_limit = incident_limit_value;
 
-                            let drivers = &session["DriverInfo"]["Drivers"].as_vec();
-                            if drivers.is_none() {
-                                error!("No drivers found");
-                                continue;
-                            }
-                            let drivers = drivers.unwrap();
-                            for driver in drivers {
-                                let car_id = driver["CarIdx"].as_i64().unwrap() as u32;
-                                let user_name = driver["UserName"].as_str().unwrap().to_string();
-                                let car_number = driver["CarNumber"].as_str().unwrap().to_string();
-                                let car_class_id = driver["CarClassID"].as_i64().unwrap() as u32;
-                                let irating = driver["IRating"].as_i64().unwrap() as u32;
+                            let drivers = session["DriverInfo"]["Drivers"].as_vec();
 
-                                if data.drivers.contains_key(&car_id) {
+                            match drivers {
+                                Some(drivers) => {
+                                    for driver in drivers {
+                                        let car_id = driver["CarIdx"]
+                                            .as_i64()
+                                            .ok_or_eyre("CarIdx not found")?
+                                            as u32;
+                                        let user_name = driver["UserName"]
+                                            .as_str()
+                                            .ok_or_eyre("UserName not found")?
+                                            .to_string();
+                                        let car_number = driver["CarNumber"]
+                                            .as_str()
+                                            .ok_or_eyre("CarNumber not found")?
+                                            .to_string();
+                                        let car_class_id = driver["CarClassID"]
+                                            .as_i64()
+                                            .ok_or_eyre("CarClassID not found")?
+                                            as u32;
+                                        let irating = driver["IRating"]
+                                            .as_i64()
+                                            .ok_or_eyre("IRating not found")?
+                                            as u32;
+
+                                        if data.drivers.contains_key(&car_id) {
+                                            continue;
+                                        }
+
+                                        if car_class_id != data.player_car_class {
+                                            continue;
+                                        }
+
+                                        let driver = Driver {
+                                            position: 0,
+                                            laps_completed: 0,
+                                            lap_dist_pct: 0.0,
+                                            total_completed: 0.0,
+                                            user_name,
+                                            car_number,
+                                            car_class_id,
+                                            irating,
+                                        };
+
+                                        data.drivers.insert(car_id, driver);
+                                    }
+                                }
+                                None => {
+                                    error!("No drivers found");
                                     continue;
                                 }
-
-                                if car_class_id != data.player_car_class {
-                                    continue;
-                                }
-
-                                let driver = Driver {
-                                    position: 0,
-                                    laps_completed: 0,
-                                    lap_dist_pct: 0.0,
-                                    total_completed: 0.0,
-                                    user_name,
-                                    car_number,
-                                    car_class_id,
-                                    irating,
-                                };
-
-                                data.drivers.insert(car_id, driver);
                             }
 
                             if !data.drivers.is_empty() {
