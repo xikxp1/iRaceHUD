@@ -7,6 +7,7 @@ use iracing_telem::{
     flags::Flags, Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME,
 };
 use log::{debug, error, info};
+use serde::Serialize;
 use serde_json::{json, Value};
 use std::{collections::HashMap, sync::OnceLock, time::Duration};
 use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
@@ -60,6 +61,12 @@ struct Emitter {
     events: HashMap<String, Value>,
     activation_time: Option<DateTime<Local>>,
     forced_emitter_duration: TimeDelta,
+}
+
+#[derive(Serialize)]
+struct Flag {
+    name: String,
+    color: String,
 }
 
 impl TelemetryData {
@@ -138,6 +145,15 @@ impl Emitter {
         }
         self.events.insert(event.to_string(), value);
         Ok(())
+    }
+}
+
+impl Flag {
+    fn new(name: &str, color: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            color: color.to_string(),
+        }
     }
 }
 
@@ -371,37 +387,52 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     Flags::from_bits_truncate(player_flags_value as u32);
 
                                 let flags = data.session_flags | data.player_flags;
-                                let mut flag_value: String = "".to_string();
+                                let mut flag_value = Flag::new("", "");
                                 if flags.contains(Flags::DISQUALIFY) {
-                                    flag_value = "DISQUALIFY".to_string();
+                                    flag_value.name = "DISQUALIFIED".to_string();
+                                    flag_value.color = "error-content".to_string();
                                 } else if flags.contains(Flags::RED) {
-                                    flag_value = "RED".to_string();
+                                    flag_value.name = "RED".to_string();
+                                    flag_value.color = "error".to_string();
                                 } else if flags.contains(Flags::BLACK) {
-                                    flag_value = "BLACK".to_string();
+                                    flag_value.name = "BLACK".to_string();
+                                    flag_value.color = "error-content".to_string();
                                 } else if flags.contains(Flags::CHECKERED) {
-                                    flag_value = "CHECKERED".to_string();
+                                    flag_value.name = "RACE FINISHED".to_string();
+                                    flag_value.color = "base-100".to_string();
                                 } else if flags.contains(Flags::REPAIR) {
-                                    flag_value = "REPAIR".to_string();
+                                    flag_value.name = "REPAIR".to_string();
+                                    flag_value.color = "error-content".to_string();
                                 } else if flags.contains(Flags::FURLED) {
-                                    flag_value = "FURLED".to_string();
-                                } else if flags.contains(Flags::CAUTION_WAVING) {
-                                    flag_value = "CAUTION_WAVING".to_string();
-                                } else if flags.contains(Flags::CAUTION) {
-                                    flag_value = "CAUTION".to_string();
-                                } else if flags.contains(Flags::YELLOW_WAVING) {
-                                    flag_value = "YELLOW_WAVING".to_string();
-                                } else if flags.contains(Flags::YELLOW) {
-                                    flag_value = "YELLOW".to_string();
+                                    flag_value.name = "ATTENTION!".to_string();
+                                    flag_value.color = "warning".to_string();
+                                } else if flags.contains(Flags::CAUTION_WAVING)
+                                    || flags.contains(Flags::CAUTION)
+                                {
+                                    flag_value.name = "CAUTION".to_string();
+                                    flag_value.color = "warning".to_string();
+                                } else if flags.contains(Flags::YELLOW_WAVING)
+                                    || flags.contains(Flags::YELLOW)
+                                {
+                                    if flags.contains(Flags::BLUE) {
+                                        flag_value.name = "BLUE+YELLOW".to_string();
+                                        flag_value.color = "info".to_string();
+                                    } else {
+                                        flag_value.name = "YELLOW".to_string();
+                                        flag_value.color = "warning".to_string();
+                                    }
                                 } else if flags.contains(Flags::BLUE) {
-                                    flag_value = "BLUE".to_string();
+                                    flag_value.name = "BLUE".to_string();
+                                    flag_value.color = "info".to_string();
                                 } else if flags.contains(Flags::WHITE) {
-                                    flag_value = "WHITE".to_string();
+                                    flag_value.name = "WHITE".to_string();
+                                    flag_value.color = "base-100".to_string();
                                 } else if flags.contains(Flags::GREEN_HELD)
                                     || flags.contains(Flags::GREEN)
                                 {
-                                    flag_value = "GREEN".to_string();
+                                    flag_value.name = "GREEN".to_string();
+                                    flag_value.color = "success".to_string();
                                 }
-
                                 emitter.emit("flag", json!(flag_value))?;
 
                                 // lap
