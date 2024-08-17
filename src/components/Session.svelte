@@ -1,7 +1,7 @@
 <script lang="ts">
     import { listen } from "@tauri-apps/api/event";
 
-    let stength_of_field = 1125; // TODO: get from telemetry
+    let stength_of_field = 0;
     let race_laps = 0;
     let laps_total = 0;
     let session_time = "--:--:--";

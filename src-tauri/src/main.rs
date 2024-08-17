@@ -6,11 +6,12 @@ use eyre::{eyre, OptionExt, Result};
 use iracing_telem::{Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME};
 use log::{debug, error, info};
 use serde_json::{json, Value};
-use std::{collections::HashMap, sync::OnceLock, time::Duration};
+use std::{collections::HashMap, f32::consts::LN_2, sync::OnceLock, time::Duration};
 use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
 use tauri_plugin_log::LogTarget;
 use yaml_rust2::YamlLoader;
 
+static BR1: f32 = 1600. / LN_2;
 static WINDOW: OnceLock<tauri::Window> = OnceLock::new();
 const SLOW_VAR_RESET_TICKS: u32 = 50;
 const FORCED_EMITTER_DURATION_SECS: i64 = 10;
@@ -30,6 +31,7 @@ struct TelemetryData {
     throttle: u32,
     position: u32,
     positions_total: u32,
+    strength_of_field: u32,
     session_time_total: Duration,
     laps_total: u32,
     incidents: u32,
@@ -75,6 +77,7 @@ impl TelemetryData {
             throttle: 0,
             position: 0,
             positions_total: 0,
+            strength_of_field: 0,
             session_time_total: Duration::new(0, 0),
             laps_total: 0,
             incidents: 0,
@@ -689,10 +692,22 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 }
                             }
 
+                            // positions_total
                             if !data.drivers.is_empty() {
                                 let positions_total = data.drivers.len() as u32;
                                 emitter.emit("positions_total", json!(positions_total))?;
                                 data.positions_total = positions_total;
+
+                                // strength_of_field
+                                let sum_of_exp = data
+                                    .drivers
+                                    .values()
+                                    .map(|driver| (-(driver.irating as f32) / BR1).exp())
+                                    .sum::<f32>();
+                                let strength_of_field =
+                                    (BR1 * (positions_total as f32 / sum_of_exp).ln()) as u32;
+                                emitter.emit("strength_of_field", json!(strength_of_field))?;
+                                data.strength_of_field = strength_of_field;
                             }
 
                             data.session_info_update = session_info_update;
