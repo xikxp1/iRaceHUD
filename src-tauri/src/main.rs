@@ -420,7 +420,7 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 emitter.emit("rpm", json!(rpm_value))?;
                                 data.rpm = rpm_value;
 
-                                // brake
+                                // telemetry (brake+throttle)
                                 let raw_brake_value: f32 = match s.value(&brake) {
                                     Ok(value) => value,
                                     Err(err) => {
@@ -429,10 +429,6 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     }
                                 };
                                 let brake_value = (raw_brake_value * 100.0).round() as u32;
-                                emitter.emit("brake", json!({"ts": data.session_time.as_secs_f64(), "value": brake_value}))?;
-                                data.brake = brake_value;
-
-                                // throttle
                                 let raw_throttle_value: f32 = match s.value(&throttle) {
                                     Ok(value) => value,
                                     Err(err) => {
@@ -441,9 +437,11 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     }
                                 };
                                 let throttle_value = (raw_throttle_value * 100.0).round() as u32;
-                                emitter.emit("throttle", json!({"ts": data.session_time.as_secs_f64(), "value": throttle_value}))?;
+                                emitter.emit("telemetry", json!({"ts": session_time_value.as_secs_f64(), "brake": brake_value, "throttle": throttle_value}))?;
+                                data.brake = brake_value;
                                 data.throttle = throttle_value;
 
+                                // positions+distance
                                 let lap_dist_pct: &[f32] = match s.value(&car_idx_lap_dist_pct) {
                                     Ok(value) => value,
                                     Err(err) => {

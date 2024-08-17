@@ -5,19 +5,16 @@
     import { onMount } from "svelte";
 
     let ctx;
-    let telemeteryCanvas: HTMLCanvasElement;
+    let telemetryCanvas: HTMLCanvasElement;
     let chart: Chart;
 
     let throttle = 0;
     let brake = 0;
 
-    let throttleData: number[] = [];
-    let brakeData: number[] = [];
-
     const maxPoints = 300;
 
-    let currentThrottlePoints = 0;
-    let currentBrakePoints = 0;
+    let throttleData = new Array(maxPoints).fill(0);
+    let brakeData = new Array(maxPoints).fill(0);
 
     const css = window.getComputedStyle(document.documentElement);
 
@@ -81,7 +78,7 @@
     };
 
     onMount(async () => {
-        ctx = telemeteryCanvas.getContext("2d")!;
+        ctx = telemetryCanvas.getContext("2d")!;
         chart = new Chart(ctx, {
             type: "line",
             data: telemetryData,
@@ -89,22 +86,17 @@
         });
     });
 
-    listen("throttle", (event) => {
-        let payload = event.payload as { ts: number; value: number };
-        throttle = payload.value;
+    listen("telemetry", (event) => {
+        let payload = event.payload as { ts: number; throttle: number; brake: number };
+        throttle = payload.throttle;
+        brake = payload.brake;
         throttleData.push(throttle);
-        currentThrottlePoints = throttleData.length;
+        brakeData.push(brake);
+        let currentThrottlePoints = throttleData.length;
+        let currentBrakePoints = brakeData.length;
         if (currentThrottlePoints > maxPoints) {
             throttleData.splice(0, currentThrottlePoints - maxPoints);
         }
-        chart.update("none");
-    });
-
-    listen("brake", (event) => {
-        let payload = event.payload as { ts: number; value: number };
-        brake = payload.value;
-        brakeData.push(brake);
-        currentBrakePoints = brakeData.length;
         if (currentBrakePoints > maxPoints) {
             brakeData.splice(0, currentBrakePoints - maxPoints);
         }
@@ -121,7 +113,7 @@
         >
             <div class="flex flex-col items-end justify-evenly w-[96%] h-[90%]">
                 <div class="flex flex-row w-[98%] h-[70%]">
-                    <canvas bind:this={telemeteryCanvas} id="telemetery_chart"
+                    <canvas bind:this={telemetryCanvas} id="telemetry_chart"
                     ></canvas>
                 </div>
                 <div class="flex flex-row w-[98%] h-[15%]"></div>
