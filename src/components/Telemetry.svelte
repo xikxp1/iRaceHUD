@@ -66,12 +66,12 @@
         datasets: [
             {
                 borderColor: throttleColor,
-                borderWidth: 1.5,
+                borderWidth: 2,
                 data: throttleData,
             },
             {
                 borderColor: brakeColor,
-                borderWidth: 1.5,
+                borderWidth: 2,
                 data: brakeData,
             },
         ],
@@ -116,7 +116,7 @@
                     <canvas bind:this={telemetryCanvas} id="telemetry_chart"
                     ></canvas>
                 </div>
-                <div class="flex flex-row w-[98%] h-[15%]"></div>
+                <div class="text-base-300 text-xs w-[98%] h-[15%]">5s</div>
             </div>
         </div>
         <div
@@ -127,7 +127,7 @@
             >
                 <ProgressBar
                     value={brake}
-                    cls="flex flex-col flex-nowrap justify-end w-1.5 h-[70%] rounded-full overflow-hidden outline outline-2 outline-offset-2 outline-primary"
+                    cls="flex flex-col flex-nowrap justify-end w-1.5 h-[70%] rounded-full overflow-hidden outline outline-2 outline-offset-2 outline-primary mt-[8px] mb-[4px]"
                     elem_cls="rounded-full overflow-hidden bg-error"
                 ></ProgressBar>
                 <div class="text-primary text-xs h-[15%]">{brake}</div>
@@ -137,7 +137,7 @@
             >
                 <ProgressBar
                     value={throttle}
-                    cls="flex flex-col flex-nowrap justify-end w-1.5 h-[70%] rounded-full overflow-hidden outline outline-2 outline-offset-2 outline-primary"
+                    cls="flex flex-col flex-nowrap justify-end w-1.5 h-[70%] rounded-full overflow-hidden outline outline-2 outline-offset-2 outline-primary mt-[8px] mb-[4px]"
                     elem_cls="rounded-full overflow-hidden bg-success"
                 ></ProgressBar>
                 <div class="text-primary text-xs h-[15%]">{throttle}</div>
