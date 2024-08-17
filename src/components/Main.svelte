@@ -14,6 +14,7 @@
     let incidents = 0;
     let incident_limit = 0;
 
+    let gear_indicator: HTMLDivElement;
     let rpm_incidator: HTMLProgressElement;
 
     listen("gear", (event) => {
@@ -36,15 +37,27 @@
         rpm = event.payload as number;
 
         if (rpm >= gear_blink_rpm) {
-            rpm_incidator.classList.remove("progress-accent");
+            gear_indicator.classList.remove("text-secondary");
+            gear_indicator.classList.remove("text-info");
+            gear_indicator.classList.add("text-error");
+
+            rpm_incidator.classList.remove("progress-secondary");
             rpm_incidator.classList.remove("progress-info");
             rpm_incidator.classList.add("progress-error");
         } else if (rpm >= gear_shift_rpm) {
-            rpm_incidator.classList.remove("progress-accent");
+            gear_indicator.classList.remove("text-secondary");
+            gear_indicator.classList.add("text-info");
+            gear_indicator.classList.remove("text-error");
+
+            rpm_incidator.classList.remove("progress-secondary");
             rpm_incidator.classList.add("progress-info");
             rpm_incidator.classList.remove("progress-error");
         } else {
-            rpm_incidator.classList.add("progress-accent");
+            gear_indicator.classList.add("text-secondary");
+            gear_indicator.classList.remove("text-info");
+            gear_indicator.classList.remove("text-error");
+
+            rpm_incidator.classList.add("progress-secondary");
             rpm_incidator.classList.remove("progress-info");
             rpm_incidator.classList.remove("progress-error");
         }
@@ -76,13 +89,16 @@
 </script>
 
 <div class="flex flex-row items-center justify-center opacity-80">
-    <div
-        class="join w-[17%] bg-primary-content"
-    >
+    <div class="join w-[17%] bg-primary-content">
         <div
             class="join-item flex flex-col items-center justify-center rounded-md w-1/4"
         >
-            <div class="text-secondary text-5xl font-square">{gear}</div>
+            <div
+                bind:this={gear_indicator}
+                class="text-secondary text-5xl font-square"
+            >
+                {gear}
+            </div>
             <div class="text-primary text-2xl">{speed}</div>
         </div>
         <div
@@ -90,7 +106,7 @@
         >
             <progress
                 bind:this={rpm_incidator}
-                class="progress progress-accent w-5/6 outline outline-2 outline-offset-2 outline-primary"
+                class="progress progress-secondary w-5/6 outline outline-2 outline-offset-2 outline-primary"
                 value={rpm}
                 max={gear_blink_rpm}
             ></progress>
