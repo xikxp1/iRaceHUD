@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-    font-family: RobotoCondensed;
+    font-family: iracing;
 
     -webkit-touch-callout: none;
     /* iOS Safari */
@@ -26,7 +26,13 @@
 }
 
 @font-face {
-    font-family: "RobotoCondensed";
+    font-family: "iracing";
     font-display: swap;
-    src: url("/fonts/RobotoCondensed-Regular.ttf");
+    src: url("/fonts/iracing.otf");
+}
+
+@font-face {
+    font-family: "iracing-square";
+    font-display: swap;
+    src: url("/fonts/iracing-square.ttf");
 }

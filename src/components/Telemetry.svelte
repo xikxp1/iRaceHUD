@@ -106,7 +106,7 @@
 
 <div class="flex flex-row items-center justify-center opacity-80">
     <div
-        class="join w-[14%] outline-1 bg-accent-content outline-dotted outline-accent"
+        class="join w-[14%] bg-primary-content"
     >
         <div
             class="join-item flex flex-row items-center justify-center rounded-md w-[82%] h-20"
@@ -130,7 +130,7 @@
                     cls="flex flex-col flex-nowrap justify-end w-1.5 h-[70%] rounded-full overflow-hidden outline outline-2 outline-offset-2 outline-primary"
                     elem_cls="rounded-full overflow-hidden bg-error"
                 ></ProgressBar>
-                <div class="text-primary text-sm h-[15%]">{brake}</div>
+                <div class="text-primary text-xs h-[15%]">{brake}</div>
             </div>
             <div
                 class="flex flex-col items-center justify-evenly w-2/5 h-[90%]"
@@ -140,7 +140,7 @@
                     cls="flex flex-col flex-nowrap justify-end w-1.5 h-[70%] rounded-full overflow-hidden outline outline-2 outline-offset-2 outline-primary"
                     elem_cls="rounded-full overflow-hidden bg-success"
                 ></ProgressBar>
-                <div class="text-primary text-sm h-[15%]">{throttle}</div>
+                <div class="text-primary text-xs h-[15%]">{throttle}</div>
             </div>
         </div>
     </div>

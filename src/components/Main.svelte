@@ -77,12 +77,12 @@
 
 <div class="flex flex-row items-center justify-center opacity-80">
     <div
-        class="join w-[17%] bg-accent-content outline-1 outline-dotted outline-accent"
+        class="join w-[17%] bg-primary-content"
     >
         <div
             class="join-item flex flex-col items-center justify-center rounded-md w-1/4"
         >
-            <div class="text-primary text-6xl">{gear}</div>
+            <div class="text-secondary text-5xl font-square">{gear}</div>
             <div class="text-primary text-2xl">{speed}</div>
         </div>
         <div
@@ -96,28 +96,28 @@
             ></progress>
             <div class="flex flex-row items-center justify-evenly">
                 <div class="flex flex-col items-center justify-evenly">
-                    <div class="text-primary text-xl">
+                    <div class="text-primary">
                         {lap}{#if laps_total > 0}/{laps_total}{/if}
                     </div>
-                    <div class="text-accent text-xs">lap</div>
+                    <div class="text-secondary text-xs">lap</div>
                 </div>
                 <div class="divider divider-horizontal divider-primary"></div>
                 <div class="flex flex-col items-center justify-evenly">
-                    <div class="text-primary text-xl">
+                    <div class="text-primary">
                         {#if position > 0}
                             {position}{#if positions_total > 0}/{positions_total}{/if}
                         {:else}
                             -
                         {/if}
                     </div>
-                    <div class="text-accent text-xs">pos</div>
+                    <div class="text-secondary text-xs">pos</div>
                 </div>
                 <div class="divider divider-horizontal divider-primary"></div>
                 <div class="flex flex-col items-center justify-evenly">
-                    <div class="text-primary text-xl">
+                    <div class="text-primary">
                         {incidents}{#if incident_limit > 0}/{incident_limit}{/if}
                     </div>
-                    <div class="text-accent text-xs">inc</div>
+                    <div class="text-secondary text-xs">inc</div>
                 </div>
             </div>
         </div>

@@ -35,38 +35,40 @@
 
 <div class="flex flex-row items-center justify-center opacity-80">
     <div
-        class="flex flex-row w-[370px] items-center justify-center rounded-md bg-accent-content outline-1 outline-dotted outline-accent"
+        class="flex flex-row w-[400px] items-center justify-center rounded-md bg-primary-content"
     >
         <div class="flex flex-col w-[40px] items-center justify-center">
-            <div class="text-primary text-xl">{stength_of_field}</div>
-            <div class="text-accent text-xs">SoF</div>
+            <div class="text-primary">
+                {stength_of_field}
+            </div>
+            <div class="text-secondary text-xs">SoF</div>
         </div>
         <div class="divider divider-horizontal divider-primary w-[2px]"></div>
         <div class="flex flex-col w-[60px] items-center justify-center">
-            <div class="text-primary text-xl">
+            <div class="text-primary">
                 {race_laps}{#if laps_total > 0}/{laps_total}{/if}
             </div>
-            <div class="text-accent text-xs">race lap</div>
+            <div class="text-secondary text-xs">race lap</div>
         </div>
         <div class="divider divider-horizontal divider-primary w-[2px]"></div>
-        <div class="flex flex-col w-[100px] items-center justify-center">
-            <div class="text-primary text-xl">
+        <div class="flex flex-col w-[120px] items-center justify-center">
+            <div class="text-primary">
                 {session_time}
             </div>
             {#if laps_total == 0 && session_time_total != ""}
-                <div class="text-accent text-xs">
+                <div class="text-secondary text-xs">
                     of {session_time_total} session time
                 </div>
             {:else}
-                <div class="text-accent text-xs">session time</div>
+                <div class="text-secondary text-xs">session time</div>
             {/if}
         </div>
         <div class="divider divider-horizontal divider-primary w-[2px]"></div>
         <div class="flex flex-col w-[40px] items-center justify-center">
-            <div class="text-primary text-xl">
+            <div class="text-primary">
                 {current_time}
             </div>
-            <div class="text-accent text-xs">time</div>
+            <div class="text-secondary text-xs">time</div>
         </div>
     </div>
 </div>
