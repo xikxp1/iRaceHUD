@@ -4,9 +4,9 @@
     let stength_of_field = 1125; // TODO: get from telemetry
     let race_laps = 0;
     let laps_total = 0;
-    let session_time = "00:00:00";
+    let session_time = "--:--:--";
     let session_time_total = "";
-    let current_time = "00:00";
+    let current_time = "--:--";
 
     listen("strength_of_field", (event) => {
         stength_of_field = event.payload as number;
