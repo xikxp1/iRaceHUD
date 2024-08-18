@@ -372,15 +372,22 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 };
                                 let lap_time_value =
                                     Duration::from_secs_f32(raw_lap_current_lap_time_value);
-                                emitter.emit(
-                                    "lap_time",
-                                    json!(format!(
-                                        "{}:{:02}.{:03}",
-                                        lap_time_value.as_secs() / 60,
-                                        lap_time_value.as_secs() % 60,
-                                        lap_time_value.subsec_millis()
-                                    )),
-                                )?;
+                                match lap_time_value.as_secs() {
+                                    0 => {
+                                        emitter.emit("lap_time", json!("–:––.–––"))?;
+                                    }
+                                    value => {
+                                        emitter.emit(
+                                            "lap_time",
+                                            json!(format!(
+                                                "{}:{:02}.{:03}",
+                                                value / 60,
+                                                value % 60,
+                                                lap_time_value.subsec_millis()
+                                            )),
+                                        )?;
+                                    }
+                                }
                                 data.lap_time = lap_time_value;
 
                                 // gear

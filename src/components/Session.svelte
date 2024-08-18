@@ -4,9 +4,9 @@
     let stength_of_field = 0;
     let race_laps = 0;
     let laps_total = 0;
-    let session_time = "--:--:--";
+    let session_time = "––:––:––";
     let session_time_total = "";
-    let current_time = "--:--";
+    let current_time = "––:––";
 
     listen("strength_of_field", (event) => {
         stength_of_field = event.payload as number;

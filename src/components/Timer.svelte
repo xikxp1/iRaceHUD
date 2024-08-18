@@ -1,7 +1,7 @@
 <script lang="ts">
     import { listen } from "@tauri-apps/api/event";
 
-    let lap_time: string = "-:--.---";
+    let lap_time: string = "–:––.––";
 
     listen("lap_time", (event) => {
         lap_time = event.payload as string;

@@ -116,7 +116,7 @@
                     <canvas bind:this={telemetryCanvas} id="telemetry_chart"
                     ></canvas>
                 </div>
-                <div class="text-base-300 text-xs w-[98%] h-[15%]">5s</div>
+                <div class="text-base-300 text-xs w-[98%] h-[15%]"></div>
             </div>
         </div>
         <div
