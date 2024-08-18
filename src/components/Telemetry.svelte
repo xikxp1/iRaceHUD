@@ -1,8 +1,8 @@
 <script lang="ts">
-    import ProgressBar from "./ProgressBar.svelte";
     import { Chart } from "chart.js/auto";
     import { listen } from "@tauri-apps/api/event";
     import { onMount } from "svelte";
+    import ProgressBar from "./ProgressBar.svelte";
 
     let ctx;
     let telemetryCanvas: HTMLCanvasElement;
