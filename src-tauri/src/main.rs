@@ -226,6 +226,12 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                     let session_time = s
                         .find_var("SessionTime")
                         .ok_or_eyre("SessionTime variable not found")?;
+                    let session_time_remain = s
+                        .find_var("SessionTimeRemain")
+                        .ok_or_eyre("SessionTimeRemain variable not found")?;
+                    let session_laps_remain_ex = s
+                        .find_var("SessionLapsRemainEx")
+                        .ok_or_eyre("SessionLapsRemainEx variable not found")?;
                     let lap_current_lap_time = s
                         .find_var("LapCurrentLapTime")
                         .ok_or_eyre("LapCurrentLapTime variable not found")?;
@@ -412,6 +418,64 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     }
                                 }
                                 data.lap_time = lap_time_value;
+
+                                // to go
+                                let to_go = match data.laps_total {
+                                    0 => {
+                                        let raw_session_time_remain_value: f64 =
+                                            match s.value(&session_time_remain) {
+                                                Ok(value) => value,
+                                                Err(err) => {
+                                                    error!(
+                                                    "Failed to get SessionTimeRemain value: {:?}",
+                                                    err
+                                                );
+                                                    continue;
+                                                }
+                                            };
+                                        if raw_session_time_remain_value <= 0. {
+                                            "Last lap".to_string()
+                                        } else {
+                                            let session_time_remain_value =
+                                                Duration::try_from_secs_f64(
+                                                    raw_session_time_remain_value,
+                                                )?;
+                                            let ss = session_time_remain_value.as_secs();
+                                            let (hh, ss) = (ss / 3600, ss % 3600);
+                                            let (mm, ss) = (ss / 60, ss % 60);
+                                            if hh > 0 {
+                                                format!("{}:{:02}:{:02} left", hh, mm, ss)
+                                            } else {
+                                                format!("{:02}:{:02 } left", mm, ss)
+                                            }
+                                        }
+                                    }
+                                    _ => {
+                                        let raw_session_laps_remain_ex_value: i32 =
+                                            match s.value(&session_laps_remain_ex) {
+                                                Ok(value) => value,
+                                                Err(err) => {
+                                                    error!(
+                                                    "Failed to get SessionLapsRemainEx value: {:?}",
+                                                    err
+                                                );
+                                                    continue;
+                                                }
+                                            };
+
+                                        match raw_session_laps_remain_ex_value {
+                                            0 => "".to_string(),
+                                            1 => "Last lap".to_string(),
+                                            _ => {
+                                                format!(
+                                                    "{} laps left",
+                                                    raw_session_laps_remain_ex_value
+                                                )
+                                            }
+                                        }
+                                    }
+                                };
+                                emitter.emit("to_go", json!(to_go))?;
 
                                 // gear
                                 let raw_gear_value: i32 = match s.value(&gear) {
