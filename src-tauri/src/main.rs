@@ -62,6 +62,11 @@ struct Emitter {
     forced_emitter_duration: TimeDelta,
 }
 
+struct SignedDuration {
+    is_positive: bool,
+    duration: Duration,
+}
+
 impl TelemetryData {
     fn new() -> Self {
         Self {
@@ -137,6 +142,22 @@ impl Emitter {
         }
         self.events.insert(event.to_string(), value);
         Ok(())
+    }
+}
+
+impl SignedDuration {
+    fn from_secs_f64(secs: f64) -> Self {
+        Self {
+            is_positive: secs >= 0.0,
+            duration: Duration::from_secs_f64(secs.abs()),
+        }
+    }
+
+    fn from_secs_f32(secs: f32) -> Self {
+        Self {
+            is_positive: secs >= 0.0,
+            duration: Duration::from_secs_f32(secs.abs()),
+        }
     }
 }
 
