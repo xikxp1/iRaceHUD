@@ -13,6 +13,8 @@ use yaml_rust2::YamlLoader;
 
 static BR1: f32 = 1600. / LN_2;
 static WINDOW: OnceLock<tauri::Window> = OnceLock::new();
+const WAIT_FOR_SESSION_SECS: u64 = 600;
+const SESSION_UPDATE_PERIOD_MILLIS: u64 = 25;
 const SLOW_VAR_RESET_TICKS: u32 = 50;
 const FORCED_EMITTER_DURATION_SECS: i64 = 10;
 
@@ -64,12 +66,12 @@ impl TelemetryData {
     fn new() -> Self {
         Self {
             active: false,
-            session_time: Duration::new(0, 0),
+            session_time: Duration::ZERO,
             player_car_id: 0,
             player_car_class: 0,
             lap: 0,
             race_laps: 0,
-            lap_time: Duration::new(0, 0),
+            lap_time: Duration::ZERO,
             gear: String::from("N"),
             speed: 0,
             rpm: 0,
@@ -78,7 +80,7 @@ impl TelemetryData {
             position: 0,
             positions_total: 0,
             strength_of_field: 0,
-            session_time_total: Duration::new(0, 0),
+            session_time_total: Duration::ZERO,
             laps_total: 0,
             incidents: 0,
             incident_limit: 0,
@@ -187,7 +189,7 @@ fn connect(mut emitter: Emitter) -> Result<()> {
     loop {
         info!("Start iRacing");
         unsafe {
-            match c.wait_for_session(Duration::new(600, 0)) {
+            match c.wait_for_session(Duration::from_secs(WAIT_FOR_SESSION_SECS)) {
                 None => {
                     info!("Remember to start iRacing!");
                     return Ok(());
@@ -249,7 +251,7 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                         .ok_or_eyre("CarIdxLap variable not found")?;
                     let mut slow_var_ticks: u32 = SLOW_VAR_RESET_TICKS;
                     loop {
-                        match s.wait_for_data(Duration::from_millis(25)) {
+                        match s.wait_for_data(Duration::from_millis(SESSION_UPDATE_PERIOD_MILLIS)) {
                             DataUpdateResult::Updated => {
                                 slow_var_ticks += 1;
 
