@@ -104,7 +104,7 @@
     });
 </script>
 
-<div class="flex flex-row items-center justify-center opacity-80">
+<div class="flex flex-row items-center justify-center opacity-75">
     <div
         class="join w-[14%] bg-primary-content"
     >

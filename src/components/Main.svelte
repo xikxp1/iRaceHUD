@@ -87,7 +87,7 @@
     });
 </script>
 
-<div class="flex flex-row items-center justify-center opacity-80">
+<div class="flex flex-row items-center justify-center opacity-75">
     <div class="join w-[17%] bg-primary-content">
         <div
             class="join-item flex flex-col items-center justify-center rounded-md w-1/4"

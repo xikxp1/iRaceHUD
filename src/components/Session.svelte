@@ -33,7 +33,7 @@
     });
 </script>
 
-<div class="flex flex-row items-center justify-center opacity-80">
+<div class="flex flex-row items-center justify-center opacity-75">
     <div
         class="flex flex-row w-[400px] items-center justify-center rounded-md bg-primary-content"
     >
