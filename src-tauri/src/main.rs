@@ -159,6 +159,22 @@ impl SignedDuration {
             duration: Duration::from_secs_f32(secs.abs()),
         }
     }
+
+    fn as_secs_f32(&self) -> f32 {
+        if self.is_positive {
+            self.duration.as_secs_f32()
+        } else {
+            -self.duration.as_secs_f32()
+        }
+    }
+
+    fn as_secs_f64(&self) -> f64 {
+        if self.is_positive {
+            self.duration.as_secs_f64()
+        } else {
+            -self.duration.as_secs_f64()
+        }
+    }
 }
 
 fn main() {
