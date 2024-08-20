@@ -285,21 +285,14 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 let current_time = Local::now();
 
                                 // active
-                                let raw_is_on_track_value: bool = match s.value(&is_on_track) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get IsOnTrack value: {:?}", err);
-                                        continue;
-                                    }
-                                };
-                                let raw_is_on_track_car_value: bool =
-                                    match s.value(&is_on_track_car) {
-                                        Ok(value) => value,
-                                        Err(err) => {
-                                            error!("Failed to get IsOnTrackCar value: {:?}", err);
-                                            continue;
-                                        }
-                                    };
+                                let raw_is_on_track_value =
+                                    s.var_value(&is_on_track).as_bool().map_err(|err| {
+                                        eyre!("Failed to get IsOnTrack value: {:?}", err)
+                                    })?;
+                                let raw_is_on_track_car_value =
+                                    s.var_value(&is_on_track_car).as_bool().map_err(|err| {
+                                        eyre!("Failed to get IsOnTrackCar value: {:?}", err)
+                                    })?;
 
                                 let active = raw_is_on_track_value && raw_is_on_track_car_value;
                                 emitter.emit("active", json!(active))?;
@@ -327,13 +320,10 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     .emit("current_time", json!(current_time_value.to_string()))?;
 
                                 // session_time
-                                let raw_session_time_value: f64 = match s.value(&session_time) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get SessionTime value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let raw_session_time_value =
+                                    s.var_value(&session_time).as_f64().map_err(|err| {
+                                        eyre!("Failed to get SessionTime value: {:?}", err)
+                                    })?;
                                 let session_time_value =
                                     Duration::from_secs_f64(raw_session_time_value);
                                 let ss = session_time_value.as_secs();
@@ -346,59 +336,42 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 data.session_time = session_time_value;
 
                                 // player_car_idx
-                                let player_car_idx_value: i32 = match s.value(&player_car_idx) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get PlayerCarIdx value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let player_car_idx_value =
+                                    s.var_value(&player_car_idx).as_i32().map_err(|err| {
+                                        eyre!("Failed to get PlayerCarIdx value: {:?}", err)
+                                    })?;
                                 data.player_car_id = player_car_idx_value as u32;
 
                                 // player_car_class
-                                let player_car_class_value: i32 = match s.value(&player_car_class) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get PlayerCarClass value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let player_car_class_value =
+                                    s.var_value(&player_car_class).as_i32().map_err(|err| {
+                                        eyre!("Failed to get PlayerCarClass value: {:?}", err)
+                                    })?;
                                 data.player_car_class = player_car_class_value as u32;
 
                                 // lap
-                                let raw_lap_value: i32 = match s.value(&lap) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get Lap value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let raw_lap_value = s
+                                    .var_value(&lap)
+                                    .as_i32()
+                                    .map_err(|err| eyre!("Failed to get Lap value: {:?}", err))?;
                                 let lap_value = raw_lap_value as u32;
                                 emitter.emit("lap", json!(lap_value))?;
                                 data.lap = lap_value;
 
                                 //race_laps
-                                let raw_race_laps_value: i32 = match s.value(&race_laps) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get RaceLaps value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let raw_race_laps_value =
+                                    s.var_value(&race_laps).as_i32().map_err(|err| {
+                                        eyre!("Failed to get RaceLaps value: {:?}", err)
+                                    })?;
                                 let race_laps_value = raw_race_laps_value as u32;
                                 emitter.emit("race_laps", json!(race_laps_value))?;
                                 data.race_laps = race_laps_value;
 
                                 // lap_time
-                                let raw_lap_current_lap_time_value: f32 = match s
-                                    .value(&lap_current_lap_time)
-                                {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get LapCurrentLapTime value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let raw_lap_current_lap_time_value =
+                                    s.var_value(&lap_current_lap_time).as_f32().map_err(|err| {
+                                        eyre!("Failed to get LapCurrentLapTime value: {:?}", err)
+                                    })?;
                                 let lap_time_value =
                                     Duration::from_secs_f32(raw_lap_current_lap_time_value);
                                 match lap_time_value.as_secs() {
@@ -422,17 +395,15 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 // to go
                                 let to_go = match data.laps_total {
                                     0 => {
-                                        let raw_session_time_remain_value: f64 =
-                                            match s.value(&session_time_remain) {
-                                                Ok(value) => value,
-                                                Err(err) => {
-                                                    error!(
+                                        let raw_session_time_remain_value = s
+                                            .var_value(&session_time_remain)
+                                            .as_f64()
+                                            .map_err(|err| {
+                                                eyre!(
                                                     "Failed to get SessionTimeRemain value: {:?}",
                                                     err
-                                                );
-                                                    continue;
-                                                }
-                                            };
+                                                )
+                                            })?;
                                         if raw_session_time_remain_value <= 0. {
                                             "Last lap".to_string()
                                         } else {
@@ -451,17 +422,15 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         }
                                     }
                                     _ => {
-                                        let raw_session_laps_remain_ex_value: i32 =
-                                            match s.value(&session_laps_remain_ex) {
-                                                Ok(value) => value,
-                                                Err(err) => {
-                                                    error!(
+                                        let raw_session_laps_remain_ex_value = s
+                                            .var_value(&session_laps_remain_ex)
+                                            .as_i32()
+                                            .map_err(|err| {
+                                                eyre!(
                                                     "Failed to get SessionLapsRemainEx value: {:?}",
                                                     err
-                                                );
-                                                    continue;
-                                                }
-                                            };
+                                                )
+                                            })?;
 
                                         match raw_session_laps_remain_ex_value {
                                             0 => "".to_string(),
@@ -478,13 +447,10 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 emitter.emit("to_go", json!(to_go))?;
 
                                 // gear
-                                let raw_gear_value: i32 = match s.value(&gear) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get Gear value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let raw_gear_value = s
+                                    .var_value(&gear)
+                                    .as_i32()
+                                    .map_err(|err| eyre!("Failed to get Gear value: {:?}", err))?;
                                 let gear_value = match raw_gear_value {
                                     -1 => String::from("R"),
                                     0 => String::from("N"),
@@ -494,74 +460,57 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 data.gear = gear_value;
 
                                 // speed
-                                let raw_speed_value: f32 = match s.value(&speed) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get Speed value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let raw_speed_value = s
+                                    .var_value(&speed)
+                                    .as_f32()
+                                    .map_err(|err| eyre!("Failed to get Speed value: {:?}", err))?;
                                 let speed_value = (raw_speed_value * 3.6).round() as u32;
                                 emitter.emit("speed", json!(speed_value))?;
                                 data.speed = speed_value;
 
                                 // rpm
-                                let raw_rpm_value: f32 = match s.value(&rpm) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get RPM value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let raw_rpm_value = s
+                                    .var_value(&rpm)
+                                    .as_f32()
+                                    .map_err(|err| eyre!("Failed to get RPM value: {:?}", err))?;
                                 let rpm_value = raw_rpm_value.round() as u32;
                                 emitter.emit("rpm", json!(rpm_value))?;
                                 data.rpm = rpm_value;
 
                                 // telemetry (brake+throttle)
-                                let raw_brake_value: f32 = match s.value(&brake) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get Brake value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let raw_brake_value = s
+                                    .var_value(&brake)
+                                    .as_f32()
+                                    .map_err(|err| eyre!("Failed to get Brake value: {:?}", err))?;
                                 let brake_value = (raw_brake_value * 100.0).round() as u32;
-                                let raw_throttle_value: f32 = match s.value(&throttle) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get Throttle value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let raw_throttle_value =
+                                    s.var_value(&throttle).as_f32().map_err(|err| {
+                                        eyre!("Failed to get Throttle value: {:?}", err)
+                                    })?;
                                 let throttle_value = (raw_throttle_value * 100.0).round() as u32;
                                 emitter.emit("telemetry", json!({"ts": session_time_value.as_secs_f64(), "brake": brake_value, "throttle": throttle_value}))?;
                                 data.brake = brake_value;
                                 data.throttle = throttle_value;
 
                                 // positions+distance
-                                let lap_dist_pct: &[f32] = match s.value(&car_idx_lap_dist_pct) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get CarIdxLapDistPct value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let lap_dist_pct = s
+                                    .var_value(&car_idx_lap_dist_pct)
+                                    .as_f32s()
+                                    .map_err(|err| {
+                                        eyre!("Failed to get CarIdxLapDistPct value: {:?}", err)
+                                    })?;
 
-                                let laps_completed: &[i32] = match s.value(&car_idx_lap_completed) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get CarIdxLapCompleted value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let laps_completed = s
+                                    .var_value(&car_idx_lap_completed)
+                                    .as_i32s()
+                                    .map_err(|err| {
+                                        eyre!("Failed to get CarIdxLapCompleted value: {:?}", err)
+                                    })?;
 
-                                let laps_started: &[i32] = match s.value(&car_idx_lap) {
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get CarIdxLap value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let laps_started =
+                                    s.var_value(&car_idx_lap).as_i32s().map_err(|err| {
+                                        eyre!("Failed to get CarIdxLap value: {:?}", err)
+                                    })?;
 
                                 for (car_id, driver) in data.drivers.iter_mut() {
                                     let lap_dist_pct_value = lap_dist_pct[*car_id as usize];
@@ -609,16 +558,19 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 // slow vars
 
                                 // session_time_total
-                                let raw_session_time_total_value: f64 = match s
-                                    .value(&session_time_total)
-                                {
-                                    Ok(value) if value >= IRSDK_UNLIMITED_TIME => 0.0,
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get SessionTimeTotal value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let raw_session_time_total_value = s
+                                    .var_value(&session_time_total)
+                                    .as_f64()
+                                    .map(|value| {
+                                        if value >= IRSDK_UNLIMITED_TIME {
+                                            0.
+                                        } else {
+                                            value
+                                        }
+                                    })
+                                    .map_err(|err| {
+                                        eyre!("Failed to get SessionTimeTotal value: {:?}", err)
+                                    })?;
                                 let session_time_total_value =
                                     Duration::from_secs_f64(raw_session_time_total_value);
                                 emitter.emit(
@@ -629,65 +581,56 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 data.session_time_total = session_time_total_value;
 
                                 // session_laps_total
-                                let raw_session_laps_total_value: i32 = match s
-                                    .value(&session_laps_total)
-                                {
-                                    Ok(value) if value >= IRSDK_UNLIMITED_LAPS => 0,
-                                    Ok(value) => value,
-                                    Err(err) => {
-                                        error!("Failed to get SessionLapsTotal value: {:?}", err);
-                                        continue;
-                                    }
-                                };
+                                let raw_session_laps_total_value: i32 = s
+                                    .var_value(&session_laps_total)
+                                    .as_i32()
+                                    .map(|value| {
+                                        if value >= IRSDK_UNLIMITED_LAPS {
+                                            0
+                                        } else {
+                                            value
+                                        }
+                                    })
+                                    .map_err(|err| {
+                                        eyre!("Failed to get SessionLapsTotal value: {:?}", err)
+                                    })?;
                                 let laps_total_value = raw_session_laps_total_value as u32;
                                 emitter.emit("laps_total", json!(laps_total_value))?;
                                 data.laps_total = laps_total_value;
 
                                 // incidents
-                                let raw_incidents_value: i32 =
-                                    match s.value(&player_car_my_incident_count) {
-                                        Ok(value) => value,
-                                        Err(err) => {
-                                            error!(
+                                let raw_incidents_value = s
+                                    .var_value(&player_car_my_incident_count)
+                                    .as_i32()
+                                    .map_err(|err| {
+                                        eyre!(
                                             "Failed to get PlayerCarMyIncidentCount value: {:?}",
                                             err
-                                        );
-                                            continue;
-                                        }
-                                    };
+                                        )
+                                    })?;
                                 let incidents_value = raw_incidents_value as u32;
                                 emitter.emit("incidents", json!(incidents_value))?;
                                 data.incidents = incidents_value;
 
                                 // gear_shift_rpm
-                                let raw_player_car_sl_shift_rpm_value: f32 =
-                                    match s.value(&player_car_sl_shift_rpm) {
-                                        Ok(value) => value,
-                                        Err(err) => {
-                                            error!(
-                                                "Failed to get PlayerCarSLShiftRPM value: {:?}",
-                                                err
-                                            );
-                                            continue;
-                                        }
-                                    };
+                                let raw_player_car_sl_shift_rpm_value = s
+                                    .var_value(&player_car_sl_shift_rpm)
+                                    .as_f32()
+                                    .map_err(|err| {
+                                        eyre!("Failed to get PlayerCarSLShiftRPM value: {:?}", err)
+                                    })?;
                                 let gear_shift_rpm_value =
                                     raw_player_car_sl_shift_rpm_value.round() as u32;
                                 emitter.emit("gear_shift_rpm", json!(gear_shift_rpm_value))?;
                                 data.gear_shift_rpm = gear_shift_rpm_value;
 
                                 // gear_blink_rpm
-                                let raw_player_car_sl_blink_rpm_value: f32 =
-                                    match s.value(&player_car_sl_blink_rpm) {
-                                        Ok(value) => value,
-                                        Err(err) => {
-                                            error!(
-                                                "Failed to get PlayerCarSLBlinkRPM value: {:?}",
-                                                err
-                                            );
-                                            continue;
-                                        }
-                                    };
+                                let raw_player_car_sl_blink_rpm_value = s
+                                    .var_value(&player_car_sl_blink_rpm)
+                                    .as_f32()
+                                    .map_err(|err| {
+                                        eyre!("Failed to get PlayerCarSLBlinkRPM value: {:?}", err)
+                                    })?;
                                 let gear_blink_rpm_value =
                                     raw_player_car_sl_blink_rpm_value.round() as u32;
                                 emitter.emit("gear_blink_rpm", json!(gear_blink_rpm_value))?;
@@ -710,13 +653,7 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                         let session_info_update = s.session_info_update();
                         if data.session_info_update != session_info_update {
                             debug!("Session info updated");
-                            let session_info = match YamlLoader::load_from_str(&s.session_info()) {
-                                Ok(value) => value,
-                                Err(err) => {
-                                    error!("Failed to load session info: {:?}", err);
-                                    continue;
-                                }
-                            };
+                            let session_info = YamlLoader::load_from_str(&s.session_info())?;
                             let session = &session_info[0];
 
                             // incident_limit
