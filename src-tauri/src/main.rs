@@ -6,7 +6,7 @@ use eyre::{eyre, OptionExt, Result};
 use iracing_telem::{Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME};
 use log::{debug, error, info};
 use serde_json::{json, Value};
-use std::{collections::HashMap, f32::consts::LN_2, sync::OnceLock, time::Duration};
+use std::{cmp::min, collections::HashMap, f32::consts::LN_2, sync::OnceLock, time::Duration};
 use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
 use tauri_plugin_log::LogTarget;
 use yaml_rust2::YamlLoader;
@@ -26,6 +26,8 @@ struct TelemetryData {
     lap: u32,
     race_laps: u32,
     lap_time: Duration,
+    delta_last_time: SignedDuration,
+    delta_optimal_time: SignedDuration,
     gear: String,
     speed: u32,
     rpm: u32,
@@ -77,6 +79,8 @@ impl TelemetryData {
             lap: 0,
             race_laps: 0,
             lap_time: Duration::ZERO,
+            delta_last_time: SignedDuration::ZERO,
+            delta_optimal_time: SignedDuration::ZERO,
             gear: String::from("N"),
             speed: 0,
             rpm: 0,
@@ -146,6 +150,11 @@ impl Emitter {
 }
 
 impl SignedDuration {
+    const ZERO: SignedDuration = SignedDuration {
+        is_positive: true,
+        duration: Duration::ZERO,
+    };
+
     fn from_secs_f64(secs: f64) -> Self {
         Self {
             is_positive: secs >= 0.0,
@@ -177,6 +186,18 @@ impl SignedDuration {
     }
 }
 
+impl std::fmt::Debug for SignedDuration {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}{}.{:03}",
+            if self.is_positive { "+" } else { "-" },
+            self.duration.as_secs(),
+            self.duration.subsec_millis()
+        )
+    }
+}
+
 fn main() {
     let _ = color_eyre::install();
 
@@ -204,7 +225,7 @@ fn main() {
             let emitter = Emitter::new(TimeDelta::seconds(FORCED_EMITTER_DURATION_SECS));
 
             tauri::async_runtime::spawn(async move {
-                connect(emitter).map_err(|err| eyre!("Error while connecting: {:?}", err))
+                connect(emitter).expect("Error while connecting to iRacing");
             });
 
             Ok(())
@@ -251,6 +272,12 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                     let lap_current_lap_time = s
                         .find_var("LapCurrentLapTime")
                         .ok_or_eyre("LapCurrentLapTime variable not found")?;
+                    let lap_delta_to_optimal_lap = s
+                        .find_var("LapDeltaToOptimalLap")
+                        .ok_or_eyre("LapDeltaToSessionOptimalLap variable not found")?;
+                    let lap_delta_to_session_last_lap = s
+                        .find_var("LapDeltaToSessionLastlLap")
+                        .ok_or_eyre("LapDeltaToSessionLastlLap variable not found")?;
                     let gear = s.find_var("Gear").ok_or_eyre("Gear variable not found")?;
                     let speed = s.find_var("Speed").ok_or_eyre("Speed variable not found")?;
                     let rpm = s.find_var("RPM").ok_or_eyre("RPM variable not found")?;
@@ -390,23 +417,115 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     })?;
                                 let lap_time_value =
                                     Duration::from_secs_f32(raw_lap_current_lap_time_value);
-                                match lap_time_value.as_secs() {
-                                    0 => {
-                                        emitter.emit("lap_time", json!("–:––.–––"))?;
-                                    }
-                                    value => {
-                                        emitter.emit(
-                                            "lap_time",
-                                            json!(format!(
-                                                "{}:{:02}.{:03}",
-                                                value / 60,
-                                                value % 60,
-                                                lap_time_value.subsec_millis()
-                                            )),
-                                        )?;
-                                    }
-                                }
+                                emitter.emit(
+                                    "lap_time",
+                                    json!(format!(
+                                        "{}:{:02}.{:03}",
+                                        lap_time_value.as_secs() / 60,
+                                        lap_time_value.as_secs() % 60,
+                                        lap_time_value.subsec_millis()
+                                    )),
+                                )?;
                                 data.lap_time = lap_time_value;
+
+                                // delta_last_time
+                                let raw_lap_delta_to_session_last_lap_value = s
+                                    .var_value(&lap_delta_to_session_last_lap)
+                                    .as_f32()
+                                    .map_err(|err| {
+                                        eyre!(
+                                            "Failed to get LapDeltaToSessionLastlLap value: {:?}",
+                                            err
+                                        )
+                                    })?;
+                                let delta_last_time_value = SignedDuration::from_secs_f32(
+                                    raw_lap_delta_to_session_last_lap_value,
+                                );
+                                let delta_last_time_str = match delta_last_time_value.as_secs_f32()
+                                {
+                                    value if value >= 100.0 => "–".to_string(),
+                                    value if value <= -100.0 => "–".to_string(),
+                                    value if value >= 10.0 => {
+                                        format!(
+                                            "+{:02}.{:01}",
+                                            value as i32,
+                                            min((value.fract().abs() * 10.0).round() as i32, 9)
+                                        )
+                                    }
+                                    value if value <= -10.0 => {
+                                        format!(
+                                            "-{:02}.{:01}",
+                                            value.abs() as i32,
+                                            min((value.fract().abs() * 10.0).round() as i32, 9)
+                                        )
+                                    }
+                                    value if value > 0.0 => {
+                                        format!(
+                                            "+{:01}.{:02}",
+                                            value as i32,
+                                            min((value.fract().abs() * 100.0).round() as i32, 99)
+                                        )
+                                    }
+                                    value if value < 0.0 => {
+                                        format!(
+                                            "-{:01}.{:02}",
+                                            value.abs() as i32,
+                                            min((value.fract().abs() * 100.0).round() as i32, 99)
+                                        )
+                                    }
+                                    _ => "0.00".to_string(),
+                                };
+                                emitter.emit("delta_last_time", json!(delta_last_time_str))?;
+                                data.delta_last_time = delta_last_time_value;
+
+                                // delta_optimal_time
+                                let raw_lap_delta_to_optimal_lap_value = s
+                                    .var_value(&lap_delta_to_optimal_lap)
+                                    .as_f32()
+                                    .map_err(|err| {
+                                        eyre!("Failed to get LapDeltaToOptimalLap value: {:?}", err)
+                                    })?;
+                                let delta_optimal_time_value = SignedDuration::from_secs_f32(
+                                    raw_lap_delta_to_optimal_lap_value,
+                                );
+                                let delta_optimal_time_str = match delta_optimal_time_value
+                                    .as_secs_f32()
+                                {
+                                    value if value >= 100.0 => "–".to_string(),
+                                    value if value <= -100.0 => "–".to_string(),
+                                    value if value >= 10.0 => {
+                                        format!(
+                                            "+{:02}.{:01}",
+                                            value as i32,
+                                            min((value.fract().abs() * 10.0).round() as i32, 9)
+                                        )
+                                    }
+                                    value if value <= -10.0 => {
+                                        format!(
+                                            "-{:02}.{:01}",
+                                            value.abs() as i32,
+                                            min((value.fract().abs() * 10.0).round() as i32, 9)
+                                        )
+                                    }
+                                    value if value > 0.0 => {
+                                        format!(
+                                            "+{:01}.{:02}",
+                                            value as i32,
+                                            min((value.fract().abs() * 100.0).round() as i32, 99)
+                                        )
+                                    }
+                                    value if value < 0.0 => {
+                                        format!(
+                                            "-{:01}.{:02}",
+                                            value.abs() as i32,
+                                            min((value.fract().abs() * 100.0).round() as i32, 99)
+                                        )
+                                    }
+                                    _ => "0.00".to_string(),
+                                };
+                                emitter
+                                    .emit("delta_optimal_time", json!(delta_optimal_time_str))?;
+                                data.delta_optimal_time = delta_optimal_time_value;
 
                                 // to go
                                 let to_go = match data.laps_total {
