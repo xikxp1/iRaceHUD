@@ -527,8 +527,8 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     .emit("delta_optimal_time", json!(delta_optimal_time_str))?;
                                 data.delta_optimal_time = delta_optimal_time_value;
 
-                                // to go
-                                let to_go = match data.laps_total {
+                                // session_state
+                                let session_state = match data.laps_total {
                                     0 => {
                                         let raw_session_time_remain_value = s
                                             .var_value(&session_time_remain)
@@ -579,7 +579,7 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         }
                                     }
                                 };
-                                emitter.emit("to_go", json!(to_go))?;
+                                emitter.emit("session_state", json!(session_state))?;
 
                                 // gear
                                 let raw_gear_value = s
