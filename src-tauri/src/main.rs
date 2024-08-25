@@ -364,6 +364,91 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     continue;
                                 }
 
+                                // slow vars
+                                if slow_var_ticks >= SLOW_VAR_RESET_TICKS {
+
+                                    // session_time_total
+                                    let raw_session_time_total_value = s
+                                        .var_value(&session_time_total)
+                                        .as_f64()
+                                        .map(|value| {
+                                            if value >= IRSDK_UNLIMITED_TIME {
+                                                0.
+                                            } else {
+                                                value
+                                            }
+                                        })
+                                        .map_err(|err| {
+                                            eyre!("Failed to get SessionTimeTotal value: {:?}", err)
+                                        })?;
+                                    let session_time_total_value =
+                                        Duration::from_secs_f64(raw_session_time_total_value);
+                                    emitter.emit(
+                                        "session_time_total",
+                                        json!(humantime::format_duration(session_time_total_value)
+                                            .to_string()),
+                                    )?;
+                                    data.session_time_total = session_time_total_value;
+
+                                    // session_laps_total
+                                    let raw_session_laps_total_value: i32 = s
+                                        .var_value(&session_laps_total)
+                                        .as_i32()
+                                        .map(|value| {
+                                            if value >= IRSDK_UNLIMITED_LAPS {
+                                                0
+                                            } else {
+                                                value
+                                            }
+                                        })
+                                        .map_err(|err| {
+                                            eyre!("Failed to get SessionLapsTotal value: {:?}", err)
+                                        })?;
+                                    let laps_total_value = raw_session_laps_total_value as u32;
+                                    emitter.emit("laps_total", json!(laps_total_value))?;
+                                    data.laps_total = laps_total_value;
+
+                                    // incidents
+                                    let raw_incidents_value = s
+                                        .var_value(&player_car_my_incident_count)
+                                        .as_i32()
+                                        .map_err(|err| {
+                                            eyre!(
+                                                "Failed to get PlayerCarMyIncidentCount value: {:?}",
+                                                err
+                                            )
+                                        })?;
+                                    let incidents_value = raw_incidents_value as u32;
+                                    emitter.emit("incidents", json!(incidents_value))?;
+                                    data.incidents = incidents_value;
+
+                                    // gear_shift_rpm
+                                    let raw_player_car_sl_shift_rpm_value = s
+                                        .var_value(&player_car_sl_shift_rpm)
+                                        .as_f32()
+                                        .map_err(|err| {
+                                            eyre!("Failed to get PlayerCarSLShiftRPM value: {:?}", err)
+                                        })?;
+                                    let gear_shift_rpm_value =
+                                        raw_player_car_sl_shift_rpm_value.round() as u32;
+                                    emitter.emit("gear_shift_rpm", json!(gear_shift_rpm_value))?;
+                                    data.gear_shift_rpm = gear_shift_rpm_value;
+
+                                    // gear_blink_rpm
+                                    let raw_player_car_sl_blink_rpm_value = s
+                                        .var_value(&player_car_sl_blink_rpm)
+                                        .as_f32()
+                                        .map_err(|err| {
+                                            eyre!("Failed to get PlayerCarSLBlinkRPM value: {:?}", err)
+                                        })?;
+                                    let gear_blink_rpm_value =
+                                        raw_player_car_sl_blink_rpm_value.round() as u32;
+                                    emitter.emit("gear_blink_rpm", json!(gear_blink_rpm_value))?;
+                                    data.gear_blink_rpm = gear_blink_rpm_value;
+
+                                    slow_var_ticks = 0;
+                                }
+
                                 // current_time
                                 let current_time_value = current_time.format("%H:%M");
                                 emitter
@@ -713,93 +798,6 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     emitter.emit("position", json!(position))?;
                                     data.position = position;
                                 }
-
-                                if slow_var_ticks < SLOW_VAR_RESET_TICKS {
-                                    continue;
-                                }
-
-                                // slow vars
-
-                                // session_time_total
-                                let raw_session_time_total_value = s
-                                    .var_value(&session_time_total)
-                                    .as_f64()
-                                    .map(|value| {
-                                        if value >= IRSDK_UNLIMITED_TIME {
-                                            0.
-                                        } else {
-                                            value
-                                        }
-                                    })
-                                    .map_err(|err| {
-                                        eyre!("Failed to get SessionTimeTotal value: {:?}", err)
-                                    })?;
-                                let session_time_total_value =
-                                    Duration::from_secs_f64(raw_session_time_total_value);
-                                emitter.emit(
-                                    "session_time_total",
-                                    json!(humantime::format_duration(session_time_total_value)
-                                        .to_string()),
-                                )?;
-                                data.session_time_total = session_time_total_value;
-
-                                // session_laps_total
-                                let raw_session_laps_total_value: i32 = s
-                                    .var_value(&session_laps_total)
-                                    .as_i32()
-                                    .map(|value| {
-                                        if value >= IRSDK_UNLIMITED_LAPS {
-                                            0
-                                        } else {
-                                            value
-                                        }
-                                    })
-                                    .map_err(|err| {
-                                        eyre!("Failed to get SessionLapsTotal value: {:?}", err)
-                                    })?;
-                                let laps_total_value = raw_session_laps_total_value as u32;
-                                emitter.emit("laps_total", json!(laps_total_value))?;
-                                data.laps_total = laps_total_value;
-
-                                // incidents
-                                let raw_incidents_value = s
-                                    .var_value(&player_car_my_incident_count)
-                                    .as_i32()
-                                    .map_err(|err| {
-                                        eyre!(
-                                            "Failed to get PlayerCarMyIncidentCount value: {:?}",
-                                            err
-                                        )
-                                    })?;
-                                let incidents_value = raw_incidents_value as u32;
-                                emitter.emit("incidents", json!(incidents_value))?;
-                                data.incidents = incidents_value;
-
-                                // gear_shift_rpm
-                                let raw_player_car_sl_shift_rpm_value = s
-                                    .var_value(&player_car_sl_shift_rpm)
-                                    .as_f32()
-                                    .map_err(|err| {
-                                        eyre!("Failed to get PlayerCarSLShiftRPM value: {:?}", err)
-                                    })?;
-                                let gear_shift_rpm_value =
-                                    raw_player_car_sl_shift_rpm_value.round() as u32;
-                                emitter.emit("gear_shift_rpm", json!(gear_shift_rpm_value))?;
-                                data.gear_shift_rpm = gear_shift_rpm_value;
-
-                                // gear_blink_rpm
-                                let raw_player_car_sl_blink_rpm_value = s
-                                    .var_value(&player_car_sl_blink_rpm)
-                                    .as_f32()
-                                    .map_err(|err| {
-                                        eyre!("Failed to get PlayerCarSLBlinkRPM value: {:?}", err)
-                                    })?;
-                                let gear_blink_rpm_value =
-                                    raw_player_car_sl_blink_rpm_value.round() as u32;
-                                emitter.emit("gear_blink_rpm", json!(gear_blink_rpm_value))?;
-                                data.gear_blink_rpm = gear_blink_rpm_value;
-
-                                slow_var_ticks = 0;
                             }
                             DataUpdateResult::NoUpdate => {
                                 debug!("No update")
