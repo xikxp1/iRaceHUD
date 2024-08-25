@@ -5,6 +5,7 @@
   import Timer from "../components/Timer.svelte";
   import Session from "../components/Session.svelte";
   import Subtimer from "../components/SubTimer.svelte";
+  import Proximity from "../components/Proximity.svelte";
 
   let active: boolean = false;
 
@@ -49,6 +50,13 @@
       </div>
     </div>
   </div>
+  <div class="outer">
+    <div class="middle">
+      <div class="proximity">
+        <Proximity />
+      </div>
+    </div>
+  </div>
 {/if}
 
 <style>
@@ -77,7 +85,7 @@
   .telemetry {
     margin-left: auto;
     margin-right: auto;
-    margin-top: 454px;
+    margin-top: 445px;
     margin-bottom: auto;
     align-items: center;
   }
@@ -102,6 +110,14 @@
     margin-left: auto;
     margin-right: auto;
     margin-top: -295px;
+    margin-bottom: auto;
+    align-items: center;
+  }
+
+  .proximity {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: -135px;
     margin-bottom: auto;
     align-items: center;
   }

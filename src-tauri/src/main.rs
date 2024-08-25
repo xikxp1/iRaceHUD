@@ -3,7 +3,7 @@
 
 use chrono::{DateTime, Local, TimeDelta};
 use eyre::{eyre, OptionExt, Result};
-use iracing_telem::{Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME};
+use iracing_telem::{flags, Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME};
 use log::{debug, error, info};
 use serde_json::{json, Value};
 use std::{cmp::min, collections::HashMap, f32::consts::LN_2, sync::OnceLock, time::Duration};
@@ -33,6 +33,8 @@ struct TelemetryData {
     rpm: u32,
     brake: u32,
     throttle: u32,
+    is_left: bool,
+    is_right: bool,
     position: u32,
     positions_total: u32,
     strength_of_field: u32,
@@ -86,6 +88,8 @@ impl TelemetryData {
             rpm: 0,
             brake: 0,
             throttle: 0,
+            is_left: false,
+            is_right: false,
             position: 0,
             positions_total: 0,
             strength_of_field: 0,
@@ -319,6 +323,9 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                     let car_idx_lap = s
                         .find_var("CarIdxLap")
                         .ok_or_eyre("CarIdxLap variable not found")?;
+                    let car_left_right = s
+                        .find_var("CarLeftRight")
+                        .ok_or_eyre("CarLeftRight variable not found")?;
                     let mut slow_var_ticks: u32 = SLOW_VAR_RESET_TICKS;
                     loop {
                         match s.wait_for_data(Duration::from_millis(SESSION_UPDATE_PERIOD_MILLIS)) {
@@ -626,6 +633,27 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 emitter.emit("telemetry", json!({"ts": session_time_value.as_secs_f64(), "brake": brake_value, "throttle": throttle_value}))?;
                                 data.brake = brake_value;
                                 data.throttle = throttle_value;
+
+                                // proximity
+                                let raw_car_left_right_value: flags::CarLeftRight =
+                                    s.var_value(&car_left_right).try_into().map_err(|err| {
+                                        eyre!("Failed to get CarLeftRight value: {:?}", err)
+                                    })?;
+                                let (is_left, is_right) = match raw_car_left_right_value {
+                                    flags::CarLeftRight::Off => (false, false),
+                                    flags::CarLeftRight::Clear => (false, false),
+                                    flags::CarLeftRight::CarLeft => (true, false),
+                                    flags::CarLeftRight::CarRight => (false, true),
+                                    flags::CarLeftRight::CarLeftRight => (true, true),
+                                    flags::CarLeftRight::TwoCarsLeft => (true, false),
+                                    flags::CarLeftRight::TwoCarsRight => (false, true),
+                                };
+                                emitter.emit(
+                                    "proximity",
+                                    json!({"is_left": is_left, "is_right": is_right}),
+                                )?;
+                                data.is_left = is_left;
+                                data.is_right = is_right;
 
                                 // positions+distance
                                 let lap_dist_pct = s
