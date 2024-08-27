@@ -46,13 +46,23 @@ struct TelemetryData {
     gear_blink_rpm: u32,
     session_info_update: i32,
     drivers: HashMap<u32, Driver>,
+    driver_positions: Vec<u32>,
+    leader_car_id: u32,
+    car_class_est_lap_time: SignedDuration,
 }
 
+#[derive(Clone)]
 struct Driver {
     position: u32,
     laps_completed: u32,
     lap_dist_pct: f32,
     total_completed: f32,
+    last_lap_time: SignedDuration,
+    estimated: SignedDuration,
+    leader_gap_laps: i32,
+    leader_gap: SignedDuration,
+    player_gap_laps: i32,
+    player_gap: SignedDuration,
     user_name: String,
     car_number: String,
     car_class_id: u32,
@@ -66,6 +76,7 @@ struct Emitter {
     forced_emitter_duration: TimeDelta,
 }
 
+#[derive(Copy, Clone)]
 struct SignedDuration {
     is_positive: bool,
     duration: Duration,
@@ -101,6 +112,9 @@ impl TelemetryData {
             gear_blink_rpm: 0,
             session_info_update: 0,
             drivers: HashMap::new(),
+            driver_positions: Vec::new(),
+            leader_car_id: 0,
+            car_class_est_lap_time: SignedDuration::ZERO,
         }
     }
 }
@@ -181,6 +195,10 @@ impl SignedDuration {
         }
     }
 
+    fn as_abs_secs_f32(&self) -> f32 {
+        self.duration.as_secs_f32()
+    }
+
     fn as_secs_f64(&self) -> f64 {
         if self.is_positive {
             self.duration.as_secs_f64()
@@ -199,6 +217,65 @@ impl std::fmt::Debug for SignedDuration {
             self.duration.as_secs(),
             self.duration.subsec_millis()
         )
+    }
+}
+
+impl std::fmt::Display for SignedDuration {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}{}.{:03}",
+            if self.is_positive { "+" } else { "-" },
+            self.duration.as_secs(),
+            self.duration.subsec_millis()
+        )
+    }
+}
+
+impl std::ops::Add for SignedDuration {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let value = self.as_secs_f32() + rhs.as_secs_f32();
+        Self {
+            is_positive: value >= 0.0,
+            duration: Duration::from_secs_f32(value.abs()),
+        }
+    }
+}
+
+impl std::ops::Sub for SignedDuration {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let value = self.as_secs_f32() - rhs.as_secs_f32();
+        Self {
+            is_positive: value >= 0.0,
+            duration: Duration::from_secs_f32(value.abs()),
+        }
+    }
+}
+
+impl std::cmp::PartialEq for SignedDuration {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_secs_f32() == other.as_secs_f32()
+    }
+}
+
+impl std::ops::Neg for SignedDuration {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self {
+            is_positive: !self.is_positive,
+            duration: self.duration,
+        }
+    }
+}
+
+impl std::cmp::PartialOrd for SignedDuration {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.as_secs_f32().partial_cmp(&other.as_secs_f32())
     }
 }
 
@@ -326,6 +403,12 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                     let car_left_right = s
                         .find_var("CarLeftRight")
                         .ok_or_eyre("CarLeftRight variable not found")?;
+                    let car_idx_est_time = s
+                        .find_var("CarIdxEstTime")
+                        .ok_or_eyre("CarIdxEstTime variable not found")?;
+                    let car_idx_last_lap_time = s
+                        .find_var("CarIdxLastLapTime")
+                        .ok_or_eyre("CarIdxLastLapTime variable not found")?;
                     let mut slow_var_ticks: u32 = SLOW_VAR_RESET_TICKS;
                     loop {
                         match s.wait_for_data(Duration::from_millis(SESSION_UPDATE_PERIOD_MILLIS)) {
@@ -366,7 +449,6 @@ fn connect(mut emitter: Emitter) -> Result<()> {
 
                                 // slow vars
                                 if slow_var_ticks >= SLOW_VAR_RESET_TICKS {
-
                                     // session_time_total
                                     let raw_session_time_total_value = s
                                         .var_value(&session_time_total)
@@ -427,7 +509,10 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         .var_value(&player_car_sl_shift_rpm)
                                         .as_f32()
                                         .map_err(|err| {
-                                            eyre!("Failed to get PlayerCarSLShiftRPM value: {:?}", err)
+                                            eyre!(
+                                                "Failed to get PlayerCarSLShiftRPM value: {:?}",
+                                                err
+                                            )
                                         })?;
                                     let gear_shift_rpm_value =
                                         raw_player_car_sl_shift_rpm_value.round() as u32;
@@ -439,7 +524,10 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         .var_value(&player_car_sl_blink_rpm)
                                         .as_f32()
                                         .map_err(|err| {
-                                            eyre!("Failed to get PlayerCarSLBlinkRPM value: {:?}", err)
+                                            eyre!(
+                                                "Failed to get PlayerCarSLBlinkRPM value: {:?}",
+                                                err
+                                            )
                                         })?;
                                     let gear_blink_rpm_value =
                                         raw_player_car_sl_blink_rpm_value.round() as u32;
@@ -760,6 +848,18 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         eyre!("Failed to get CarIdxLap value: {:?}", err)
                                     })?;
 
+                                let car_idx_est_time_value =
+                                    s.var_value(&car_idx_est_time).as_f32s().map_err(|err| {
+                                        eyre!("Failed to get CarIdxEstTime value: {:?}", err)
+                                    })?;
+
+                                let car_idx_last_lap_time_value = s
+                                    .var_value(&car_idx_last_lap_time)
+                                    .as_f32s()
+                                    .map_err(|err| {
+                                        eyre!("Failed to get CarIdxLastLapTime value: {:?}", err)
+                                    })?;
+
                                 for (car_id, driver) in data.drivers.iter_mut() {
                                     let lap_dist_pct_value = lap_dist_pct[*car_id as usize];
                                     let laps_completed_value = match laps_completed
@@ -774,29 +874,168 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         value => value,
                                     }
                                         as u32;
+                                    let est_time_value = car_idx_est_time_value[*car_id as usize];
                                     driver.lap_dist_pct = lap_dist_pct_value;
                                     driver.laps_completed = laps_completed_value;
                                     driver.total_completed = laps_completed_value as f32;
+                                    driver.estimated =
+                                        SignedDuration::from_secs_f32(est_time_value);
                                     if laps_started_value > 0 {
                                         driver.total_completed += lap_dist_pct_value;
                                     }
+                                    driver.last_lap_time = SignedDuration::from_secs_f32(
+                                        car_idx_last_lap_time_value[*car_id as usize],
+                                    );
                                 }
 
-                                if data.drivers.contains_key(&data.player_car_id) {
+                                let mut driver_positions = data
+                                    .drivers
+                                    .iter()
+                                    .map(|(car_id, driver)| (*car_id, driver.total_completed))
+                                    .collect::<Vec<(u32, f32)>>();
+                                driver_positions.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                                data.driver_positions = driver_positions
+                                    .iter()
+                                    .rev()
+                                    .map(|(car_id, _)| *car_id)
+                                    .collect();
+
+                                for (position, car_id) in data.driver_positions.iter().enumerate() {
+                                    let driver = data
+                                        .drivers
+                                        .get_mut(car_id)
+                                        .ok_or_eyre("Driver not found while updating position")?;
+                                    driver.position = position as u32 + 1;
+                                    if *car_id == data.player_car_id {
+                                        emitter.emit("position", json!(driver.position))?;
+                                        data.position = driver.position;
+                                    }
+                                    if position == 0 {
+                                        data.leader_car_id = *car_id;
+                                    }
+                                }
+
+                                // gaps
+                                if !data.driver_positions.is_empty() {
                                     let player = data
                                         .drivers
                                         .get(&data.player_car_id)
-                                        .ok_or_eyre("Player not found")?;
-                                    let position =
-                                        data.drivers
-                                            .iter()
-                                            .filter(|(_, driver)| {
-                                                driver.total_completed > player.total_completed
-                                            })
-                                            .count() as u32
-                                            + 1;
-                                    emitter.emit("position", json!(position))?;
-                                    data.position = position;
+                                        .ok_or_eyre("Player not found")?
+                                        .to_owned();
+                                    let leader = data
+                                        .drivers
+                                        .get(&data.leader_car_id)
+                                        .ok_or_eyre("Leader not found")?
+                                        .to_owned();
+
+                                    for driver in data.drivers.values_mut() {
+                                        let leader_gap_laps =
+                                            leader.total_completed - driver.total_completed;
+                                        if leader_gap_laps >= 1.0 {
+                                            driver.leader_gap_laps = leader_gap_laps as i32;
+                                            driver.leader_gap = SignedDuration::ZERO;
+                                        } else {
+                                            driver.leader_gap_laps = 0;
+                                            driver.leader_gap = match leader.estimated
+                                                - driver.estimated
+                                            {
+                                                value if value >= SignedDuration::ZERO => {
+                                                    leader.estimated - driver.estimated
+                                                }
+                                                _ => {
+                                                    leader.estimated + data.car_class_est_lap_time
+                                                        - driver.estimated
+                                                }
+                                            };
+                                        }
+                                        let player_gap_laps =
+                                            player.total_completed - driver.total_completed;
+                                        if player_gap_laps >= 1.0 || player_gap_laps <= -1.0 {
+                                            driver.player_gap_laps = player_gap_laps as i32;
+                                            driver.player_gap = SignedDuration::ZERO;
+                                        } else {
+                                            driver.player_gap_laps = 0;
+                                            driver.player_gap = match player_gap_laps {
+                                                value if value >= 0.0 => {
+                                                    match player.estimated - driver.estimated {
+                                                        value if value >= SignedDuration::ZERO => {
+                                                            player.estimated - driver.estimated
+                                                        }
+                                                        _ => {
+                                                            player.estimated
+                                                                + data.car_class_est_lap_time
+                                                                - driver.estimated
+                                                        }
+                                                    }
+                                                }
+                                                _ => match player.estimated - driver.estimated {
+                                                    value if value >= SignedDuration::ZERO => {
+                                                        driver.estimated
+                                                            + data.car_class_est_lap_time
+                                                            - player.estimated
+                                                    }
+                                                    _ => player.estimated - driver.estimated,
+                                                },
+                                            };
+                                        }
+                                    }
+
+                                    let player_position = player.position;
+                                    if player_position >= 2 {
+                                        let next_position = player_position - 1;
+                                        let next_car_id =
+                                            data.driver_positions[next_position as usize - 1];
+                                        let next_driver = data
+                                            .drivers
+                                            .get(&next_car_id)
+                                            .ok_or_eyre("Next driver not found")?;
+                                        let gap_next = match next_driver.player_gap_laps {
+                                            0 => {
+                                                let gap_next = &next_driver.player_gap;
+                                                let gap_next = gap_next.as_abs_secs_f32();
+                                                format!(
+                                                    "{}.{}",
+                                                    gap_next as i32,
+                                                    min(
+                                                        (gap_next.fract() * 10.0).round() as i32,
+                                                        9
+                                                    )
+                                                )
+                                            }
+                                            _ => format!("L{}", next_driver.player_gap_laps.abs()),
+                                        };
+
+                                        emitter.emit("gap_next", json!(gap_next))?;
+                                    } else {
+                                        emitter.emit("gap_next", json!("–"))?;
+                                    }
+                                    if player_position < data.driver_positions.len() as u32 {
+                                        let prev_position = player_position + 1;
+                                        let prev_car_id =
+                                            data.driver_positions[prev_position as usize - 1];
+                                        let prev_driver = data
+                                            .drivers
+                                            .get(&prev_car_id)
+                                            .ok_or_eyre("Prev driver not found")?;
+                                        let gap_prev = match prev_driver.player_gap_laps {
+                                            0 => {
+                                                let gap_prev = &prev_driver.player_gap;
+                                                let gap_prev = gap_prev.as_abs_secs_f32();
+                                                format!(
+                                                    "{}.{}",
+                                                    gap_prev as i32,
+                                                    min(
+                                                        (gap_prev.fract() * 10.0).round() as i32,
+                                                        9
+                                                    )
+                                                )
+                                            }
+                                            _ => format!("L{}", prev_driver.player_gap_laps.abs()),
+                                        };
+                                        emitter.emit("gap_prev", json!(gap_prev))?;
+                                    } else {
+                                        emitter.emit("gap_prev", json!("–"))?;
+                                    }
                                 }
                             }
                             DataUpdateResult::NoUpdate => {
@@ -864,11 +1103,28 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                             continue;
                                         }
 
+                                        if car_id == data.player_car_id {
+                                            let car_class_est_lap_time = driver
+                                                ["CarClassEstLapTime"]
+                                                .as_f64()
+                                                .ok_or_eyre("CarClassEstLapTime not found")?;
+                                            data.car_class_est_lap_time =
+                                                SignedDuration::from_secs_f64(
+                                                    car_class_est_lap_time,
+                                                );
+                                        }
+
                                         let driver = Driver {
                                             position: 0,
                                             laps_completed: 0,
                                             lap_dist_pct: 0.0,
                                             total_completed: 0.0,
+                                            last_lap_time: SignedDuration::ZERO,
+                                            estimated: SignedDuration::ZERO,
+                                            leader_gap_laps: 0,
+                                            leader_gap: SignedDuration::ZERO,
+                                            player_gap_laps: 0,
+                                            player_gap: SignedDuration::ZERO,
                                             user_name,
                                             car_number,
                                             car_class_id,
