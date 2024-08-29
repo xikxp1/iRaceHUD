@@ -6,6 +6,7 @@
   import Session from "../components/Session.svelte";
   import Subtimer from "../components/SubTimer.svelte";
   import Proximity from "../components/Proximity.svelte";
+  import Standings from "../components/Standings.svelte";
 
   let active: boolean = false;
 
@@ -54,6 +55,13 @@
     <div class="middle">
       <div class="proximity">
         <Proximity />
+      </div>
+    </div>
+  </div>
+  <div class="outer">
+    <div class="middle">
+      <div class="standings">
+        <Standings />
       </div>
     </div>
   </div>
@@ -118,6 +126,14 @@
     margin-left: auto;
     margin-right: auto;
     margin-top: -135px;
+    margin-bottom: auto;
+    align-items: center;
+  }
+
+  .standings {
+    margin-left: -1350px;
+    margin-right: auto;
+    margin-top: -475px;
     margin-bottom: auto;
     align-items: center;
   }

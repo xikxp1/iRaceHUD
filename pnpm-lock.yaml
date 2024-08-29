@@ -8,12 +8,12 @@ importers:
 
   .:
     dependencies:
-      '@designbycode/tailwindcss-stripes':
-        specifier: ^1.0.5
-        version: 1.0.5(tailwindcss@3.4.6)
       '@tauri-apps/api':
         specifier: ^1
         version: 1.6.0
+      ag-grid-community:
+        specifier: ^32.1.0
+        version: 32.1.0
       chart.js:
         specifier: ^4.4.3
         version: 4.4.3
@@ -70,11 +70,6 @@ packages:
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
-
-  '@designbycode/tailwindcss-stripes@1.0.5':
-    resolution: {integrity: sha512-MXDe6ml+LelPRjnauXl4v7J3pPfRNyqB7msgRvdcRDau2rKEGXZ7/wIK16OEFqKtU93NiAvIzb8Va4/t5iXXcg==}
-    peerDependencies:
-      tailwindcss: '>=3.0.0 || >=3.0.0-alpha.1'
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -449,6 +444,12 @@ packages:
     resolution: {integrity: sha512-tcpGyI9zbizT9JbV6oYE477V6mTlXvvi0T0G3SNIYE2apm/G5huBa1+K89VGeovbg+jycCrfhl3ADxErOuO6Jg==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  ag-charts-types@10.1.0:
+    resolution: {integrity: sha512-pk9ft8hbgTXJ/thI/SEUR1BoauNplYExpcHh7tMOqVikoDsta1O15TB1ZL4XWnl4TPIzROBmONKsz7d8a2HBuQ==}
+
+  ag-grid-community@32.1.0:
+    resolution: {integrity: sha512-RVvkjRH61nuCXwIqTKQPqNbKR+8cGBKw7S1qmmMXsy0pCBAJaQn4kL3v31hKHxDtV4bPscBXLFKGnKzHuss0GQ==}
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -1178,10 +1179,6 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
 
-  '@designbycode/tailwindcss-stripes@1.0.5(tailwindcss@3.4.6)':
-    dependencies:
-      tailwindcss: 3.4.6
-
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
 
@@ -1441,6 +1438,12 @@ snapshots:
   '@types/pug@2.0.10': {}
 
   acorn@8.12.1: {}
+
+  ag-charts-types@10.1.0: {}
+
+  ag-grid-community@32.1.0:
+    dependencies:
+      ag-charts-types: 10.1.0
 
   ansi-regex@5.0.1: {}
 

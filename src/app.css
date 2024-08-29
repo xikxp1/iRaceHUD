@@ -23,6 +23,24 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
+
+    .ag-theme-iracing {
+        --ag-active-color: oklch(var(--a));
+        --ag-foreground-color: oklch(var(--p));
+        --ag-background-color: oklch(var(--pc));
+        --ag-secondary-foreground-color: oklch(var(--s));
+        --ag-secondary-background-color: oklch(var(--sc));
+        --ag-value-change-value-highlight-background-color: oklch(var(--in));
+        --ag-row-height: 18px;
+        --ag-header-height: 26px;
+        --ag-font-family: "iracing";
+        --ag-font-size: 14px;
+    }
+
+    .player {
+        color: var(--ag-background-color);
+        background-color: var(--ag-secondary-foreground-color);
+    }
 }
 
 @font-face {

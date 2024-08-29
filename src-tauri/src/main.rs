@@ -53,6 +53,7 @@ struct TelemetryData {
 
 #[derive(Clone)]
 struct Driver {
+    car_id: u32,
     position: u32,
     laps_completed: u32,
     lap_dist_pct: f32,
@@ -67,6 +68,8 @@ struct Driver {
     car_number: String,
     car_class_id: u32,
     irating: u32,
+    is_player: bool,
+    is_leader: bool,
 }
 
 #[derive(Debug)]
@@ -533,8 +536,6 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         raw_player_car_sl_blink_rpm_value.round() as u32;
                                     emitter.emit("gear_blink_rpm", json!(gear_blink_rpm_value))?;
                                     data.gear_blink_rpm = gear_blink_rpm_value;
-
-                                    slow_var_ticks = 0;
                                 }
 
                                 // current_time
@@ -929,6 +930,8 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         .to_owned();
 
                                     for driver in data.drivers.values_mut() {
+                                        driver.is_leader = driver.car_id == data.leader_car_id;
+                                        driver.is_player = driver.car_id == data.player_car_id;
                                         let leader_gap_laps =
                                             leader.total_completed - driver.total_completed;
                                         if leader_gap_laps >= 1.0 {
@@ -1037,6 +1040,66 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         emitter.emit("gap_prev", json!("–"))?;
                                     }
                                 }
+
+                                if slow_var_ticks >= SLOW_VAR_RESET_TICKS
+                                    && !data.drivers.is_empty()
+                                {
+                                    // standings
+                                    let drivers: Vec<Value> = data
+                                        .drivers
+                                        .values()
+                                        .map(|driver| {
+                                            let leader_gap = match driver.leader_gap_laps {
+                                                0 => {
+                                                    let leader_gap = &driver.leader_gap;
+                                                    let leader_gap = leader_gap.as_abs_secs_f32();
+                                                    format!(
+                                                        "{}.{}",
+                                                        leader_gap as i32,
+                                                        min(
+                                                            (leader_gap.fract() * 10.0).round()
+                                                                as i32,
+                                                            9
+                                                        )
+                                                    )
+                                                }
+                                                _ => format!("L{}", driver.leader_gap_laps.abs()),
+                                            };
+                                            let player_gap = match driver.player_gap_laps {
+                                                0 => {
+                                                    let player_gap = &driver.player_gap;
+                                                    let player_gap = player_gap.as_abs_secs_f32();
+                                                    format!(
+                                                        "{}.{}",
+                                                        player_gap as i32,
+                                                        min(
+                                                            (player_gap.fract() * 10.0).round()
+                                                                as i32,
+                                                            9
+                                                        )
+                                                    )
+                                                }
+                                                _ => format!("L{}", driver.player_gap_laps.abs()),
+                                            };
+                                            json!({
+                                                "car_id": driver.car_id,
+                                                "position": driver.position,
+                                                // "last_lap_time": driver.last_lap_time.as_secs_f32(),
+                                                "user_name": driver.user_name,
+                                                "car_number": driver.car_number,
+                                                "leader_gap": leader_gap,
+                                                "player_gap": player_gap,
+                                                // "irating": driver.irating,
+                                                "is_player": driver.is_player,
+                                            })
+                                        })
+                                        .collect();
+                                    emitter.emit("standings", json!(drivers))?;
+                                }
+
+                                if slow_var_ticks >= SLOW_VAR_RESET_TICKS {
+                                    slow_var_ticks = 0;
+                                }
                             }
                             DataUpdateResult::NoUpdate => {
                                 debug!("No update")
@@ -1115,6 +1178,7 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         }
 
                                         let driver = Driver {
+                                            car_id,
                                             position: 0,
                                             laps_completed: 0,
                                             lap_dist_pct: 0.0,
@@ -1129,6 +1193,8 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                             car_number,
                                             car_class_id,
                                             irating,
+                                            is_player: false,
+                                            is_leader: false,
                                         };
 
                                         data.drivers.insert(car_id, driver);

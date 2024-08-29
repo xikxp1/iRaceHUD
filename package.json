@@ -14,6 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "@tauri-apps/api": "^1",
+    "ag-grid-community": "^32.1.0",
     "chart.js": "^4.4.3",
     "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1"
   },
