@@ -5,6 +5,7 @@
         type GetRowIdParams,
         type GridApi,
         type GridOptions,
+        type NewValueParams,
     } from "ag-grid-community";
     import "ag-grid-community/styles/ag-grid.css";
     import "ag-grid-community/styles/ag-theme-quartz.css";
@@ -17,8 +18,10 @@
         position: number;
         user_name: string;
         car_number: string;
+        irating: string;
         leader_gap: string;
-        player_gap: string;
+        best_lap: string;
+        last_lap: string;
         is_player: boolean;
     }
 
@@ -29,18 +32,19 @@
         defaultColDef: {
             sortable: false,
         },
+        suppressHorizontalScroll: true,
         columnDefs: [
             {
                 field: "position",
-                headerName: "Pos",
+                headerName: "P",
                 resizable: false,
-                width: 70,
+                width: 50,
                 pinned: "left",
-                sortable: true,
-                sort: "asc",
                 cellClass: "ag-right-aligned-cell",
                 headerClass: "ag-right-aligned-header",
-                enableCellChangeFlash: true,
+                onCellValueChanged: (params: NewValueParams<Standings, Standings>) => {
+                    // TODO: properly highlight changes
+                },
             },
             {
                 field: "car_number",
@@ -54,28 +58,33 @@
                 field: "user_name",
                 headerName: "Name",
                 resizable: false,
-                width: 200,
+                flex: 1,
+            },
+            {
+                field: "irating",
+                headerName: "iR",
+                resizable: false,
+                width: 60,
+                cellClass: "ag-right-aligned-cell",
+                headerClass: "ag-right-aligned-header",
             },
             {
                 field: "leader_gap",
-                headerName: "Int",
-                resizable: false,
-                width: 70,
-            },
-            {
-                field: "player_gap",
                 headerName: "Gap",
                 resizable: false,
-                width: 70,
+                width: 60,
+                cellClass: "ag-right-aligned-cell",
+                headerClass: "ag-right-aligned-header",
             },
         ],
         getRowId: (params: GetRowIdParams) => String(params.data.car_id),
         icons: {
-            sortAscending: " ",
-            sortDescending: " ",
+            sortAscending: "\xa0",
+            sortDescending: "\xa0",
         },
         rowClassRules: {
             player: "data.is_player",
+            odd: "!data.is_player && data.position % 2 === 1",
         },
     };
 
@@ -84,7 +93,15 @@
     });
 
     listen("standings", (event) => {
-        gridApi.setGridOption("rowData", event.payload as Standings[]);
+        let newRowData = event.payload as Standings[];
+        newRowData.sort((a, b) => a.position - b.position);
+        let playerRowDataIdx = newRowData.findIndex((row) => row.is_player);
+        let newLeaderRowData = newRowData.splice(0, 1);
+        gridApi.updateGridOptions({
+            rowData: newRowData,
+            pinnedTopRowData: newLeaderRowData,
+        });
+        gridApi.ensureIndexVisible(playerRowDataIdx, "middle");
     });
 </script>
 
@@ -93,7 +110,7 @@
     <div
         bind:this={standings}
         id="standings"
-        class="ag-theme-quartz ag-theme-iracing w-[480px] h-[210px]"
+        class="ag-theme-quartz ag-theme-iracing w-[400px] h-[140px]"
     ></div>
 </div>
 

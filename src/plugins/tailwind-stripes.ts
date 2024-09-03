@@ -1,6 +1,4 @@
 import plugin from "tailwindcss/plugin"
-// import { info } from "tauri-plugin-log-api";
-
 
 export default plugin.withOptions(
     function () {
@@ -70,7 +68,6 @@ export default plugin.withOptions(
             matchUtilities(
                 {
                     "stripes": (value: any) => {
-                        // info("stripes", value);
                         return {
                             "--stripes-color": value.replace("<alpha-value>", "var(--stripes-opacity)"),
                         }

@@ -68,6 +68,7 @@ struct Driver {
     car_number: String,
     car_class_id: u32,
     irating: u32,
+    lic_string: String,
     is_player: bool,
     is_leader: bool,
 }
@@ -297,6 +298,9 @@ fn main() {
         )
         .setup(|app| {
             let window = app.get_window("main").ok_or_eyre("Failed to get window")?;
+
+            #[cfg(debug_assertions)]
+            window.open_devtools();
 
             window
                 .set_ignore_cursor_events(true)
@@ -1050,46 +1054,31 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         .values()
                                         .map(|driver| {
                                             let leader_gap = match driver.leader_gap_laps {
-                                                0 => {
-                                                    let leader_gap = &driver.leader_gap;
-                                                    let leader_gap = leader_gap.as_abs_secs_f32();
-                                                    format!(
+                                                0 => match driver.leader_gap.as_abs_secs_f32() {
+                                                    value if value >= 100.0 => {
+                                                        format!("{}", value as i32)
+                                                    }
+                                                    value => format!(
                                                         "{}.{}",
-                                                        leader_gap as i32,
+                                                        value as i32,
                                                         min(
-                                                            (leader_gap.fract() * 10.0).round()
-                                                                as i32,
+                                                            (value.fract() * 10.0).round() as i32,
                                                             9
                                                         )
-                                                    )
-                                                }
+                                                    ),
+                                                },
                                                 _ => format!("L{}", driver.leader_gap_laps.abs()),
                                             };
-                                            let player_gap = match driver.player_gap_laps {
-                                                0 => {
-                                                    let player_gap = &driver.player_gap;
-                                                    let player_gap = player_gap.as_abs_secs_f32();
-                                                    format!(
-                                                        "{}.{}",
-                                                        player_gap as i32,
-                                                        min(
-                                                            (player_gap.fract() * 10.0).round()
-                                                                as i32,
-                                                            9
-                                                        )
-                                                    )
-                                                }
-                                                _ => format!("L{}", driver.player_gap_laps.abs()),
-                                            };
+                                            let irating =
+                                                format!("{:.1}k", driver.irating as f32 / 1000.0);
                                             json!({
                                                 "car_id": driver.car_id,
                                                 "position": driver.position,
-                                                // "last_lap_time": driver.last_lap_time.as_secs_f32(),
                                                 "user_name": driver.user_name,
                                                 "car_number": driver.car_number,
+                                                "irating": irating,
+                                                "license": driver.lic_string,
                                                 "leader_gap": leader_gap,
-                                                "player_gap": player_gap,
-                                                // "irating": driver.irating,
                                                 "is_player": driver.is_player,
                                             })
                                         })
@@ -1157,6 +1146,9 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                             .as_i64()
                                             .ok_or_eyre("IRating not found")?
                                             as u32;
+                                        let lic_string = driver["LicString"]
+                                            .as_str()
+                                            .ok_or_eyre("LicString not found")?;
 
                                         if data.drivers.contains_key(&car_id) {
                                             continue;
@@ -1193,6 +1185,7 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                             car_number,
                                             car_class_id,
                                             irating,
+                                            lic_string: lic_string.to_string(),
                                             is_player: false,
                                             is_leader: false,
                                         };
