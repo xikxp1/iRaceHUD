@@ -1,140 +1,156 @@
 <script lang="ts">
-  import { listen } from "@tauri-apps/api/event";
-  import Main from "../components/Main.svelte";
-  import Telemetery from "../components/Telemetry.svelte";
-  import Timer from "../components/Timer.svelte";
-  import Session from "../components/Session.svelte";
-  import Subtimer from "../components/SubTimer.svelte";
-  import Proximity from "../components/Proximity.svelte";
-  import Standings from "../components/Standings.svelte";
+    import { listen } from "@tauri-apps/api/event";
+    import Main from "../components/Main.svelte";
+    import Telemetery from "../components/Telemetry.svelte";
+    import Timer from "../components/Timer.svelte";
+    import Session from "../components/Session.svelte";
+    import Subtimer from "../components/SubTimer.svelte";
+    import Proximity from "../components/Proximity.svelte";
+    import Standings from "../components/Standings.svelte";
+    import TrackMap from "../components/TrackMap.svelte";
 
-  let active: boolean = false;
+    let active: boolean = false;
 
-  listen("active", (event) => {
-    active = event.payload as boolean;
-  });
+    listen("active", (event) => {
+        active = event.payload as boolean;
+    });
 </script>
 
 {#if active}
-  <div class="outer">
-    <div class="middle">
-      <div class="main">
-        <Main />
-      </div>
+    <div class="outer">
+        <div class="middle">
+            <div class="main">
+                <Main />
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="outer">
-    <div class="middle">
-      <div class="telemetry">
-        <Telemetery />
-      </div>
+    <div class="outer">
+        <div class="middle">
+            <div class="telemetry">
+                <Telemetery />
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="outer">
-    <div class="middle">
-      <div class="timer">
-        <Timer />
-      </div>
+    <div class="outer">
+        <div class="middle">
+            <div class="timer">
+                <Timer />
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="outer">
-    <div class="middle">
-      <div class="session">
-        <Session />
-      </div>
+    <div class="outer">
+        <div class="middle">
+            <div class="session">
+                <Session />
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="outer">
-    <div class="middle">
-      <div class="subtimer">
-        <Subtimer />
-      </div>
+    <div class="outer">
+        <div class="middle">
+            <div class="subtimer">
+                <Subtimer />
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="outer">
-    <div class="middle">
-      <div class="proximity">
-        <Proximity />
-      </div>
+    <div class="outer">
+        <div class="middle">
+            <div class="proximity">
+                <Proximity />
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="outer">
-    <div class="middle">
-      <div class="standings">
-        <Standings />
-      </div>
+    <div class="outer">
+        <div class="middle">
+            <div class="standings">
+                <Standings />
+            </div>
+        </div>
     </div>
-  </div>
+    <div class="outer">
+        <div class="middle">
+            <div class="trackmap">
+                <TrackMap />
+            </div>
+        </div>
+    </div>
 {/if}
 
 <style>
-  .outer {
-    display: table;
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-  }
+    .outer {
+        display: table;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+    }
 
-  .middle {
-    display: table-cell;
-    vertical-align: middle;
-  }
+    .middle {
+        display: table-cell;
+        vertical-align: middle;
+    }
 
-  .main {
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 280px;
-    margin-bottom: auto;
-    align-items: center;
-  }
+    .main {
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 280px;
+        margin-bottom: auto;
+        align-items: center;
+    }
 
-  .telemetry {
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 445px;
-    margin-bottom: auto;
-    align-items: center;
-  }
+    .telemetry {
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 445px;
+        margin-bottom: auto;
+        align-items: center;
+    }
 
-  .timer {
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: -335px;
-    margin-bottom: auto;
-    align-items: center;
-  }
+    .timer {
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: -335px;
+        margin-bottom: auto;
+        align-items: center;
+    }
 
-  .session {
-    margin-left: -1400px;
-    margin-right: auto;
-    margin-top: -520px;
-    margin-bottom: auto;
-    align-items: center;
-  }
+    .session {
+        margin-left: -1400px;
+        margin-right: auto;
+        margin-top: -520px;
+        margin-bottom: auto;
+        align-items: center;
+    }
 
-  .subtimer {
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: -295px;
-    margin-bottom: auto;
-    align-items: center;
-  }
+    .subtimer {
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: -295px;
+        margin-bottom: auto;
+        align-items: center;
+    }
 
-  .proximity {
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: -135px;
-    margin-bottom: auto;
-    align-items: center;
-  }
+    .proximity {
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: -135px;
+        margin-bottom: auto;
+        align-items: center;
+    }
 
-  .standings {
-    margin-left: -1350px;
-    margin-right: auto;
-    margin-top: -475px;
-    margin-bottom: auto;
-    align-items: center;
-  }
+    .standings {
+        margin-left: -1350px;
+        margin-right: auto;
+        margin-top: -475px;
+        margin-bottom: auto;
+        align-items: center;
+    }
+
+    .trackmap {
+        margin-left: 1300px;
+        margin-right: auto;
+        margin-top: -550px;
+        margin-bottom: auto;
+        align-items: center;
+    }
 </style>

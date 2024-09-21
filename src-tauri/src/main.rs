@@ -1121,6 +1121,13 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                             emitter.emit("incident_limit", json!(incident_limit_value))?;
                             data.incident_limit = incident_limit_value;
 
+                            // track_id
+                            let track_id = session["WeekendInfo"]["TrackID"]
+                                .as_i64()
+                                .ok_or_eyre("TrackID not found")?
+                                as u32;
+                            emitter.emit("track_id", json!(track_id))?;
+
                             let drivers = session["DriverInfo"]["Drivers"].as_vec();
 
                             match drivers {

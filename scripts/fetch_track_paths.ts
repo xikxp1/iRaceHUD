@@ -28,6 +28,9 @@ async function fetchAndExtractSvgPath(svgUrl: string): Promise<string | null> {
 async function featchTrackPaths() {
     try {
         const iracing = new IracingAPI();
+        if (!process.env.IRACING_LOGIN || !process.env.IRACING_PWD) {
+            throw new Error("Missing iRacing login credentials");
+        }
         await iracing.login(process.env.IRACING_LOGIN, process.env.IRACING_PWD);
         console.log("Successfully logged in");
 
