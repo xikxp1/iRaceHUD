@@ -1,0 +1,12 @@
+<svg version="1.1" id="Kokomo__Start_Finish_Line" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 1920 1080" style="enable-background:new 0 0 1920 1080;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:oklch(80.1701% 0.156063 81.056275);}
+</style>
+<title>start-finish</title>
+<g id="Start_Finish_Link">
+	<path class="st0" d="M965.8,186.2c-2.8,0-5,2.2-5,5v113c0,2.8,2.2,5,5,5s5-2.2,5-5v-113C970.8,188.5,968.6,186.2,965.8,186.2z"></path>
+	<polygon class="st0" points="1022.2,111.7 1022.2,111.7 1022.2,111.7 	"></polygon>
+	<path class="st0" d="M1022.2,111.7l-61.7,0.9l13.2-32.2l-87.3,38.3l88.3,35.8l-14.1-31.8l61.7-0.9c2.8,0,5-2.3,4.9-5.1
+		C1027.2,113.9,1024.9,111.7,1022.2,111.7z"></path>
+</g>
+</svg>

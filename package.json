@@ -10,7 +10,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "tauri": "tauri",
-    "fetch-track-paths": "pnpm tsx ./scripts/fetch_track_paths.ts"
+    "fetch-track-info": "pnpm tsx ./scripts/fetch_track_info.ts"
   },
   "license": "MIT",
   "dependencies": {

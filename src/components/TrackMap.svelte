@@ -2,46 +2,153 @@
     import { listen } from "@tauri-apps/api/event";
     import { onMount } from "svelte";
 
-    let trackPaths: { [k: number]: string } = {};
+    type TrackMapCar = {
+        car_id: number;
+        position: number;
+        is_leader: boolean;
+        is_player: boolean;
+        lap_dist_pct: number;
+        x: number;
+        y: number;
+    };
+
+    let trackPathElement: SVGPathElement;
+
+    let trackInfo: { [k: number]: any } = {};
 
     let track_id: number;
     let trackPath: string | undefined;
+    let trackMapCars: TrackMapCar[] = [];
 
     const css = window.getComputedStyle(document.documentElement);
 
+    const textColor: string = `oklch(${css.getPropertyValue("--pc")})`;
     const trackColor: string = `oklch(${css.getPropertyValue("--sc")})`;
-    const trackStrokeColor: string = `oklch(${css.getPropertyValue("--p")})`;
+    const trackBorderColor: string = `oklch(${css.getPropertyValue("--p")})`;
+    const carCircleColor: string = `oklch(${css.getPropertyValue("--p")})`;
+    const leaderCircleColor: string = `oklch(${css.getPropertyValue("--in")})`;
+    const playerCircleColor: string = `oklch(${css.getPropertyValue("--s")})`;
 
     onMount(() => {
-        fetch("/track_paths/track_paths.json")
+        fetch("/track_info/track_info.json")
             .then((response) => response.json())
             .then((data) => {
-                trackPaths = data;
+                trackInfo = data;
             });
     });
 
     listen("track_id", (event) => {
         track_id = event.payload as number;
-        trackPath = trackPaths[track_id];
+        trackPath = trackInfo[track_id].activePath;
+    });
+
+    listen("track_map", (event) => {
+        const track_map = event.payload as TrackMapCar[];
+        for (let car of track_map) {
+            const pathLength = trackPathElement.getTotalLength();
+            const point = trackPathElement.getPointAtLength(
+                car.lap_dist_pct * pathLength,
+            );
+            car.x = point.x;
+            car.y = point.y;
+        }
+        trackMapCars = track_map;
     });
 </script>
 
 <div class="flex flex-row items-center justify-center opacity-75">
-    <svg
-        width="500"
-        height="100%"
-        viewBox="0 0 1800 1000"
-        fill="none"
-        overflow="visible"
-        xmlns="http://www.w3.org/2000/svg"
-    >
-        <path
-            d={trackPath}
-            fill={trackColor}
-            stroke={trackStrokeColor}
-            stroke-width="5"
-        />
-    </svg>
+    <div class="flex flex-col items-center justify-center w-[600px]">
+        <svg
+            fill="none"
+            viewBox="0 0 1920 1080"
+            overflow="visible"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            <path d={trackPath} stroke={trackBorderColor} stroke-width="30" />
+            <path
+                bind:this={trackPathElement}
+                d={trackPath}
+                stroke={trackColor}
+                stroke-width="20"
+            />
+            {#if track_id != undefined}
+                <image
+                    href="/track_info/start_finish/{track_id}.svg"
+                    x="0"
+                    y="0"
+                    width="1920"
+                    height="1080"
+                >
+                </image>
+            {/if}
+            {#each trackMapCars as car}
+                {#if !car.is_leader && !car.is_player}
+                    <g>
+                        <circle
+                            cx={car.x}
+                            cy={car.y}
+                            r="32"
+                            fill={carCircleColor}
+                        />
+                        <text
+                            x={car.x}
+                            y={car.y + 5}
+                            fill={textColor}
+                            font-size="60"
+                            text-anchor="middle"
+                            alignment-baseline="middle"
+                        >
+                            {car.position}
+                        </text>
+                    </g>
+                {/if}
+            {/each}
+            {#each trackMapCars as car}
+                {#if car.is_leader}
+                    <g>
+                        <circle
+                            cx={car.x}
+                            cy={car.y}
+                            r="32"
+                            fill={leaderCircleColor}
+                        />
+                        <text
+                            x={car.x}
+                            y={car.y + 5}
+                            fill={textColor}
+                            font-size="60"
+                            text-anchor="middle"
+                            alignment-baseline="middle"
+                        >
+                            {car.position}
+                        </text>
+                    </g>
+                {/if}
+            {/each}
+            {#each trackMapCars as car}
+                {#if car.is_player}
+                    <g>
+                        <circle
+                            cx={car.x}
+                            cy={car.y}
+                            r="32"
+                            fill={playerCircleColor}
+                        />
+                        <text
+                            x={car.x}
+                            y={car.y + 5}
+                            fill={textColor}
+                            font-size="60"
+                            text-anchor="middle"
+                            alignment-baseline="middle"
+                        >
+                            {car.position}
+                        </text>
+                    </g>
+                {/if}
+            {/each}
+        </svg>
+    </div>
 </div>
 
 <style>
