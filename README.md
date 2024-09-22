@@ -22,9 +22,11 @@ $env:IRACING_PWD = '<iracing password>'
 Run script via pnpm:
 
 ```
-pnpm run fetch-track-paths
+pnpm run fetch-track-info
 ```
 
 Script will report its progress and final state upon finish.
 
-Track paths will be saved to [track_paths.json](./static/track_paths/track_paths.json).
+Track info (with main track paths) will be saved to [track_info.json](./static/track_info/track_info.json).
+
+Track start/finish SVGs will be saved to [start_finish](./static/track_info/start_finish/) directory
