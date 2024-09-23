@@ -27,6 +27,21 @@ pnpm run fetch-track-info
 
 Script will report its progress and final state upon finish.
 
-Track info (with main track paths) will be saved to [track_info.json](./static/track_info/track_info.json).
+Track info (with main track paths) will be saved to [track_info.json](./static/track_info_data/track_info.json).
 
-Track start/finish SVGs will be saved to [start_finish](./static/track_info/start_finish/) directory
+Track start/finish SVGs will be saved to [start_finish](./static/track_info_data/start_finish/) directory
+
+### Settings track settings
+
+Iracing's SVG start point and direction may differ with start/finish line and track direction. To overcome this issue one can manually fill in [track_settings.json](./static/track_info_data/track_settings.json) static file. It stores a json object where keys are track ids and values have the following format:
+
+```json
+{
+    "offset": 0.567,
+    "direction": -1
+}
+```
+
+`offset` is a start/finish line offset from SVG starting point (value shoud be between `0` and `1`), `direction` is `1` if track direction matches SVG direction and `-1` otherwise.
+
+You can use accompanying interface located at `/track_info` url when lauching iRaceHUD in Vite develoment mode.
