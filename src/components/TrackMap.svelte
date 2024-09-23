@@ -15,10 +15,14 @@
     let trackPathElement: SVGPathElement;
 
     let trackInfo: { [k: number]: any } = {};
+    let trackSettings: { [k: number]: any } = {};
 
     let track_id: number;
     let trackPath: string | undefined;
     let trackMapCars: TrackMapCar[] = [];
+
+    let offset: number = 0;
+    let direction: number = 1;
 
     const css = window.getComputedStyle(document.documentElement);
 
@@ -30,24 +34,33 @@
     const playerCircleColor: string = `oklch(${css.getPropertyValue("--s")})`;
 
     onMount(() => {
-        fetch("/track_info/track_info.json")
+        fetch("/track_info_data/track_info.json")
             .then((response) => response.json())
             .then((data) => {
                 trackInfo = data;
+            });
+        fetch("/track_info_data/track_settings.json")
+            .then((response) => response.json())
+            .then((data) => {
+                trackSettings = data;
             });
     });
 
     listen("track_id", (event) => {
         track_id = event.payload as number;
         trackPath = trackInfo[track_id].activePath;
+        offset = trackSettings[track_id]?.offset ?? 0;
+        direction = trackSettings[track_id]?.direction ?? 1;
     });
 
     listen("track_map", (event) => {
         const track_map = event.payload as TrackMapCar[];
         for (let car of track_map) {
             const pathLength = trackPathElement.getTotalLength();
+            const offsetedLapDistPct =
+                (1 + offset + direction * car.lap_dist_pct) % 1;
             const point = trackPathElement.getPointAtLength(
-                car.lap_dist_pct * pathLength,
+                offsetedLapDistPct * pathLength,
             );
             car.x = point.x;
             car.y = point.y;
@@ -73,7 +86,7 @@
             />
             {#if track_id != undefined}
                 <image
-                    href="/track_info/start_finish/{track_id}.svg"
+                    href="/track_info_data/start_finish/{track_id}.svg"
                     x="0"
                     y="0"
                     width="1920"
