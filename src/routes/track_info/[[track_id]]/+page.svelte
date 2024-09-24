@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { page } from "$app/stores";
     import Menu from "../../../components/track_info/Menu.svelte";
     import TrackInfo from "../../../components/track_info/TrackInfo.svelte";
 </script>
