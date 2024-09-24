@@ -42,6 +42,6 @@ Iracing's SVG start point and direction may differ with start/finish line and tr
 }
 ```
 
-`offset` is a start/finish line offset from SVG starting point (value shoud be between `0` and `1`), `direction` is `1` if track direction matches SVG direction and `-1` otherwise.
+`offset` is a start/finish line offset from SVG starting point (value shoud be between `0` and `1`), `direction` is `1` if track direction matches SVG path direction and `-1` otherwise.
 
 To search for these values you can use accompanying interface located at `/track_info` url when lauching iRaceHUD via Vite development mode.
