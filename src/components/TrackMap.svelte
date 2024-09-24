@@ -127,7 +127,7 @@
                 {/if}
             {/each}
             {#each trackMapCars as car}
-                {#if car.is_leader}
+                {#if car.is_leader && !car.is_player}
                     <g>
                         <circle
                             cx={car.x}
