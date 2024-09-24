@@ -31,7 +31,7 @@ Track info (with main track paths) will be saved to [track_info.json](./static/t
 
 Track start/finish SVGs will be saved to [start_finish](./static/track_info_data/start_finish/) directory
 
-### Settings track settings
+### Track settings
 
 Iracing's SVG start point and direction may differ with start/finish line and track direction. To overcome this issue one can manually fill in [track_settings.json](./static/track_info_data/track_settings.json) static file. It stores a json object where keys are track ids and values have the following format:
 
