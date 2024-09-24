@@ -922,25 +922,6 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     }
                                 }
 
-                                // track_map
-                                let track_map = data
-                                    .driver_positions
-                                    .iter()
-                                    .map(|car_id| {
-                                        let driver = data.drivers.get(car_id).ok_or_eyre(
-                                            "Driver not found while updating track map",
-                                        )?;
-                                        Ok(json!({
-                                            "car_id": driver.car_id,
-                                            "position": driver.position,
-                                            "is_leader": driver.is_leader,
-                                            "is_player": driver.is_player,
-                                            "lap_dist_pct": driver.lap_dist_pct,
-                                        }))
-                                    })
-                                    .collect::<Result<Vec<Value>>>()?;
-                                emitter.emit("track_map", json!(track_map))?;
-
                                 // gaps
                                 if !data.driver_positions.is_empty() {
                                     let player = data
@@ -1065,6 +1046,25 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         emitter.emit("gap_prev", json!("–"))?;
                                     }
                                 }
+
+                                // track_map
+                                let track_map = data
+                                    .driver_positions
+                                    .iter()
+                                    .map(|car_id| {
+                                        let driver = data.drivers.get(car_id).ok_or_eyre(
+                                            "Driver not found while updating track map",
+                                        )?;
+                                        Ok(json!({
+                                            "car_id": driver.car_id,
+                                            "position": driver.position,
+                                            "is_leader": driver.is_leader,
+                                            "is_player": driver.is_player,
+                                            "lap_dist_pct": driver.lap_dist_pct,
+                                        }))
+                                    })
+                                    .collect::<Result<Vec<Value>>>()?;
+                                emitter.emit("track_map", json!(track_map))?;
 
                                 if slow_var_ticks >= SLOW_VAR_RESET_TICKS
                                     && !data.drivers.is_empty()
