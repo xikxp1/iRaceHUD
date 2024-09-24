@@ -11,6 +11,10 @@
     import "ag-grid-community/styles/ag-theme-quartz.css";
     import { onMount } from "svelte";
 
+    let stength_of_field = 0;
+    let current_time = "––:––";
+    let driver_count = 0;
+
     let standings: HTMLDivElement;
 
     interface Standings {
@@ -42,7 +46,9 @@
                 pinned: "left",
                 cellClass: "ag-right-aligned-cell",
                 headerClass: "ag-right-aligned-header",
-                onCellValueChanged: (params: NewValueParams<Standings, Standings>) => {
+                onCellValueChanged: (
+                    params: NewValueParams<Standings, Standings>,
+                ) => {
                     // TODO: properly highlight changes
                 },
             },
@@ -86,14 +92,24 @@
             player: "data.is_player",
             odd: "!data.is_player && data.position % 2 === 1",
         },
+        overlayNoRowsTemplate: "Time to race 🏁",
     };
 
     onMount(() => {
         gridApi = createGrid(standings, gridOptions);
     });
 
+    listen("strength_of_field", (event) => {
+        stength_of_field = event.payload as number;
+    });
+
+    listen("current_time", (event) => {
+        current_time = event.payload as string;
+    });
+
     listen("standings", (event) => {
         let newRowData = event.payload as Standings[];
+        driver_count = newRowData.length;
         newRowData.sort((a, b) => a.position - b.position);
         let playerRowDataIdx = newRowData.findIndex((row) => row.is_player);
         let newLeaderRowData = newRowData.splice(0, 1);
@@ -107,11 +123,26 @@
 
 <div class="align-right" />
 <div class="flex flex-row items-center justify-center opacity-75">
-    <div
-        bind:this={standings}
-        id="standings"
-        class="ag-theme-quartz ag-theme-iracing w-[400px] h-[140px]"
-    ></div>
+    <div class="flex flex-col bg-primary-content rounded-md w-[400px]">
+        <div class="flex flex-row items-center justify-center">
+            <div class="flex flex-row items-center justify-start w-1/6 pl-2">
+                <span class="text text-secondary">SoF&nbsp</span>
+                <span class="text text-primary">{stength_of_field}</span>
+            </div>
+            <div class="flex flex-row items-center justify-center w-4/6">
+                <span class="text text-primary">{current_time}</span>
+            </div>
+            <div class="flex flex-row items-center justify-end w-1/6 pr-2">
+                <span class="text text-primary">{driver_count}&nbsp;</span>
+                <img src="/icons/helmet.svg" alt="" />
+            </div>
+        </div>
+        <div
+            bind:this={standings}
+            id="standings"
+            class="ag-theme-quartz ag-theme-iracing h-[140px]"
+        ></div>
+    </div>
 </div>
 
 <style>
