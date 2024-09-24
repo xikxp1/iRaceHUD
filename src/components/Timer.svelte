@@ -1,20 +1,33 @@
 <script lang="ts">
     import { listen } from "@tauri-apps/api/event";
+    import { onDestroy } from "svelte";
 
     let lap_time = "–:––.–––";
     let delta_last_time = "–";
     let delta_optimal_time = "–";
 
-    listen("lap_time", (event) => {
-        lap_time = event.payload as string;
-    });
+    let unlistens = [];
 
-    listen("delta_last_time", (event) => {
-        delta_last_time = event.payload as string;
-    });
+    unlistens.push(
+        listen("lap_time", (event) => {
+            lap_time = event.payload as string;
+        }),
+    );
 
-    listen("delta_optimal_time", (event) => {
-        delta_optimal_time = event.payload as string;
+    unlistens.push(
+        listen("delta_last_time", (event) => {
+            delta_last_time = event.payload as string;
+        }),
+    );
+
+    unlistens.push(
+        listen("delta_optimal_time", (event) => {
+            delta_optimal_time = event.payload as string;
+        }),
+    );
+
+    onDestroy(() => {
+        unlistens.forEach(async (unlisten) => (await unlisten)());
     });
 </script>
 

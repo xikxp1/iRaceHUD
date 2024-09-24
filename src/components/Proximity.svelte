@@ -1,13 +1,25 @@
 <script lang="ts">
     import { listen } from "@tauri-apps/api/event";
+    import { onDestroy } from "svelte";
 
     let left_icon: HTMLImageElement;
     let right_icon: HTMLImageElement;
 
-    listen("proximity", (event) => {
-        let payload = event.payload as { is_left: boolean; is_right: boolean };
-        left_icon.style.opacity = payload.is_left ? "1" : "0";
-        right_icon.style.opacity = payload.is_right ? "1" : "0";
+    let unlistens = [];
+
+    unlistens.push(
+        listen("proximity", (event) => {
+            let payload = event.payload as {
+                is_left: boolean;
+                is_right: boolean;
+            };
+            left_icon.style.opacity = payload.is_left ? "1" : "0";
+            right_icon.style.opacity = payload.is_right ? "1" : "0";
+        }),
+    );
+
+    onDestroy(() => {
+        unlistens.forEach(async (unlisten) => (await unlisten)());
     });
 </script>
 

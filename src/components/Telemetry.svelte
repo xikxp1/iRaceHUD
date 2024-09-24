@@ -1,8 +1,8 @@
 <script lang="ts">
     import { Chart } from "chart.js/auto";
     import { listen } from "@tauri-apps/api/event";
-    import { onMount } from "svelte";
-    import ProgressBar from "./ProgressBar.svelte";
+    import { onDestroy, onMount } from "svelte";
+    import ProgressBar from "./utils/ProgressBar.svelte";
 
     let ctx;
     let telemetryCanvas: HTMLCanvasElement;
@@ -86,28 +86,38 @@
         });
     });
 
-    listen("telemetry", (event) => {
-        let payload = event.payload as { ts: number; throttle: number; brake: number };
-        throttle = payload.throttle;
-        brake = payload.brake;
-        throttleData.push(throttle);
-        brakeData.push(brake);
-        let currentThrottlePoints = throttleData.length;
-        let currentBrakePoints = brakeData.length;
-        if (currentThrottlePoints > maxPoints) {
-            throttleData.splice(0, currentThrottlePoints - maxPoints);
-        }
-        if (currentBrakePoints > maxPoints) {
-            brakeData.splice(0, currentBrakePoints - maxPoints);
-        }
-        chart.update("none");
+    let unlistens = [];
+
+    unlistens.push(
+        listen("telemetry", (event) => {
+            let payload = event.payload as {
+                ts: number;
+                throttle: number;
+                brake: number;
+            };
+            throttle = payload.throttle;
+            brake = payload.brake;
+            throttleData.push(throttle);
+            brakeData.push(brake);
+            let currentThrottlePoints = throttleData.length;
+            let currentBrakePoints = brakeData.length;
+            if (currentThrottlePoints > maxPoints) {
+                throttleData.splice(0, currentThrottlePoints - maxPoints);
+            }
+            if (currentBrakePoints > maxPoints) {
+                brakeData.splice(0, currentBrakePoints - maxPoints);
+            }
+            chart.update("none");
+        }),
+    );
+
+    onDestroy(() => {
+        unlistens.forEach(async (unlisten) => (await unlisten)());
     });
 </script>
 
 <div class="flex flex-row items-center justify-center opacity-75">
-    <div
-        class="join w-[14%] bg-primary-content"
-    >
+    <div class="join w-[14%] bg-primary-content">
         <div
             class="join-item flex flex-row items-center justify-center rounded-md w-[82%] h-20"
         >

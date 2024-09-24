@@ -1,20 +1,33 @@
 <script lang="ts">
     import { listen } from "@tauri-apps/api/event";
+    import { onDestroy } from "svelte";
 
     let session_state = "";
     let gap_next = "";
     let gap_prev = "";
 
-    listen("session_state", (event) => {
-        session_state = event.payload as string;
-    });
+    let unlistens = [];
 
-    listen("gap_next", (event) => {
-        gap_next = event.payload as string;
-    });
+    unlistens.push(
+        listen("session_state", (event) => {
+            session_state = event.payload as string;
+        }),
+    );
 
-    listen("gap_prev", (event) => {
-        gap_prev = event.payload as string;
+    unlistens.push(
+        listen("gap_next", (event) => {
+            gap_next = event.payload as string;
+        }),
+    );
+
+    unlistens.push(
+        listen("gap_prev", (event) => {
+            gap_prev = event.payload as string;
+        }),
+    );
+
+    onDestroy(() => {
+        unlistens.forEach(async (unlisten) => (await unlisten)());
     });
 </script>
 

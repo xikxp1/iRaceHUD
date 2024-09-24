@@ -9,7 +9,7 @@
     } from "ag-grid-community";
     import "ag-grid-community/styles/ag-grid.css";
     import "ag-grid-community/styles/ag-theme-quartz.css";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
 
     let stength_of_field = 0;
     let current_time = "––:––";
@@ -99,25 +99,37 @@
         gridApi = createGrid(standings, gridOptions);
     });
 
-    listen("strength_of_field", (event) => {
-        stength_of_field = event.payload as number;
-    });
+    let unlistens = [];
 
-    listen("current_time", (event) => {
-        current_time = event.payload as string;
-    });
+    unlistens.push(
+        listen("strength_of_field", (event) => {
+            stength_of_field = event.payload as number;
+        }),
+    );
 
-    listen("standings", (event) => {
-        let newRowData = event.payload as Standings[];
-        driver_count = newRowData.length;
-        newRowData.sort((a, b) => a.position - b.position);
-        let playerRowDataIdx = newRowData.findIndex((row) => row.is_player);
-        let newLeaderRowData = newRowData.splice(0, 1);
-        gridApi.updateGridOptions({
-            rowData: newRowData,
-            pinnedTopRowData: newLeaderRowData,
-        });
-        gridApi.ensureIndexVisible(playerRowDataIdx, "middle");
+    unlistens.push(
+        listen("current_time", (event) => {
+            current_time = event.payload as string;
+        }),
+    );
+
+    unlistens.push(
+        listen("standings", (event) => {
+            let newRowData = event.payload as Standings[];
+            driver_count = newRowData.length;
+            newRowData.sort((a, b) => a.position - b.position);
+            let playerRowDataIdx = newRowData.findIndex((row) => row.is_player);
+            let newLeaderRowData = newRowData.splice(0, 1);
+            gridApi.updateGridOptions({
+                rowData: newRowData,
+                pinnedTopRowData: newLeaderRowData,
+            });
+            gridApi.ensureIndexVisible(playerRowDataIdx, "middle");
+        }),
+    );
+
+    onDestroy(() => {
+        unlistens.forEach(async (unlisten) => (await unlisten)());
     });
 </script>
 

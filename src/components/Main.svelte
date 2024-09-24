@@ -1,5 +1,6 @@
 <script lang="ts">
     import { listen } from "@tauri-apps/api/event";
+    import { onDestroy } from "svelte";
 
     let gear = "N";
     let speed = 0;
@@ -16,74 +17,102 @@
     let gear_indicator: HTMLDivElement;
     let rpm_incidator: HTMLProgressElement;
 
-    listen("gear", (event) => {
-        gear = event.payload as string;
-    });
+    let unlistens = [];
 
-    listen("gear_shift_rpm", (event) => {
-        gear_shift_rpm = event.payload as number;
-    });
+    unlistens.push(
+        listen("gear", (event) => {
+            gear = event.payload as string;
+        }),
+    );
 
-    listen("gear_blink_rpm", (event) => {
-        gear_blink_rpm = event.payload as number;
-    });
+    unlistens.push(
+        listen("gear_shift_rpm", (event) => {
+            gear_shift_rpm = event.payload as number;
+        }),
+    );
 
-    listen("speed", (event) => {
-        speed = event.payload as number;
-    });
+    unlistens.push(
+        listen("gear_blink_rpm", (event) => {
+            gear_blink_rpm = event.payload as number;
+        }),
+    );
 
-    listen("rpm", (event) => {
-        rpm = event.payload as number;
+    unlistens.push(
+        listen("speed", (event) => {
+            speed = event.payload as number;
+        }),
+    );
 
-        if (rpm >= gear_blink_rpm) {
-            gear_indicator.classList.remove("text-secondary");
-            gear_indicator.classList.remove("text-info");
-            gear_indicator.classList.add("text-error");
+    unlistens.push(
+        listen("rpm", (event) => {
+            rpm = event.payload as number;
 
-            rpm_incidator.classList.remove("progress-secondary");
-            rpm_incidator.classList.remove("progress-info");
-            rpm_incidator.classList.add("progress-error");
-        } else if (rpm >= gear_shift_rpm) {
-            gear_indicator.classList.remove("text-secondary");
-            gear_indicator.classList.add("text-info");
-            gear_indicator.classList.remove("text-error");
+            if (rpm >= gear_blink_rpm) {
+                gear_indicator.classList.remove("text-secondary");
+                gear_indicator.classList.remove("text-info");
+                gear_indicator.classList.add("text-error");
 
-            rpm_incidator.classList.remove("progress-secondary");
-            rpm_incidator.classList.add("progress-info");
-            rpm_incidator.classList.remove("progress-error");
-        } else {
-            gear_indicator.classList.add("text-secondary");
-            gear_indicator.classList.remove("text-info");
-            gear_indicator.classList.remove("text-error");
+                rpm_incidator.classList.remove("progress-secondary");
+                rpm_incidator.classList.remove("progress-info");
+                rpm_incidator.classList.add("progress-error");
+            } else if (rpm >= gear_shift_rpm) {
+                gear_indicator.classList.remove("text-secondary");
+                gear_indicator.classList.add("text-info");
+                gear_indicator.classList.remove("text-error");
 
-            rpm_incidator.classList.add("progress-secondary");
-            rpm_incidator.classList.remove("progress-info");
-            rpm_incidator.classList.remove("progress-error");
-        }
-    });
+                rpm_incidator.classList.remove("progress-secondary");
+                rpm_incidator.classList.add("progress-info");
+                rpm_incidator.classList.remove("progress-error");
+            } else {
+                gear_indicator.classList.add("text-secondary");
+                gear_indicator.classList.remove("text-info");
+                gear_indicator.classList.remove("text-error");
 
-    listen("lap", (event) => {
-        lap = event.payload as number;
-    });
+                rpm_incidator.classList.add("progress-secondary");
+                rpm_incidator.classList.remove("progress-info");
+                rpm_incidator.classList.remove("progress-error");
+            }
+        }),
+    );
 
-    listen("laps_total", (event) => {
-        laps_total = event.payload as number;
-    });
+    unlistens.push(
+        listen("lap", (event) => {
+            lap = event.payload as number;
+        }),
+    );
 
-    listen("position", (event) => {
-        position = event.payload as number;
-    });
+    unlistens.push(
+        listen("laps_total", (event) => {
+            laps_total = event.payload as number;
+        }),
+    );
 
-    listen("positions_total", (event) => {
-        positions_total = event.payload as number;
-    });
+    unlistens.push(
+        listen("position", (event) => {
+            position = event.payload as number;
+        }),
+    );
 
-    listen("incidents", (event) => {
-        incidents = event.payload as number;
-    });
+    unlistens.push(
+        listen("positions_total", (event) => {
+            positions_total = event.payload as number;
+        }),
+    );
 
-    listen("incident_limit", (event) => {
-        incident_limit = event.payload as number;
+    unlistens.push(
+        listen("incidents", (event) => {
+            incidents = event.payload as number;
+        }),
+    );
+
+    unlistens.push(
+        listen("incident_limit", (event) => {
+            incident_limit = event.payload as number;
+        }),
+    );
+
+    onDestroy(() => {
+        unlistens.forEach(async (unlisten) => (await unlisten)());
     });
 </script>
 

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { listen } from "@tauri-apps/api/event";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
 
     type TrackMapCar = {
         car_id: number;
@@ -46,26 +46,36 @@
             });
     });
 
-    listen("track_id", (event) => {
-        track_id = event.payload as number;
-        trackPath = trackInfo[track_id].activePath;
-        offset = trackSettings[track_id]?.offset ?? 0;
-        direction = trackSettings[track_id]?.direction ?? 1;
-    });
+    let unlistens = [];
 
-    listen("track_map", (event) => {
-        const track_map = event.payload as TrackMapCar[];
-        for (let car of track_map) {
-            const pathLength = trackPathElement.getTotalLength();
-            const offsetedLapDistPct =
-                (1 + offset + direction * car.lap_dist_pct) % 1;
-            const point = trackPathElement.getPointAtLength(
-                offsetedLapDistPct * pathLength,
-            );
-            car.x = point.x;
-            car.y = point.y;
-        }
-        trackMapCars = track_map;
+    unlistens.push(
+        listen("track_id", (event) => {
+            track_id = event.payload as number;
+            trackPath = trackInfo[track_id].activePath;
+            offset = trackSettings[track_id]?.offset ?? 0;
+            direction = trackSettings[track_id]?.direction ?? 1;
+        }),
+    );
+
+    unlistens.push(
+        listen("track_map", (event) => {
+            const track_map = event.payload as TrackMapCar[];
+            for (let car of track_map) {
+                const pathLength = trackPathElement.getTotalLength();
+                const offsetedLapDistPct =
+                    (1 + offset + direction * car.lap_dist_pct) % 1;
+                const point = trackPathElement.getPointAtLength(
+                    offsetedLapDistPct * pathLength,
+                );
+                car.x = point.x;
+                car.y = point.y;
+            }
+            trackMapCars = track_map;
+        }),
+    );
+
+    onDestroy(() => {
+        unlistens.forEach(async (unlisten) => (await unlisten)());
     });
 </script>
 
