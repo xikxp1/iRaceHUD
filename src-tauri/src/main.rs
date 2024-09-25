@@ -16,7 +16,7 @@ static WINDOW: OnceLock<tauri::Window> = OnceLock::new();
 const WAIT_FOR_SESSION_SECS: u64 = 600;
 const SESSION_UPDATE_PERIOD_MILLIS: u64 = 25;
 const SLOW_VAR_RESET_TICKS: u32 = 50;
-const FORCED_EMITTER_DURATION_SECS: i64 = 10000;
+const FORCED_EMITTER_DURATION_SECS: i64 = 10;
 const MAX_LAP_TIMES: usize = 5;
 
 struct TelemetryData {
