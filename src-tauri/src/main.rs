@@ -16,7 +16,8 @@ static WINDOW: OnceLock<tauri::Window> = OnceLock::new();
 const WAIT_FOR_SESSION_SECS: u64 = 600;
 const SESSION_UPDATE_PERIOD_MILLIS: u64 = 25;
 const SLOW_VAR_RESET_TICKS: u32 = 50;
-const FORCED_EMITTER_DURATION_SECS: i64 = 10;
+const FORCED_EMITTER_DURATION_SECS: i64 = 10000;
+const MAX_LAP_TIMES: usize = 5;
 
 struct TelemetryData {
     active: bool,
@@ -50,6 +51,8 @@ struct TelemetryData {
     leader_car_id: u32,
     car_class_est_lap_time: SignedDuration,
     track_id: u32,
+    player_lap_times: Vec<LapTime>,
+    last_lap_time: SignedDuration,
 }
 
 #[derive(Clone)]
@@ -59,6 +62,7 @@ struct Driver {
     laps_completed: u32,
     lap_dist_pct: f32,
     total_completed: f32,
+    best_lap_time: SignedDuration,
     last_lap_time: SignedDuration,
     estimated: SignedDuration,
     leader_gap_laps: i32,
@@ -72,6 +76,11 @@ struct Driver {
     lic_string: String,
     is_player: bool,
     is_leader: bool,
+}
+
+struct LapTime {
+    lap: u32,
+    lap_time: SignedDuration,
 }
 
 #[derive(Debug)]
@@ -121,6 +130,8 @@ impl TelemetryData {
             leader_car_id: 0,
             car_class_est_lap_time: SignedDuration::ZERO,
             track_id: 0,
+            player_lap_times: Vec::new(),
+            last_lap_time: SignedDuration::ZERO,
         }
     }
 }
@@ -211,6 +222,18 @@ impl SignedDuration {
         } else {
             -self.duration.as_secs_f64()
         }
+    }
+
+    fn as_secs(&self) -> i64 {
+        if self.is_positive {
+            self.duration.as_secs() as i64
+        } else {
+            -(self.duration.as_secs() as i64)
+        }
+    }
+
+    fn subsec_millis(&self) -> u32 {
+        self.duration.subsec_millis()
     }
 }
 
@@ -368,6 +391,9 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                     let lap_delta_to_session_last_lap = s
                         .find_var("LapDeltaToSessionLastlLap")
                         .ok_or_eyre("LapDeltaToSessionLastlLap variable not found")?;
+                    let lap_last_last_time = s
+                        .find_var("LapLastLapTime")
+                        .ok_or_eyre("LapLastLapTime variable not found")?;
                     let gear = s.find_var("Gear").ok_or_eyre("Gear variable not found")?;
                     let speed = s.find_var("Speed").ok_or_eyre("Speed variable not found")?;
                     let rpm = s.find_var("RPM").ok_or_eyre("RPM variable not found")?;
@@ -415,6 +441,9 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                     let car_idx_est_time = s
                         .find_var("CarIdxEstTime")
                         .ok_or_eyre("CarIdxEstTime variable not found")?;
+                    let car_idx_best_lap_time = s
+                        .find_var("CarIdxBestLapTime")
+                        .ok_or_eyre("CarIdxBestLapTime variable not found")?;
                     let car_idx_last_lap_time = s
                         .find_var("CarIdxLastLapTime")
                         .ok_or_eyre("CarIdxLastLapTime variable not found")?;
@@ -446,6 +475,9 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     );
                                     if active {
                                         emitter.activate(current_time);
+                                        // TODO: properly clear session state
+                                        data.player_lap_times.clear();
+                                        data.last_lap_time = SignedDuration::ZERO;
                                     } else {
                                         emitter.deactivate();
                                     }
@@ -860,6 +892,13 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         eyre!("Failed to get CarIdxEstTime value: {:?}", err)
                                     })?;
 
+                                let car_idx_best_lap_time_value = s
+                                    .var_value(&car_idx_best_lap_time)
+                                    .as_f32s()
+                                    .map_err(|err| {
+                                        eyre!("Failed to get CarIdxBestLapTime value: {:?}", err)
+                                    })?;
+
                                 let car_idx_last_lap_time_value = s
                                     .var_value(&car_idx_last_lap_time)
                                     .as_f32s()
@@ -869,7 +908,7 @@ fn connect(mut emitter: Emitter) -> Result<()> {
 
                                 for (car_id, driver) in data.drivers.iter_mut() {
                                     let lap_dist_pct_value = lap_dist_pct[*car_id as usize];
-                                    let laps_completed_value = match laps_completed
+                                    let mut laps_completed_value = match laps_completed
                                         [*car_id as usize]
                                     {
                                         value if value >= IRSDK_UNLIMITED_LAPS || value <= 0 => 0,
@@ -882,14 +921,18 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     }
                                         as u32;
                                     let est_time_value = car_idx_est_time_value[*car_id as usize];
+                                    if laps_started_value == 0 {
+                                        laps_completed_value = 0;
+                                    }
                                     driver.lap_dist_pct = lap_dist_pct_value;
                                     driver.laps_completed = laps_completed_value;
-                                    driver.total_completed = laps_completed_value as f32;
+                                    driver.total_completed =
+                                        laps_completed_value as f32 + lap_dist_pct_value;
                                     driver.estimated =
                                         SignedDuration::from_secs_f32(est_time_value);
-                                    if laps_started_value > 0 {
-                                        driver.total_completed += lap_dist_pct_value;
-                                    }
+                                    driver.best_lap_time = SignedDuration::from_secs_f32(
+                                        car_idx_best_lap_time_value[*car_id as usize],
+                                    );
                                     driver.last_lap_time = SignedDuration::from_secs_f32(
                                         car_idx_last_lap_time_value[*car_id as usize],
                                     );
@@ -1066,45 +1109,108 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     .collect::<Result<Vec<Value>>>()?;
                                 emitter.emit("track_map", json!(track_map))?;
 
-                                if slow_var_ticks >= SLOW_VAR_RESET_TICKS
-                                    && !data.drivers.is_empty()
-                                {
+                                // extra slow vars
+                                if slow_var_ticks >= SLOW_VAR_RESET_TICKS {
                                     // standings
-                                    let drivers: Vec<Value> = data
-                                        .drivers
-                                        .values()
-                                        .map(|driver| {
-                                            let leader_gap = match driver.leader_gap_laps {
-                                                0 => match driver.leader_gap.as_abs_secs_f32() {
-                                                    value if value >= 100.0 => {
-                                                        format!("{}", value as i32)
+                                    if !data.drivers.is_empty() {
+                                        let drivers: Vec<Value> = data
+                                            .drivers
+                                            .values()
+                                            .map(|driver| {
+                                                let leader_gap = match driver.leader_gap_laps {
+                                                    0 => {
+                                                        match driver.leader_gap.as_abs_secs_f32() {
+                                                            value if value >= 100.0 => {
+                                                                format!("{}", value as i32)
+                                                            }
+                                                            value => format!(
+                                                                "{}.{}",
+                                                                value as i32,
+                                                                min(
+                                                                    (value.fract() * 10.0).round()
+                                                                        as i32,
+                                                                    9
+                                                                )
+                                                            ),
+                                                        }
                                                     }
-                                                    value => format!(
-                                                        "{}.{}",
-                                                        value as i32,
-                                                        min(
-                                                            (value.fract() * 10.0).round() as i32,
-                                                            9
-                                                        )
-                                                    ),
-                                                },
-                                                _ => format!("L{}", driver.leader_gap_laps.abs()),
-                                            };
-                                            let irating =
-                                                format!("{:.1}k", driver.irating as f32 / 1000.0);
-                                            json!({
-                                                "car_id": driver.car_id,
-                                                "position": driver.position,
-                                                "user_name": driver.user_name,
-                                                "car_number": driver.car_number,
-                                                "irating": irating,
-                                                "license": driver.lic_string,
-                                                "leader_gap": leader_gap,
-                                                "is_player": driver.is_player,
+                                                    _ => {
+                                                        format!("L{}", driver.leader_gap_laps.abs())
+                                                    }
+                                                };
+                                                let irating = format!(
+                                                    "{:.1}k",
+                                                    driver.irating as f32 / 1000.0
+                                                );
+                                                json!({
+                                                    "car_id": driver.car_id,
+                                                    "position": driver.position,
+                                                    "user_name": driver.user_name,
+                                                    "car_number": driver.car_number,
+                                                    "irating": irating,
+                                                    "license": driver.lic_string,
+                                                    "leader_gap": leader_gap,
+                                                    "is_player": driver.is_player,
+                                                })
                                             })
-                                        })
-                                        .collect();
-                                    emitter.emit("standings", json!(drivers))?;
+                                            .collect();
+                                        emitter.emit("standings", json!(drivers))?;
+                                    }
+
+                                    // lap_last_lap_time
+                                    if data.lap > 1 {
+                                        let raw_lap_last_lap_time_value = s
+                                            .var_value(&lap_last_last_time)
+                                            .as_f32()
+                                            .map_err(|err| {
+                                                eyre!(
+                                                    "Failed to get LapLastLapTime value: {:?}",
+                                                    err
+                                                )
+                                            })?;
+                                        let lap_last_lap_time_value = SignedDuration::from_secs_f32(
+                                            raw_lap_last_lap_time_value,
+                                        );
+                                        match lap_last_lap_time_value {
+                                            value if value.is_positive => {
+                                                // This check is not exactly safe
+                                                if lap_last_lap_time_value != data.last_lap_time {
+                                                    data.player_lap_times.insert(
+                                                        0,
+                                                        LapTime {
+                                                            lap: data.lap - 1,
+                                                            lap_time: value,
+                                                        },
+                                                    );
+                                                    if data.player_lap_times.len() > MAX_LAP_TIMES {
+                                                        data.player_lap_times.pop();
+                                                    }
+                                                    let player_lap_times_value: Value = data
+                                                        .player_lap_times
+                                                        .iter()
+                                                        .map(|lap| {
+                                                            json!({
+                                                                "lap": lap.lap,
+                                                                "lap_time": format!(
+                                                                    "{}:{:02}.{:03}",
+                                                                    lap.lap_time.as_secs() / 60,
+                                                                    lap.lap_time.as_secs() % 60,
+                                                                    lap.lap_time
+                                                                        .subsec_millis()
+                                                                ),
+                                                            })
+                                                        })
+                                                        .collect();
+                                                    emitter.emit(
+                                                        "player_lap_times",
+                                                        json!(player_lap_times_value),
+                                                    )?;
+                                                    data.last_lap_time = value;
+                                                }
+                                            }
+                                            _ => {}
+                                        }
+                                    }
                                 }
 
                                 if slow_var_ticks >= SLOW_VAR_RESET_TICKS {
@@ -1204,6 +1310,7 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                             laps_completed: 0,
                                             lap_dist_pct: 0.0,
                                             total_completed: 0.0,
+                                            best_lap_time: SignedDuration::ZERO,
                                             last_lap_time: SignedDuration::ZERO,
                                             estimated: SignedDuration::ZERO,
                                             leader_gap_laps: 0,

@@ -7,6 +7,7 @@
     import Proximity from "../components/Proximity.svelte";
     import Standings from "../components/Standings.svelte";
     import TrackMap from "../components/TrackMap.svelte";
+    import LapTimes from "../components/LapTimes.svelte";
 
     let active: boolean = false;
 
@@ -62,6 +63,13 @@
         <div class="middle">
             <div class="trackmap">
                 <TrackMap />
+            </div>
+        </div>
+    </div>
+    <div class="outer">
+        <div class="middle">
+            <div class="laptimes">
+                <LapTimes />
             </div>
         </div>
     </div>
@@ -134,6 +142,14 @@
         margin-left: 1300px;
         margin-right: auto;
         margin-top: -550px;
+        margin-bottom: auto;
+        align-items: center;
+    }
+
+    .laptimes {
+        margin-left: 1800px;
+        margin-right: auto;
+        margin-top: auto;
         margin-bottom: auto;
         align-items: center;
     }
