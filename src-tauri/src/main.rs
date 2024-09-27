@@ -243,8 +243,8 @@ impl std::fmt::Debug for SignedDuration {
             f,
             "{}{}.{:03}",
             if self.is_positive { "+" } else { "-" },
-            self.duration.as_secs(),
-            self.duration.subsec_millis()
+            self.as_secs(),
+            self.subsec_millis()
         )
     }
 }
@@ -255,8 +255,8 @@ impl std::fmt::Display for SignedDuration {
             f,
             "{}{}.{:03}",
             if self.is_positive { "+" } else { "-" },
-            self.duration.as_secs(),
-            self.duration.subsec_millis()
+            self.as_secs(),
+            self.subsec_millis()
         )
     }
 }
