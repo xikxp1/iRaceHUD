@@ -19,6 +19,7 @@ const SLOW_VAR_RESET_TICKS: u32 = 50;
 const FORCED_EMITTER_DURATION_SECS: i64 = 10;
 const MAX_LAP_TIMES: usize = 5;
 
+#[derive(Default)]
 struct TelemetryData {
     active: bool,
     session_time: Duration,
@@ -29,7 +30,7 @@ struct TelemetryData {
     lap_time: Duration,
     delta_last_time: SignedDuration,
     delta_optimal_time: SignedDuration,
-    gear: String,
+    gear: Gear,
     speed: u32,
     rpm: u32,
     brake: u32,
@@ -55,7 +56,7 @@ struct TelemetryData {
     last_lap_time: SignedDuration,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 struct Driver {
     car_id: u32,
     position: u32,
@@ -78,6 +79,28 @@ struct Driver {
     is_leader: bool,
 }
 
+impl Driver {
+    fn new(
+        car_id: u32,
+        user_name: String,
+        car_number: String,
+        car_class_id: u32,
+        irating: u32,
+        lic_string: String,
+    ) -> Self {
+        Self {
+            car_id,
+            user_name,
+            car_number,
+            car_class_id,
+            irating,
+            lic_string,
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Default)]
 struct LapTime {
     lap: u32,
     lap_time: SignedDuration,
@@ -90,49 +113,31 @@ struct Emitter {
     forced_emitter_duration: TimeDelta,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 struct SignedDuration {
     is_positive: bool,
     duration: Duration,
 }
 
-impl TelemetryData {
-    fn new() -> Self {
-        Self {
-            active: false,
-            session_time: Duration::ZERO,
-            player_car_id: 0,
-            player_car_class: 0,
-            lap: 0,
-            race_laps: 0,
-            lap_time: Duration::ZERO,
-            delta_last_time: SignedDuration::ZERO,
-            delta_optimal_time: SignedDuration::ZERO,
-            gear: String::from("N"),
-            speed: 0,
-            rpm: 0,
-            brake: 0,
-            throttle: 0,
-            is_left: false,
-            is_right: false,
-            position: 0,
-            positions_total: 0,
-            strength_of_field: 0,
-            session_time_total: Duration::ZERO,
-            laps_total: 0,
-            incidents: 0,
-            incident_limit: 0,
-            gear_shift_rpm: 0,
-            gear_blink_rpm: 0,
-            session_info_update: 0,
-            drivers: HashMap::new(),
-            driver_positions: Vec::new(),
-            leader_car_id: 0,
-            car_class_est_lap_time: SignedDuration::ZERO,
-            track_id: 0,
-            player_lap_times: Vec::new(),
-            last_lap_time: SignedDuration::ZERO,
-        }
+#[derive(Default)]
+struct Gear {
+    value: i32,
+}
+
+impl Gear {
+    fn new(value: i32) -> Self {
+        Self { value }
+    }
+}
+
+impl std::fmt::Display for Gear {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let gear_str = match self.value {
+            -1 => "R".to_string(),
+            0 => "N".to_string(),
+            _ => self.value.to_string(),
+        };
+        write!(f, "{}", gear_str)
     }
 }
 
@@ -366,7 +371,7 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                     return Ok(());
                 }
                 Some(mut s) => {
-                    let mut data = TelemetryData::new();
+                    let mut data = TelemetryData::default();
                     let is_on_track = s
                         .find_var("IsOnTrack")
                         .ok_or_eyre("IsOnTrack variable not found")?;
@@ -805,12 +810,8 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     .var_value(&gear)
                                     .as_i32()
                                     .map_err(|err| eyre!("Failed to get Gear value: {:?}", err))?;
-                                let gear_value = match raw_gear_value {
-                                    -1 => String::from("R"),
-                                    0 => String::from("N"),
-                                    _ => raw_gear_value.to_string(),
-                                };
-                                emitter.emit("gear", json!(gear_value))?;
+                                let gear_value = Gear::new(raw_gear_value);
+                                emitter.emit("gear", json!(gear_value.to_string()))?;
                                 data.gear = gear_value;
 
                                 // speed
@@ -1304,27 +1305,14 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                                 );
                                         }
 
-                                        let driver = Driver {
+                                        let driver = Driver::new(
                                             car_id,
-                                            position: 0,
-                                            laps_completed: 0,
-                                            lap_dist_pct: 0.0,
-                                            total_completed: 0.0,
-                                            best_lap_time: SignedDuration::ZERO,
-                                            last_lap_time: SignedDuration::ZERO,
-                                            estimated: SignedDuration::ZERO,
-                                            leader_gap_laps: 0,
-                                            leader_gap: SignedDuration::ZERO,
-                                            player_gap_laps: 0,
-                                            player_gap: SignedDuration::ZERO,
                                             user_name,
                                             car_number,
                                             car_class_id,
                                             irating,
-                                            lic_string: lic_string.to_string(),
-                                            is_player: false,
-                                            is_leader: false,
-                                        };
+                                            lic_string.to_string(),
+                                        );
 
                                         data.drivers.insert(car_id, driver);
                                     }
