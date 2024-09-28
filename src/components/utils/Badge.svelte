@@ -23,11 +23,11 @@
 </script>
 
 {#if license && irating}
-    <span class="badge {getBadgeColor(license)}">
+    <div class="rounded-md text-center {getBadgeColor(license)}">
         <span class="text text-primary text-sm"
             >{license.substring(0, 5)}&nbsp|&nbsp{irating}</span
         >
-    </span>
+    </div>
 {/if}
 
 <style>

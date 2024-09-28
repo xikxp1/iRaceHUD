@@ -46,7 +46,7 @@
                 <td class="text text-sm">
                     {rel?.user_name ?? ""}
                 </td>
-                <td class="text text-sm text-right pr-1 w-[100px]">
+                <td class="text text-sm text-right pr-1 w-[80px]">
                     <Badge
                         license={rel?.license ?? ""}
                         irating={rel?.irating ?? ""}
