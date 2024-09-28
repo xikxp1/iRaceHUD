@@ -118,8 +118,11 @@
             let newRowData = event.payload as Standings[];
             driver_count = newRowData.length;
             newRowData.sort((a, b) => a.position - b.position);
-            let playerRowDataIdx = newRowData.findIndex((row) => row.is_player);
             let newLeaderRowData = newRowData.splice(0, 1);
+            let playerRowDataIdx = Math.max(
+                newRowData.findIndex((row) => row.is_player),
+                0,
+            );
             gridApi.updateGridOptions({
                 rowData: newRowData,
                 pinnedTopRowData: newLeaderRowData,
@@ -133,7 +136,6 @@
     });
 </script>
 
-<div class="align-right" />
 <div class="flex flex-row items-center justify-center opacity-75">
     <div class="flex flex-col bg-primary-content rounded-md w-[400px]">
         <div class="flex flex-row items-center justify-center">

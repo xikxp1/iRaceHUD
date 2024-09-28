@@ -18,6 +18,8 @@ const SESSION_UPDATE_PERIOD_MILLIS: u64 = 25;
 const SLOW_VAR_RESET_TICKS: u32 = 50;
 const FORCED_EMITTER_DURATION_SECS: i64 = 10;
 const MAX_LAP_TIMES: usize = 5;
+const RELATIVE_DRIVERS_BEFORE: usize = 3;
+const RELATIVE_DRIVERS_AFTER: usize = 3;
 
 #[derive(Default)]
 struct TelemetryData {
@@ -70,6 +72,7 @@ struct Driver {
     leader_gap: SignedDuration,
     player_gap_laps: i32,
     player_gap: SignedDuration,
+    player_relative_gap: SignedDuration,
     user_name: String,
     car_number: String,
     car_class_id: u32,
@@ -283,6 +286,30 @@ impl std::ops::Sub for SignedDuration {
 
     fn sub(self, rhs: Self) -> Self::Output {
         let value = self.as_secs_f32() - rhs.as_secs_f32();
+        Self {
+            is_positive: value >= 0.0,
+            duration: Duration::from_secs_f32(value.abs()),
+        }
+    }
+}
+
+impl std::ops::Mul for SignedDuration {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let value = self.as_secs_f32() * rhs.as_secs_f32();
+        Self {
+            is_positive: value >= 0.0,
+            duration: Duration::from_secs_f32(value.abs()),
+        }
+    }
+}
+
+impl std::ops::Mul<f32> for SignedDuration {
+    type Output = Self;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        let value = self.as_secs_f32() * rhs;
         Self {
             is_positive: value >= 0.0,
             duration: Duration::from_secs_f32(value.abs()),
@@ -1030,7 +1057,20 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                                     _ => player.estimated - driver.estimated,
                                                 },
                                             };
-                                        }
+                                        };
+                                        driver.player_relative_gap = match player.estimated
+                                            - driver.estimated
+                                        {
+                                            value if value >= data.car_class_est_lap_time * 0.5 => {
+                                                value - data.car_class_est_lap_time
+                                            }
+                                            value
+                                                if value <= -data.car_class_est_lap_time * 0.5 =>
+                                            {
+                                                value + data.car_class_est_lap_time
+                                            }
+                                            value => value,
+                                        };
                                     }
 
                                     let player_position = player.position;
@@ -1158,7 +1198,160 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         emitter.emit("standings", json!(drivers))?;
                                     }
 
-                                    // lap_last_lap_time
+                                    // relative
+                                    if !data.drivers.is_empty() {
+                                        let mut drivers: Vec<Driver> =
+                                            data.drivers.values().cloned().collect();
+                                        drivers.sort_by(|a, b| {
+                                            a.player_relative_gap
+                                                .partial_cmp(&b.player_relative_gap)
+                                                .unwrap()
+                                        });
+                                        let player_idx = drivers
+                                            .iter()
+                                            .enumerate()
+                                            .find(|(_, driver)| driver.is_player)
+                                            .unwrap()
+                                            .0;
+                                        let mut relative: Vec<Value> = vec![
+                                            json!(null);
+                                            RELATIVE_DRIVERS_BEFORE + RELATIVE_DRIVERS_AFTER
+                                                + 1
+                                        ];
+                                        for idx in 0..RELATIVE_DRIVERS_BEFORE {
+                                            if player_idx <= idx {
+                                                break;
+                                            }
+                                            let driver = drivers.get(player_idx - idx - 1);
+                                            let value = match driver {
+                                                Some(driver) => {
+                                                    let player_relative_gap = match driver
+                                                        .player_relative_gap
+                                                        .as_abs_secs_f32()
+                                                    {
+                                                        value if value >= 100.0 => {
+                                                            format!("{}", value as i32)
+                                                        }
+                                                        value => format!(
+                                                            "{}.{}",
+                                                            value as i32,
+                                                            min(
+                                                                (value.fract() * 10.0).round()
+                                                                    as i32,
+                                                                9
+                                                            )
+                                                        ),
+                                                    };
+                                                    let irating = format!(
+                                                        "{:.1}k",
+                                                        driver.irating as f32 / 1000.0
+                                                    );
+                                                    json!({
+                                                        "car_id": driver.car_id,
+                                                        "position": driver.position,
+                                                        "user_name": driver.user_name,
+                                                        "car_number": driver.car_number,
+                                                        "irating": irating,
+                                                        "license": driver.lic_string,
+                                                        "player_relative_gap": player_relative_gap,
+                                                        "is_player": driver.is_player,
+                                                    })
+                                                }
+                                                None => {
+                                                    json!(null)
+                                                }
+                                            };
+                                            relative[RELATIVE_DRIVERS_BEFORE - idx - 1] = value;
+                                        }
+                                        let player = drivers.get(player_idx);
+                                        let value = match player {
+                                            Some(driver) => {
+                                                let player_relative_gap = match driver
+                                                    .player_relative_gap
+                                                    .as_abs_secs_f32()
+                                                {
+                                                    value if value >= 100.0 => {
+                                                        format!("{}", value as i32)
+                                                    }
+                                                    value => format!(
+                                                        "{}.{}",
+                                                        value as i32,
+                                                        min(
+                                                            (value.fract() * 10.0).round() as i32,
+                                                            9
+                                                        )
+                                                    ),
+                                                };
+                                                let irating = format!(
+                                                    "{:.1}k",
+                                                    driver.irating as f32 / 1000.0
+                                                );
+                                                json!({
+                                                    "car_id": driver.car_id,
+                                                    "position": driver.position,
+                                                    "user_name": driver.user_name,
+                                                    "car_number": driver.car_number,
+                                                    "irating": irating,
+                                                    "license": driver.lic_string,
+                                                    "player_relative_gap": player_relative_gap,
+                                                    "is_player": driver.is_player,
+                                                })
+                                            }
+                                            None => {
+                                                json!(null)
+                                            }
+                                        };
+                                        relative[RELATIVE_DRIVERS_BEFORE] = value;
+                                        for idx in 0..RELATIVE_DRIVERS_AFTER {
+                                            let relative_idx = player_idx + idx + 1;
+                                            if relative_idx >= drivers.len() {
+                                                break;
+                                            };
+                                            let driver = drivers.get(relative_idx);
+                                            let value = match driver {
+                                                Some(driver) => {
+                                                    let player_relative_gap = match driver
+                                                        .player_relative_gap
+                                                        .as_abs_secs_f32()
+                                                    {
+                                                        value if value >= 100.0 => {
+                                                            format!("{}", value as i32)
+                                                        }
+                                                        value => format!(
+                                                            "{}.{}",
+                                                            value as i32,
+                                                            min(
+                                                                (value.fract() * 10.0).round()
+                                                                    as i32,
+                                                                9
+                                                            )
+                                                        ),
+                                                    };
+                                                    let irating = format!(
+                                                        "{:.1}k",
+                                                        driver.irating as f32 / 1000.0
+                                                    );
+                                                    json!({
+                                                        "car_id": driver.car_id,
+                                                        "position": driver.position,
+                                                        "user_name": driver.user_name,
+                                                        "car_number": driver.car_number,
+                                                        "irating": irating,
+                                                        "license": driver.lic_string,
+                                                        "player_relative_gap": player_relative_gap,
+                                                        "is_player": driver.is_player,
+                                                    })
+                                                }
+                                                None => {
+                                                    json!(null)
+                                                }
+                                            };
+                                            relative[RELATIVE_DRIVERS_BEFORE + idx + 1] = value;
+                                        }
+                                        emitter.emit("relative", json!(relative))?;
+                                    }
+
+                                    // player_lap_times
                                     if data.lap > 1 {
                                         let raw_lap_last_lap_time_value = s
                                             .var_value(&lap_last_last_time)

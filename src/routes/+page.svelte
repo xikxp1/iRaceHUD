@@ -8,6 +8,7 @@
     import Standings from "../components/Standings.svelte";
     import TrackMap from "../components/TrackMap.svelte";
     import LapTimes from "../components/LapTimes.svelte";
+    import Relative from "../components/Relative.svelte";
 
     let active: boolean = false;
 
@@ -70,6 +71,13 @@
         <div class="middle">
             <div class="laptimes">
                 <LapTimes />
+            </div>
+        </div>
+    </div>
+    <div class="outer">
+        <div class="middle">
+            <div class="relative">
+                <Relative />
             </div>
         </div>
     </div>
@@ -150,6 +158,14 @@
         margin-left: 1800px;
         margin-right: auto;
         margin-top: auto;
+        margin-bottom: auto;
+        align-items: center;
+    }
+
+    .relative {
+        margin-left:1500px;
+        margin-right: auto;
+        margin-top: 700px;
         margin-bottom: auto;
         align-items: center;
     }
