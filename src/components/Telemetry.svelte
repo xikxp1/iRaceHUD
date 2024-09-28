@@ -120,7 +120,7 @@
 </script>
 
 <div class="flex flex-row items-center justify-center opacity-75">
-    <div class="join w-[14%] bg-primary-content">
+    <div class="join w-[14%] bg-primary-content {abs ? 'outline outline-1 outline-secondary' : ''}">
         <div
             class="join-item flex flex-row items-center justify-center rounded-md w-[82%] h-20"
         >
