@@ -430,6 +430,9 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                     let speed = s.find_var("Speed").ok_or_eyre("Speed variable not found")?;
                     let rpm = s.find_var("RPM").ok_or_eyre("RPM variable not found")?;
                     let lap = s.find_var("Lap").ok_or_eyre("Lap variable not found")?;
+                    let brake_abs_active = s
+                        .find_var("BrakeABSactive")
+                        .ok_or_eyre("BrakeABSactive variable not found")?;
                     let race_laps = s
                         .find_var("RaceLaps")
                         .ok_or_eyre("RaceLaps variable not found")?;
@@ -870,7 +873,11 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                         eyre!("Failed to get Throttle value: {:?}", err)
                                     })?;
                                 let throttle_value = (raw_throttle_value * 100.0).round() as u32;
-                                emitter.emit("telemetry", json!({"ts": session_time_value.as_secs_f64(), "brake": brake_value, "throttle": throttle_value}))?;
+                                let abs_active_value =
+                                    s.var_value(&brake_abs_active).as_bool().map_err(|err| {
+                                        eyre!("Failed to get BrakeABSactive value: {:?}", err)
+                                    })?;
+                                emitter.emit("telemetry", json!({"ts": session_time_value.as_secs_f64(), "brake": brake_value, "throttle": throttle_value, "abs": abs_active_value}))?;
                                 data.brake = brake_value;
                                 data.throttle = throttle_value;
 

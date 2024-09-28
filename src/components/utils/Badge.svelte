@@ -24,7 +24,9 @@
 
 {#if license && irating}
     <span class="badge {getBadgeColor(license)}">
-        <span class="text text-primary text-sm">{license}&nbsp|&nbsp{irating}</span>
+        <span class="text text-primary text-sm"
+            >{license.substring(0, 5)}&nbsp|&nbsp{irating}</span
+        >
     </span>
 {/if}
 
