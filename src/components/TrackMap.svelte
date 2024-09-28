@@ -8,6 +8,9 @@
         is_leader: boolean;
         is_player: boolean;
         lap_dist_pct: number;
+        is_in_pits: boolean;
+        is_off_track: boolean;
+        is_off_world: boolean;
         x: number;
         y: number;
     };
@@ -32,6 +35,8 @@
     const carCircleColor: string = `oklch(${css.getPropertyValue("--p")})`;
     const leaderCircleColor: string = `oklch(${css.getPropertyValue("--in")})`;
     const playerCircleColor: string = `oklch(${css.getPropertyValue("--s")})`;
+    const offtrackCircleColor: string = `oklch(${css.getPropertyValue("--er")})`;
+    const inPitsCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
 
     onMount(() => {
         fetch("/track_info_data/track_info.json")
@@ -105,7 +110,7 @@
                 </image>
             {/if}
             {#each trackMapCars as car}
-                {#if !car.is_leader && !car.is_player}
+                {#if !car.is_off_world && !car.is_leader && !car.is_player}
                     <g>
                         <circle
                             cx={car.x}
@@ -113,6 +118,17 @@
                             r="32"
                             fill={carCircleColor}
                         />
+                        {#if car.is_off_track || car.is_in_pits}
+                            <circle
+                                cx={car.x}
+                                cy={car.y}
+                                r="36"
+                                stroke={car.is_off_track
+                                    ? offtrackCircleColor
+                                    : inPitsCircleColor}
+                                stroke-width="6"
+                            />
+                        {/if}
                         <text
                             x={car.x}
                             y={car.y + 5}
@@ -127,7 +143,7 @@
                 {/if}
             {/each}
             {#each trackMapCars as car}
-                {#if car.is_leader && !car.is_player}
+                {#if !car.is_off_world && car.is_leader && !car.is_player}
                     <g>
                         <circle
                             cx={car.x}
@@ -135,6 +151,17 @@
                             r="32"
                             fill={leaderCircleColor}
                         />
+                        {#if car.is_off_track || car.is_in_pits}
+                            <circle
+                                cx={car.x}
+                                cy={car.y}
+                                r="36"
+                                stroke={car.is_off_track
+                                    ? offtrackCircleColor
+                                    : inPitsCircleColor}
+                                stroke-width="6"
+                            />
+                        {/if}
                         <text
                             x={car.x}
                             y={car.y + 5}
@@ -149,7 +176,7 @@
                 {/if}
             {/each}
             {#each trackMapCars as car}
-                {#if car.is_player}
+                {#if !car.is_off_world && car.is_player}
                     <g>
                         <circle
                             cx={car.x}
@@ -157,6 +184,17 @@
                             r="32"
                             fill={playerCircleColor}
                         />
+                        {#if car.is_off_track || car.is_in_pits}
+                            <circle
+                                cx={car.x}
+                                cy={car.y}
+                                r="36"
+                                stroke={car.is_off_track
+                                    ? offtrackCircleColor
+                                    : inPitsCircleColor}
+                                stroke-width="6"
+                            />
+                        {/if}
                         <text
                             x={car.x}
                             y={car.y + 5}

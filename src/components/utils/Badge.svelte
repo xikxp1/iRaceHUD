@@ -5,7 +5,7 @@
     function getBadgeColor(license: string) {
         switch (license.charAt(0)) {
             case "R":
-                return "bg-red-600";
+                return "bg-error";
             case "D":
                 return "bg-orange-600";
             case "C":
@@ -17,7 +17,7 @@
             case "P":
                 return "bg-black";
             default:
-                return "bg-red-600";
+                return "bg-error";
         }
     }
 </script>

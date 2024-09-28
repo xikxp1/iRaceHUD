@@ -3,7 +3,10 @@
 
 use chrono::{DateTime, Local, TimeDelta};
 use eyre::{eyre, OptionExt, Result};
-use iracing_telem::{flags, Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME};
+use iracing_telem::{
+    flags::{CarLeftRight, TrackLocation},
+    Client, DataUpdateResult, IRSDK_UNLIMITED_LAPS, IRSDK_UNLIMITED_TIME,
+};
 use log::{debug, error, info};
 use serde_json::{json, Value};
 use std::{cmp::min, collections::HashMap, f32::consts::LN_2, sync::OnceLock, time::Duration};
@@ -80,6 +83,9 @@ struct Driver {
     lic_string: String,
     is_player: bool,
     is_leader: bool,
+    is_in_pits: bool,
+    is_off_track: bool,
+    is_off_world: bool,
 }
 
 impl Driver {
@@ -482,6 +488,9 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                     let car_idx_last_lap_time = s
                         .find_var("CarIdxLastLapTime")
                         .ok_or_eyre("CarIdxLastLapTime variable not found")?;
+                    let car_idx_track_surface = s
+                        .find_var("CarIdxTrackSurface")
+                        .ok_or_eyre("CarIdxTrackSurface variable not found")?;
                     let mut slow_var_ticks: u32 = SLOW_VAR_RESET_TICKS;
                     loop {
                         match s.wait_for_data(Duration::from_millis(SESSION_UPDATE_PERIOD_MILLIS)) {
@@ -882,18 +891,18 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 data.throttle = throttle_value;
 
                                 // proximity
-                                let raw_car_left_right_value: flags::CarLeftRight =
+                                let raw_car_left_right_value: CarLeftRight =
                                     s.var_value(&car_left_right).try_into().map_err(|err| {
                                         eyre!("Failed to get CarLeftRight value: {:?}", err)
                                     })?;
                                 let (is_left, is_right) = match raw_car_left_right_value {
-                                    flags::CarLeftRight::Off => (false, false),
-                                    flags::CarLeftRight::Clear => (false, false),
-                                    flags::CarLeftRight::CarLeft => (true, false),
-                                    flags::CarLeftRight::CarRight => (false, true),
-                                    flags::CarLeftRight::CarLeftRight => (true, true),
-                                    flags::CarLeftRight::TwoCarsLeft => (true, false),
-                                    flags::CarLeftRight::TwoCarsRight => (false, true),
+                                    CarLeftRight::Off => (false, false),
+                                    CarLeftRight::Clear => (false, false),
+                                    CarLeftRight::CarLeft => (true, false),
+                                    CarLeftRight::CarRight => (false, true),
+                                    CarLeftRight::CarLeftRight => (true, true),
+                                    CarLeftRight::TwoCarsLeft => (true, false),
+                                    CarLeftRight::TwoCarsRight => (false, true),
                                 };
                                 emitter.emit(
                                     "proximity",
@@ -940,6 +949,20 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     .map_err(|err| {
                                         eyre!("Failed to get CarIdxLastLapTime value: {:?}", err)
                                     })?;
+                                let car_idx_track_surface_value = s
+                                    .var_value(&car_idx_track_surface)
+                                    .as_i32s()
+                                    .map_err(|err| {
+                                        eyre!("Failed to get CarIdxTrackSurface value: {:?}", err)
+                                    })?;
+                                let car_idx_track_surface_value = car_idx_track_surface_value
+                                    .iter()
+                                    .map(|value| {
+                                        iracing_telem::Value::Bitfield(*value)
+                                            .try_into()
+                                            .unwrap_or(TrackLocation::NotInWorld)
+                                    })
+                                    .collect::<Vec<TrackLocation>>();
 
                                 for (car_id, driver) in data.drivers.iter_mut() {
                                     let lap_dist_pct_value = lap_dist_pct[*car_id as usize];
@@ -971,6 +994,17 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                     driver.last_lap_time = SignedDuration::from_secs_f32(
                                         car_idx_last_lap_time_value[*car_id as usize],
                                     );
+                                    driver.is_in_pits = car_idx_track_surface_value
+                                        [*car_id as usize]
+                                        == TrackLocation::InPitStall
+                                        || car_idx_track_surface_value[*car_id as usize]
+                                            == TrackLocation::ApproachingPits;
+                                    driver.is_off_track = car_idx_track_surface_value
+                                        [*car_id as usize]
+                                        == TrackLocation::OffTrack;
+                                    driver.is_off_world = car_idx_track_surface_value
+                                        [*car_id as usize]
+                                        == TrackLocation::NotInWorld;
                                 }
 
                                 let mut driver_positions = data
@@ -1152,6 +1186,9 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                             "is_leader": driver.is_leader,
                                             "is_player": driver.is_player,
                                             "lap_dist_pct": driver.lap_dist_pct,
+                                            "is_in_pits": driver.is_in_pits,
+                                            "is_off_track": driver.is_off_track,
+                                            "is_off_world": driver.is_off_world,
                                         }))
                                     })
                                     .collect::<Result<Vec<Value>>>()?;
@@ -1207,8 +1244,14 @@ fn connect(mut emitter: Emitter) -> Result<()> {
 
                                     // relative
                                     if !data.drivers.is_empty() {
-                                        let mut drivers: Vec<Driver> =
-                                            data.drivers.values().cloned().collect();
+                                        let mut drivers: Vec<Driver> = data
+                                            .drivers
+                                            .values()
+                                            .filter(|driver| {
+                                                driver.is_player || !driver.is_off_world
+                                            })
+                                            .cloned()
+                                            .collect();
                                         drivers.sort_by(|a, b| {
                                             a.player_relative_gap
                                                 .partial_cmp(&b.player_relative_gap)
@@ -1262,6 +1305,9 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                                         "license": driver.lic_string,
                                                         "player_relative_gap": player_relative_gap,
                                                         "is_player": driver.is_player,
+                                                        "is_in_pits": driver.is_in_pits,
+                                                        "is_off_track": driver.is_off_track,
+                                                        "is_off_world": driver.is_off_world,
                                                     })
                                                 }
                                                 None => {
@@ -1302,6 +1348,9 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                                     "license": driver.lic_string,
                                                     "player_relative_gap": player_relative_gap,
                                                     "is_player": driver.is_player,
+                                                    "is_in_pits": driver.is_in_pits,
+                                                    "is_off_track": driver.is_off_track,
+                                                    "is_off_world": driver.is_off_world,
                                                 })
                                             }
                                             None => {
@@ -1347,6 +1396,9 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                                         "license": driver.lic_string,
                                                         "player_relative_gap": player_relative_gap,
                                                         "is_player": driver.is_player,
+                                                        "is_in_pits": driver.is_in_pits,
+                                                        "is_off_track": driver.is_off_track,
+                                                        "is_off_world": driver.is_off_world,
                                                     })
                                                 }
                                                 None => {

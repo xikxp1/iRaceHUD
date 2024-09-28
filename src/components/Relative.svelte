@@ -12,6 +12,8 @@
         license: string;
         player_relative_gap: string;
         is_player: boolean;
+        is_in_pits: boolean;
+        is_off_track: boolean;
     }
 
     let relative: (Relative | null)[] = [];
@@ -44,7 +46,17 @@
                     {rel?.car_number ?? ""}</td
                 >
                 <td class="text text-sm">
-                    {rel?.user_name ?? ""}
+                    <span class="text text-sm">{rel?.user_name ?? ""}</span>
+                    {#if rel?.is_off_track}
+                        <span class="text text-sm text-error text-right"
+                            >&nbspOFF</span
+                        >
+                    {/if}
+                    {#if rel?.is_in_pits}
+                        <span class="text text-sm text-success text-right"
+                            >&nbspPIT</span
+                        >
+                    {/if}
                 </td>
                 <td class="text text-sm text-right pr-1 w-[80px]">
                     <Badge
