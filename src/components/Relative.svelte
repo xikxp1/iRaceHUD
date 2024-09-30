@@ -18,6 +18,25 @@
 
     let relative: (Relative | null)[] = [];
 
+    function getBadgeColor(license: string) {
+        switch (license.charAt(0)) {
+            case "R":
+                return "bg-error";
+            case "D":
+                return "bg-orange-600";
+            case "C":
+                return "bg-yellow-600";
+            case "B":
+                return "bg-green-700";
+            case "A":
+                return "bg-blue-800";
+            case "P":
+                return "bg-black";
+            default:
+                return "";
+        }
+    }
+
     let unlistens = [];
 
     unlistens.push(
@@ -37,7 +56,7 @@
             <tr
                 class="{rel?.is_player
                     ? 'bg-secondary text-primary-content'
-                    : 'odd:bg-secondary-content even:bg-primary-content text-primary'} h-[18px]"
+                    : 'odd:bg-secondary-content even:bg-primary-content text-primary'} h-[22px]"
             >
                 <td class="text text-sm text-right pr-2 w-[25px]">
                     {rel?.position ?? "*"}</td
@@ -59,10 +78,15 @@
                     {/if}
                 </td>
                 <td class="text text-sm text-right pr-1 w-[80px]">
-                    <Badge
-                        license={rel?.license ?? ""}
-                        irating={rel?.irating ?? ""}
-                    />
+                    {#if rel?.license && rel?.irating}
+                        <Badge
+                            color={getBadgeColor(rel?.license ?? "")}
+                            text="{(rel?.license).substring(
+                                0,
+                                5,
+                            )}&nbsp|&nbsp{rel?.irating}"
+                        />
+                    {/if}
                 </td>
                 <td class="text text-sm text-right pr-1 w-[40px]"
                     >{rel?.player_relative_gap ?? ""}

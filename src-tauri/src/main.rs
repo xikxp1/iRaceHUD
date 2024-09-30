@@ -1198,9 +1198,11 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                 if slow_var_ticks >= SLOW_VAR_RESET_TICKS {
                                     // standings
                                     if !data.drivers.is_empty() {
-                                        let drivers: Vec<Value> = data
-                                            .drivers
-                                            .values()
+                                        let mut drivers =
+                                            data.drivers.values().cloned().collect::<Vec<Driver>>();
+                                        drivers.sort_by(|a, b| a.position.cmp(&b.position));
+                                        let standings: Vec<Value> = drivers
+                                            .iter()
                                             .map(|driver| {
                                                 let leader_gap = match driver.leader_gap_laps {
                                                     0 => {
@@ -1227,19 +1229,47 @@ fn connect(mut emitter: Emitter) -> Result<()> {
                                                     "{:.1}k",
                                                     driver.irating as f32 / 1000.0
                                                 );
+                                                let best_lap = match driver.best_lap_time {
+                                                    value if value.as_secs_f32() <= 0.0 => {
+                                                        "–:--:--".to_string()
+                                                    }
+                                                    value => {
+                                                        format!(
+                                                            "{}:{:02}.{:03}",
+                                                            value.as_secs() / 60,
+                                                            value.as_secs() % 60,
+                                                            value.subsec_millis()
+                                                        )
+                                                    }
+                                                };
+                                                let last_lap = match driver.last_lap_time {
+                                                    value if value.as_secs_f32() <= 0.0 => {
+                                                        "–:--:--".to_string()
+                                                    }
+                                                    value => {
+                                                        format!(
+                                                            "{}:{:02}.{:03}",
+                                                            value.as_secs() / 60,
+                                                            value.as_secs() % 60,
+                                                            value.subsec_millis()
+                                                        )
+                                                    }
+                                                };
                                                 json!({
                                                     "car_id": driver.car_id,
                                                     "position": driver.position,
                                                     "user_name": driver.user_name,
                                                     "car_number": driver.car_number,
                                                     "irating": irating,
-                                                    "license": driver.lic_string,
                                                     "leader_gap": leader_gap,
+                                                    "best_lap": best_lap,
+                                                    "last_lap": last_lap,
                                                     "is_player": driver.is_player,
+                                                    "is_in_pits": driver.is_in_pits,
                                                 })
                                             })
                                             .collect();
-                                        emitter.emit("standings", json!(drivers))?;
+                                        emitter.emit("standings", json!(standings))?;
                                     }
 
                                     // relative

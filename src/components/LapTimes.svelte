@@ -1,7 +1,5 @@
 <script lang="ts">
     import { listen } from "@tauri-apps/api/event";
-    import "ag-grid-community/styles/ag-grid.css";
-    import "ag-grid-community/styles/ag-theme-quartz.css";
     import { onDestroy } from "svelte";
 
     interface LapTime {
