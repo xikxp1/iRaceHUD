@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@tauri-apps/api':
-        specifier: ^1
+        specifier: ^1.6.0
         version: 1.6.0
       chart.js:
         specifier: ^4.4.3
@@ -19,16 +19,16 @@ importers:
         version: https://codeload.github.com/tauri-apps/tauri-plugin-log/tar.gz/2bb26e22f7f7b4f164bad02f0ae4085796f77fff
     devDependencies:
       '@sveltejs/adapter-static':
-        specifier: ^3.0.1
+        specifier: ^3.0.2
         version: 3.0.2(@sveltejs/kit@2.5.18(@sveltejs/vite-plugin-svelte@3.1.1(svelte@4.2.18)(vite@5.3.3(@types/node@22.5.5)))(svelte@4.2.18)(vite@5.3.3(@types/node@22.5.5)))
       '@sveltejs/kit':
-        specifier: ^2.0.0
+        specifier: ^2.5.18
         version: 2.5.18(@sveltejs/vite-plugin-svelte@3.1.1(svelte@4.2.18)(vite@5.3.3(@types/node@22.5.5)))(svelte@4.2.18)(vite@5.3.3(@types/node@22.5.5))
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.0
+        specifier: ^3.1.1
         version: 3.1.1(svelte@4.2.18)(vite@5.3.3(@types/node@22.5.5))
       '@tauri-apps/cli':
-        specifier: ^1
+        specifier: ^1.6.0
         version: 1.6.0
       '@types/jsdom':
         specifier: ^21.1.7
@@ -52,25 +52,25 @@ importers:
         specifier: ^8.4.39
         version: 8.4.39
       svelte:
-        specifier: ^4.2.7
+        specifier: ^4.2.18
         version: 4.2.18
       svelte-check:
-        specifier: ^3.6.0
+        specifier: ^3.8.4
         version: 3.8.4(postcss-load-config@4.0.2(postcss@8.4.39))(postcss@8.4.39)(svelte@4.2.18)
       tailwindcss:
         specifier: ^3.4.6
         version: 3.4.6
       tslib:
-        specifier: ^2.4.1
+        specifier: ^2.6.3
         version: 2.6.3
       tsx:
         specifier: ^4.19.1
         version: 4.19.1
       typescript:
-        specifier: ^5.0.0
+        specifier: ^5.5.3
         version: 5.5.3
       vite:
-        specifier: ^5.0.3
+        specifier: ^5.3.3
         version: 5.3.3(@types/node@22.5.5)
 
 packages:

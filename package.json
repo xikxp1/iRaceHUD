@@ -14,15 +14,15 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@tauri-apps/api": "^1",
+    "@tauri-apps/api": "^1.6.0",
     "chart.js": "^4.4.3",
     "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1"
   },
   "devDependencies": {
-    "@sveltejs/adapter-static": "^3.0.1",
-    "@sveltejs/kit": "^2.0.0",
-    "@sveltejs/vite-plugin-svelte": "^3.0.0",
-    "@tauri-apps/cli": "^1",
+    "@sveltejs/adapter-static": "^3.0.2",
+    "@sveltejs/kit": "^2.5.18",
+    "@sveltejs/vite-plugin-svelte": "^3.1.1",
+    "@tauri-apps/cli": "^1.6.0",
     "@types/jsdom": "^21.1.7",
     "autoprefixer": "^10.4.19",
     "axios": "^1.7.7",
@@ -30,12 +30,12 @@
     "iracing-api": "^0.4.4",
     "jsdom": "^25.0.0",
     "postcss": "^8.4.39",
-    "svelte": "^4.2.7",
-    "svelte-check": "^3.6.0",
+    "svelte": "^4.2.18",
+    "svelte-check": "^3.8.4",
     "tailwindcss": "^3.4.6",
-    "tslib": "^2.4.1",
+    "tslib": "^2.6.3",
     "tsx": "^4.19.1",
-    "typescript": "^5.0.0",
-    "vite": "^5.0.3"
+    "typescript": "^5.5.3",
+    "vite": "^5.3.3"
   }
 }
