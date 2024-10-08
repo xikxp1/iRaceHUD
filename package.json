@@ -12,7 +12,7 @@
     "tauri": "tauri",
     "fetch-track-info": "pnpm tsx ./scripts/fetch_track_info.ts"
   },
-  "license": "MIT",
+  "license": "GPL-3.0-only",
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-log": "^2.0.0",

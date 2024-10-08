@@ -4,6 +4,7 @@ version = "0.0.0"
 description = "iRacing HUD overlay built in Tauri"
 authors = ["Ivan Kachalkin<xikxp1@gmail.com>"]
 edition = "2021"
+license = "GPL-3.0-only"
 publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
