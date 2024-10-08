@@ -356,9 +356,7 @@ async fn main() {
     tauri::Builder::default()
         .plugin(
             tauri_plugin_log::Builder::default()
-                .target(Target::new(TargetKind::LogDir {
-                    file_name: Some("iracehud.log".to_string()),
-                }))
+                .target(Target::new(TargetKind::LogDir { file_name: None }))
                 .target(Target::new(TargetKind::Stdout))
                 .target(Target::new(TargetKind::Webview))
                 .build(),
