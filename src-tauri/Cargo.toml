@@ -9,7 +9,7 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
 chrono = "0.4.38"
@@ -20,8 +20,8 @@ log = "0.4.22"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 simetry = {version = "0.2.3", features = [] }
-tauri = { version = "1", features = ["system-tray"] }
-tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-log = { version = "2" }
 tokio = "1.40.0"
 
 [features]

@@ -2,21 +2,32 @@
   "build": {
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
-    "devPath": "http://localhost:1420",
-    "distDir": "../build"
+    "frontendDist": "../build",
+    "devUrl": "http://localhost:1420"
   },
-  "package": {
-    "productName": "iracehud",
-    "version": "0.0.0"
+  "bundle": {
+    "active": true,
+    "category": "Utility",
+    "targets": "nsis",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
   },
-  "tauri": {
+  "productName": "iracehud",
+  "mainBinaryName": "iracehud",
+  "version": "0.0.0",
+  "identifier": "dev.xikxp1.iracehud",
+  "plugins": {},
+  "app": {
     "windows": [
       {
         "label": "main",
         "alwaysOnTop": true,
         "skipTaskbar": true,
-        "fileDropEnabled": false,
-        "center": true,
         "resizable": false,
         "maximizable": false,
         "minimizable": false,
@@ -27,23 +38,6 @@
     ],
     "security": {
       "csp": null
-    },
-    "systemTray": {
-      "iconPath": "icons/icon.ico",
-      "title": "iracehud"
-    },
-    "bundle": {
-      "active": true,
-      "category": "Utility",
-      "targets": "nsis",
-      "identifier": "dev.xikxp1.iracehud",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ]
     }
   }
 }

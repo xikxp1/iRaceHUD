@@ -7,11 +7,16 @@ use log::{debug, error, info};
 use serde_json::{json, Value};
 use simetry::iracing::{Client, UNLIMITED_LAPS, UNLIMITED_TIME};
 use std::{cmp::min, collections::HashMap, f32::consts::LN_2, sync::OnceLock, time::Duration};
-use tauri::{async_runtime, CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
-use tauri_plugin_log::LogTarget;
+use tauri::{
+    async_runtime,
+    menu::{MenuBuilder, MenuItemBuilder},
+    tray::TrayIconBuilder,
+    Emitter, Manager,
+};
+use tauri_plugin_log::{Target, TargetKind};
 
 static BR1: f32 = 1600. / LN_2;
-static WINDOW: OnceLock<tauri::Window> = OnceLock::new();
+static WINDOW: OnceLock<tauri::WebviewWindow> = OnceLock::new();
 const WAIT_FOR_SESSION_SECS: u64 = 600;
 const SESSION_UPDATE_PERIOD_MILLIS: u64 = 25;
 const SLOW_VAR_RESET_TICKS: u32 = 50;
@@ -112,7 +117,7 @@ struct LapTime {
 }
 
 #[derive(Debug)]
-struct Emitter {
+struct TelemeteryEmitter {
     events: HashMap<String, Value>,
     activation_time: Option<DateTime<Local>>,
     forced_emitter_duration: TimeDelta,
@@ -146,7 +151,7 @@ impl std::fmt::Display for Gear {
     }
 }
 
-impl Emitter {
+impl TelemeteryEmitter {
     fn new(forced_emitter_duration: TimeDelta) -> Self {
         Self {
             events: HashMap::new(),
@@ -348,18 +353,34 @@ async fn main() {
 
     let _ = color_eyre::install();
 
-    let quit = CustomMenuItem::new("quit".to_string(), "Quit");
-    let tray_menu = SystemTrayMenu::new().add_item(quit);
-    let system_tray = SystemTray::new().with_menu(tray_menu);
-
     tauri::Builder::default()
         .plugin(
             tauri_plugin_log::Builder::default()
-                .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
+                .target(Target::new(TargetKind::LogDir {
+                    file_name: Some("iracehud.log".to_string()),
+                }))
+                .target(Target::new(TargetKind::Stdout))
+                .target(Target::new(TargetKind::Webview))
                 .build(),
         )
         .setup(|app| {
-            let window = app.get_window("main").ok_or_eyre("Failed to get window")?;
+            let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
+            let tray_menu = MenuBuilder::new(app).items(&[&quit]).build()?;
+            TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&tray_menu)
+                .on_menu_event(|_, event| {
+                    if event.id().as_ref() == "quit" {
+                        info!("Quit menu item clicked, quitting application");
+                        std::process::exit(0);
+                    }
+                })
+                .title("iRaceHUD")
+                .build(app)?;
+
+            let window = app
+                .get_webview_window("main")
+                .ok_or_eyre("Failed to get window")?;
 
             #[cfg(debug_assertions)]
             window.open_devtools();
@@ -372,7 +393,7 @@ async fn main() {
                 .set(window)
                 .map_err(|err| eyre!("Failed to set window: {:?}", err))?;
 
-            let emitter = Emitter::new(TimeDelta::seconds(FORCED_EMITTER_DURATION_SECS));
+            let emitter = TelemeteryEmitter::new(TimeDelta::seconds(FORCED_EMITTER_DURATION_SECS));
             async_runtime::spawn(async move {
                 if let Err(err) = connect(emitter).await {
                     error!("Failed to connect: {:?}", err);
@@ -381,19 +402,11 @@ async fn main() {
 
             Ok(())
         })
-        .system_tray(system_tray)
-        .on_system_tray_event(|_, event| match event {
-            tauri::SystemTrayEvent::MenuItemClick { id, .. } if id == "quit" => {
-                info!("Quit menu item clicked, quitting application");
-                std::process::exit(0);
-            }
-            _ => {}
-        })
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
 }
 
-async fn connect(mut emitter: Emitter) -> Result<()> {
+async fn connect(mut emitter: TelemeteryEmitter) -> Result<()> {
     loop {
         info!("Start iRacing");
         let mut client = Client::connect(Duration::from_secs(WAIT_FOR_SESSION_SECS)).await;

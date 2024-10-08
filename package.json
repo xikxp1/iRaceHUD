@@ -14,28 +14,28 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@tauri-apps/api": "^1.6.0",
-    "chart.js": "^4.4.3",
-    "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1"
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-log": "^2.0.0",
+    "chart.js": "^4.4.4"
   },
   "devDependencies": {
-    "@sveltejs/adapter-static": "^3.0.2",
-    "@sveltejs/kit": "^2.5.18",
-    "@sveltejs/vite-plugin-svelte": "^3.1.1",
-    "@tauri-apps/cli": "^1.6.0",
+    "@sveltejs/adapter-static": "^3.0.5",
+    "@sveltejs/kit": "^2.6.3",
+    "@sveltejs/vite-plugin-svelte": "^3.1.2",
+    "@tauri-apps/cli": "^2.0.2",
     "@types/jsdom": "^21.1.7",
-    "autoprefixer": "^10.4.19",
+    "autoprefixer": "^10.4.20",
     "axios": "^1.7.7",
-    "daisyui": "^4.12.10",
+    "daisyui": "^4.12.12",
     "iracing-api": "^0.4.4",
-    "jsdom": "^25.0.0",
-    "postcss": "^8.4.39",
-    "svelte": "^4.2.18",
-    "svelte-check": "^3.8.4",
-    "tailwindcss": "^3.4.6",
-    "tslib": "^2.6.3",
+    "jsdom": "^25.0.1",
+    "postcss": "^8.4.47",
+    "svelte": "^4.2.19",
+    "svelte-check": "^3.8.6",
+    "tailwindcss": "^3.4.13",
+    "tslib": "^2.7.0",
     "tsx": "^4.19.1",
-    "typescript": "^5.5.3",
-    "vite": "^5.3.3"
+    "typescript": "^5.6.2",
+    "vite": "^5.4.8"
   }
 }
