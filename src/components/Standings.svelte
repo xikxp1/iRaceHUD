@@ -1,6 +1,10 @@
 <script lang="ts">
-    import type { Standings } from "$lib/types/telemetry";
-    import { listen } from "@tauri-apps/api/event";
+    import type {
+        CurrentTime,
+        Standings,
+        StrengthOfField,
+    } from "$lib/types/telemetry";
+    import { Channel, invoke } from "@tauri-apps/api/core";
     import { onDestroy, onMount } from "svelte";
     import { flip } from "svelte/animate";
 
@@ -14,38 +18,60 @@
     let show_best_lap = false;
     let interval: NodeJS.Timeout;
 
+    let standings_channel = new Channel<Standings>();
+    let current_time_channel = new Channel<CurrentTime>();
+    let stength_of_field_channel = new Channel<StrengthOfField>();
+
     onMount(() => {
         interval = setInterval(() => {
             show_best_lap = !show_best_lap;
         }, SWITCH_INTERVAL);
+
+        standings_channel.onmessage = (message) => {
+            standings = message;
+        };
+
+        current_time_channel.onmessage = (message) => {
+            current_time = message;
+        };
+
+        stength_of_field_channel.onmessage = (message) => {
+            stength_of_field = message;
+        };
+
+        invoke("register_event_emitter", {
+            event: "standings",
+            onEvent: standings_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "current_time",
+            onEvent: current_time_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "strength_of_field",
+            onEvent: stength_of_field_channel,
+        });
     });
-
-    let unlistens = [];
-
-    unlistens.push(
-        listen("strength_of_field", (event) => {
-            stength_of_field = event.payload as number;
-        }),
-    );
-
-    unlistens.push(
-        listen("current_time", (event) => {
-            current_time = event.payload as string;
-        }),
-    );
-
-    unlistens.push(
-        listen("standings", (event) => {
-            let newStandings = event.payload as Standings;
-            //TODO: Calculate changes
-            standings = newStandings;
-            driver_count = standings.length;
-        }),
-    );
 
     onDestroy(() => {
         clearInterval(interval);
-        unlistens.forEach(async (unlisten) => (await unlisten)());
+        standings_channel.onmessage = () => {};
+        current_time_channel.onmessage = () => {};
+        stength_of_field_channel.onmessage = () => {};
+
+        invoke("unregister_event_emitter", {
+            event: "standings",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "current_time",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "strength_of_field",
+        });
     });
 </script>
 

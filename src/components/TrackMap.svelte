@@ -1,6 +1,6 @@
 <script lang="ts">
-    import type { TrackMap } from "$lib/types/telemetry";
-    import { listen } from "@tauri-apps/api/event";
+    import type { TrackID, TrackMap } from "$lib/types/telemetry";
+    import { Channel, invoke } from "@tauri-apps/api/core";
     import { onDestroy, onMount } from "svelte";
 
     let trackPathElement: SVGPathElement;
@@ -26,6 +26,9 @@
     const offtrackCircleColor: string = `oklch(${css.getPropertyValue("--er")})`;
     const inPitsCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
 
+    let track_id_channel = new Channel<TrackID>();
+    let track_map_channel = new Channel<TrackMap>();
+
     onMount(() => {
         fetch("/track_info_data/track_info.json")
             .then((response) => response.json())
@@ -37,24 +40,21 @@
             .then((data) => {
                 trackSettings = data;
             });
-    });
 
-    let unlistens = [];
-
-    unlistens.push(
-        listen("track_id", (event) => {
-            track_id = event.payload as number;
+        track_id_channel.onmessage = (message) => {
+            track_id = message;
             trackPath = trackInfo[track_id].activePath;
             offset = trackSettings[track_id]?.offset ?? 0;
             direction = trackSettings[track_id]?.direction ?? 1;
-        }),
-    );
+        };
 
-    unlistens.push(
-        listen("track_map", (event) => {
-            const track_map = event.payload as TrackMap;
+        track_map_channel.onmessage = (message) => {
+            const pathLength = trackPathElement.getTotalLength();
+            if (pathLength === 0) {
+                return;
+            }
+            const track_map = message;
             for (let car of track_map) {
-                const pathLength = trackPathElement.getTotalLength();
                 const offsetedLapDistPct =
                     (1 + offset + direction * car.lap_dist_pct) % 1;
                 const point = trackPathElement.getPointAtLength(
@@ -64,11 +64,30 @@
                 car.y = point.y;
             }
             trackMapCars = track_map;
-        }),
-    );
+        };
+
+        invoke("register_event_emitter", {
+            event: "track_id",
+            onEvent: track_id_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "track_map",
+            onEvent: track_map_channel,
+        });
+    });
 
     onDestroy(() => {
-        unlistens.forEach(async (unlisten) => (await unlisten)());
+        track_id_channel.onmessage = () => {};
+        track_map_channel.onmessage = () => {};
+
+        invoke("unregister_event_emitter", {
+            event: "track_id",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "track_map",
+        });
     });
 </script>
 

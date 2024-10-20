@@ -1,34 +1,61 @@
 <script lang="ts">
     import type { DeltaTime, LapTime } from "$lib/types/telemetry";
-    import { listen } from "@tauri-apps/api/event";
-    import { onDestroy } from "svelte";
+    import { Channel, invoke } from "@tauri-apps/api/core";
+    import { onMount, onDestroy } from "svelte";
 
     let lap_time = "–:––.–––";
     let delta_last_time = "–";
     let delta_optimal_time = "–";
 
-    let unlistens = [];
+    let lap_time_channel = new Channel<LapTime>();
+    let delta_last_time_channel = new Channel<DeltaTime>();
+    let delta_optimal_time_channel = new Channel<DeltaTime>();
 
-    unlistens.push(
-        listen("lap_time", (event) => {
-            lap_time = event.payload as LapTime;
-        }),
-    );
+    onMount(() => {
+        lap_time_channel.onmessage = (message) => {
+            lap_time = message;
+        };
 
-    unlistens.push(
-        listen("delta_last_time", (event) => {
-            delta_last_time = event.payload as DeltaTime;
-        }),
-    );
+        delta_last_time_channel.onmessage = (message) => {
+            delta_last_time = message;
+        };
 
-    unlistens.push(
-        listen("delta_optimal_time", (event) => {
-            delta_optimal_time = event.payload as DeltaTime;
-        }),
-    );
+        delta_optimal_time_channel.onmessage = (message) => {
+            delta_optimal_time = message;
+        };
+
+        invoke("register_event_emitter", {
+            event: "lap_time",
+            onEvent: lap_time_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "delta_last_time",
+            onEvent: delta_last_time_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "delta_optimal_time",
+            onEvent: delta_optimal_time_channel,
+        });
+    });
 
     onDestroy(() => {
-        unlistens.forEach(async (unlisten) => (await unlisten)());
+        lap_time_channel.onmessage = () => {};
+        delta_last_time_channel.onmessage = () => {};
+        delta_optimal_time_channel.onmessage = () => {};
+
+        invoke("unregister_event_emitter", {
+            event: "lap_time",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "delta_last_time",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "delta_optimal_time",
+        });
     });
 </script>
 

@@ -8,8 +8,8 @@
         RPM,
         Speed,
     } from "$lib/types/telemetry";
-    import { listen } from "@tauri-apps/api/event";
-    import { onDestroy } from "svelte";
+    import { Channel, invoke } from "@tauri-apps/api/core";
+    import { onDestroy, onMount } from "svelte";
 
     let gear: Gear = "N";
     let speed: Speed = 0;
@@ -26,35 +26,29 @@
     let gear_indicator: HTMLDivElement;
     let rpm_incidator: HTMLProgressElement;
 
-    let unlistens = [];
+    let gear_channel = new Channel<Gear>();
+    let speed_channel = new Channel<Speed>();
+    let rpm_channel = new Channel<RPM>();
+    let gear_shift_rpm_channel = new Channel<GearRPM>();
+    let gear_blink_rpm_channel = new Channel<GearRPM>();
+    let lap_channel = new Channel<Laps>();
+    let laps_total_channel = new Channel<Laps>();
+    let position_channel = new Channel<Position>();
+    let positions_total_channel = new Channel<Position>();
+    let incidents_channel = new Channel<Incidents>();
+    let incident_limit_channel = new Channel<Incidents>();
 
-    unlistens.push(
-        listen("gear", (event) => {
-            gear = event.payload as Gear;
-        }),
-    );
+    onMount(() => {
+        gear_channel.onmessage = (message) => {
+            gear = message;
+        };
 
-    unlistens.push(
-        listen("gear_shift_rpm", (event) => {
-            gear_shift_rpm = event.payload as GearRPM;
-        }),
-    );
+        speed_channel.onmessage = (message) => {
+            speed = message;
+        };
 
-    unlistens.push(
-        listen("gear_blink_rpm", (event) => {
-            gear_blink_rpm = event.payload as GearRPM;
-        }),
-    );
-
-    unlistens.push(
-        listen("speed", (event) => {
-            speed = event.payload as Speed;
-        }),
-    );
-
-    unlistens.push(
-        listen("rpm", (event) => {
-            rpm = event.payload as RPM;
+        rpm_channel.onmessage = (message) => {
+            rpm = message;
 
             if (rpm >= gear_blink_rpm) {
                 gear_indicator.classList.remove("text-secondary");
@@ -81,47 +75,152 @@
                 rpm_incidator.classList.remove("progress-info");
                 rpm_incidator.classList.remove("progress-error");
             }
-        }),
-    );
+        };
 
-    unlistens.push(
-        listen("lap", (event) => {
-            lap = event.payload as Laps;
-        }),
-    );
+        gear_shift_rpm_channel.onmessage = (message) => {
+            gear_shift_rpm = message;
+        };
 
-    unlistens.push(
-        listen("laps_total", (event) => {
-            laps_total = event.payload as Laps;
-        }),
-    );
+        gear_blink_rpm_channel.onmessage = (message) => {
+            gear_blink_rpm = message;
+        };
 
-    unlistens.push(
-        listen("position", (event) => {
-            position = event.payload as Position;
-        }),
-    );
+        lap_channel.onmessage = (message) => {
+            lap = message;
+        };
 
-    unlistens.push(
-        listen("positions_total", (event) => {
-            positions_total = event.payload as Position;
-        }),
-    );
+        laps_total_channel.onmessage = (message) => {
+            laps_total = message;
+        };
 
-    unlistens.push(
-        listen("incidents", (event) => {
-            incidents = event.payload as Incidents;
-        }),
-    );
+        position_channel.onmessage = (message) => {
+            position = message;
+        };
 
-    unlistens.push(
-        listen("incident_limit", (event) => {
-            incident_limit = event.payload as Incidents;
-        }),
-    );
+        positions_total_channel.onmessage = (message) => {
+            positions_total = message;
+        };
+
+        incidents_channel.onmessage = (message) => {
+            incidents = message;
+        };
+
+        incident_limit_channel.onmessage = (message) => {
+            incident_limit = message;
+        };
+
+        invoke("register_event_emitter", {
+            event: "gear",
+            onEvent: gear_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "speed",
+            onEvent: speed_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "rpm",
+            onEvent: rpm_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "gear_shift_rpm",
+            onEvent: gear_shift_rpm_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "gear_blink_rpm",
+            onEvent: gear_blink_rpm_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "lap",
+            onEvent: lap_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "laps_total",
+            onEvent: laps_total_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "position",
+            onEvent: position_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "positions_total",
+            onEvent: positions_total_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "incidents",
+            onEvent: incidents_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "incident_limit",
+            onEvent: incident_limit_channel,
+        });
+    });
 
     onDestroy(() => {
-        unlistens.forEach(async (unlisten) => (await unlisten)());
+        gear_channel.onmessage = () => {};
+        speed_channel.onmessage = () => {};
+        rpm_channel.onmessage = () => {};
+        gear_shift_rpm_channel.onmessage = () => {};
+        gear_blink_rpm_channel.onmessage = () => {};
+        lap_channel.onmessage = () => {};
+        laps_total_channel.onmessage = () => {};
+        position_channel.onmessage = () => {};
+        positions_total_channel.onmessage = () => {};
+        incidents_channel.onmessage = () => {};
+        incident_limit_channel.onmessage = () => {};
+
+        invoke("unregister_event_emitter", {
+            event: "gear",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "speed",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "rpm",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "gear_shift_rpm",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "gear_blink_rpm",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "lap",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "laps_total",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "position",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "positions_total",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "incidents",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "incident_limit",
+        });
     });
 </script>
 

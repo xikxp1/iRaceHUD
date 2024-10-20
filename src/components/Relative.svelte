@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Relative } from "$lib/types/telemetry";
-    import { listen } from "@tauri-apps/api/event";
-    import { onDestroy } from "svelte";
+    import { Channel, invoke } from "@tauri-apps/api/core";
+    import { onDestroy, onMount } from "svelte";
     import Badge from "./utils/Badge.svelte";
 
     let relative: Relative = [];
@@ -25,16 +25,25 @@
         }
     }
 
-    let unlistens = [];
+    let channel = new Channel<Relative>();
 
-    unlistens.push(
-        listen("relative", (event) => {
-            relative = event.payload as Relative;
-        }),
-    );
+    onMount(() => {
+        channel.onmessage = (message) => {
+            relative = message as Relative;
+        };
+
+        invoke("register_event_emitter", {
+            event: "relative",
+            onEvent: channel,
+        });
+    });
 
     onDestroy(() => {
-        unlistens.forEach(async (unlisten) => (await unlisten)());
+        channel.onmessage = () => {};
+
+        invoke("unregister_event_emitter", {
+            event: "relative",
+        });
     });
 </script>
 

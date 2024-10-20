@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Telemetry } from "$lib/types/telemetry";
     import { Chart } from "chart.js/auto";
-    import { listen } from "@tauri-apps/api/event";
+    import { Channel, invoke } from "@tauri-apps/api/core";
     import { onDestroy, onMount } from "svelte";
     import ProgressBar from "./utils/ProgressBar.svelte";
 
@@ -23,6 +23,8 @@
     const throttleColor: string = `oklch(${css.getPropertyValue("--su")})`;
     const brakeColor: string = `oklch(${css.getPropertyValue("--er")})`;
     const gridColor: string = `oklch(${css.getPropertyValue("--p")} / 0.8)`;
+
+    let channel = new Channel<Telemetry>();
 
     const telemetryOptions = {
         plugins: {
@@ -86,13 +88,9 @@
             data: telemetryData,
             options: telemetryOptions,
         });
-    });
 
-    let unlistens = [];
-
-    unlistens.push(
-        listen("telemetry", (event) => {
-            let payload = event.payload as Telemetry;
+        channel.onmessage = (message) => {
+            let payload = message as Telemetry;
             throttle = payload.throttle;
             brake = payload.brake;
             abs = payload.abs_active;
@@ -107,11 +105,20 @@
                 brakeData.splice(0, currentBrakePoints - maxPoints);
             }
             chart.update("none");
-        }),
-    );
+        };
+
+        invoke("register_event_emitter", {
+            event: "telemetry",
+            onEvent: channel,
+        });
+    });
 
     onDestroy(() => {
-        unlistens.forEach(async (unlisten) => (await unlisten)());
+        channel.onmessage = () => {};
+
+        invoke("unregister_event_emitter", {
+            event: "telemetry",
+        });
     });
 </script>
 

@@ -3,88 +3,36 @@
 
 pub mod driver;
 pub mod signed_duration;
-pub mod telemetry_data;
 pub mod telemetry;
+pub mod telemetry_data;
+pub mod telemetry_emitter;
 
 use crate::driver::Driver;
 use crate::signed_duration::SignedDuration;
 use crate::telemetry_data::{LapTime, TelemetryData};
-use chrono::{DateTime, Local, TimeDelta};
+use crate::telemetry_emitter::TelemetryEmitter;
+use chrono::Local;
 use eyre::{eyre, OptionExt, Result};
 use log::{debug, error, info};
-use serde_json::{json, Value};
+use serde_json::json;
 use simetry::iracing::{Client, UNLIMITED_LAPS, UNLIMITED_TIME};
-use std::{collections::HashMap, f32::consts::LN_2, sync::OnceLock, time::Duration};
+use std::{f32::consts::LN_2, sync::OnceLock, time::Duration};
+use tauri::ipc::Channel;
 use tauri::{
     async_runtime,
     menu::{MenuBuilder, MenuItemBuilder},
     tray::TrayIconBuilder,
-    Emitter, Manager,
+    Manager,
 };
 use tauri_plugin_log::{Target, TargetKind};
+use tokio::sync::Mutex;
 
 static BR1: f32 = 1600. / LN_2;
 static WINDOW: OnceLock<tauri::WebviewWindow> = OnceLock::new();
 const WAIT_FOR_SESSION_SECS: u64 = 600;
 const SESSION_UPDATE_PERIOD_MILLIS: u64 = 25;
 const SLOW_VAR_RESET_TICKS: u32 = 50;
-const FORCED_EMITTER_DURATION_SECS: i64 = 10;
 const MAX_LAP_TIMES: usize = 5;
-
-#[derive(Debug)]
-struct TelemetryEmitter {
-    events: HashMap<String, Value>,
-    activation_time: Option<DateTime<Local>>,
-    forced_emitter_duration: TimeDelta,
-}
-
-impl TelemetryEmitter {
-    fn new(forced_emitter_duration: TimeDelta) -> Self {
-        Self {
-            events: HashMap::new(),
-            activation_time: None,
-            forced_emitter_duration,
-        }
-    }
-
-    fn activate(&mut self, activation_time: DateTime<Local>) {
-        self.activation_time = Some(activation_time);
-    }
-
-    fn deactivate(&mut self) {
-        self.activation_time = None;
-    }
-
-    fn emit(&mut self, event: &str, value: Value) -> Result<()> {
-        if event != "active" && self.activation_time.is_none() {
-            error!("Emitter is not activated");
-            return Ok(());
-        }
-
-        let mut is_forced = false;
-
-        if let Some(activation_time) = self.activation_time {
-            let current_time = Local::now();
-            let elapsed = current_time.signed_duration_since(activation_time);
-            if elapsed < self.forced_emitter_duration {
-                is_forced = true;
-            }
-        }
-
-        if !is_forced && self.events.contains_key(event) && self.events[event] == value {
-            return Ok(());
-        }
-
-        let window = WINDOW.get().ok_or_eyre("Failed to get window")?;
-
-        match window.emit(event, value.clone()) {
-            Ok(_) => {}
-            Err(err) => error!("Failed to emit event {}: {:?}", event, err),
-        }
-        self.events.insert(event.to_string(), value);
-        Ok(())
-    }
-}
 
 #[tokio::main]
 async fn main() {
@@ -118,6 +66,8 @@ async fn main() {
                 .title("iRaceHUD")
                 .build(app)?;
 
+            app.manage(Mutex::new(TelemetryEmitter::default()));
+
             let window = app
                 .get_webview_window("main")
                 .ok_or_eyre("Failed to get window")?;
@@ -133,26 +83,30 @@ async fn main() {
                 .set(window)
                 .map_err(|err| eyre!("Failed to set window: {:?}", err))?;
 
-            let emitter = TelemetryEmitter::new(TimeDelta::seconds(FORCED_EMITTER_DURATION_SECS));
             async_runtime::spawn(async move {
-                if let Err(err) = connect(emitter).await {
+                if let Err(err) = connect().await {
                     error!("Failed to connect: {:?}", err);
                 }
             });
 
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![register_event_emitter, unregister_event_emitter])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
 }
 
-async fn connect(mut emitter: TelemetryEmitter) -> Result<()> {
+async fn connect() -> Result<()> {
     loop {
         info!("Start iRacing");
         let mut client = Client::connect(Duration::from_secs(WAIT_FOR_SESSION_SECS)).await;
         let mut data = TelemetryData::default();
         let mut slow_var_ticks: u32 = SLOW_VAR_RESET_TICKS;
         while let Some(sim_state) = client.next_sim_state().await {
+            let window = WINDOW.get().ok_or_eyre("Failed to get window")?;
+            let emitter_state = window.app_handle().state::<Mutex<TelemetryEmitter>>();
+            let mut emitter = emitter_state.lock().await;
+
             slow_var_ticks += 1;
 
             let current_time = Local::now();
@@ -598,7 +552,10 @@ async fn connect(mut emitter: TelemetryEmitter) -> Result<()> {
                         None => 0u32,
                     },
                 };
-                emitter.emit("incident_limit", json!(telemetry::Incidents::new(incident_limit_value)))?;
+                emitter.emit(
+                    "incident_limit",
+                    json!(telemetry::Incidents::new(incident_limit_value)),
+                )?;
                 data.incident_limit = incident_limit_value;
 
                 // track_id
@@ -699,4 +656,19 @@ async fn connect(mut emitter: TelemetryEmitter) -> Result<()> {
             tokio::time::sleep(Duration::from_millis(SESSION_UPDATE_PERIOD_MILLIS)).await;
         }
     }
+}
+
+#[tauri::command]
+async fn register_event_emitter(app: tauri::AppHandle, event: String, on_event: Channel) {
+    debug!("Registering event emitter for {}", event);
+    let emitter_state = app.app_handle().state::<Mutex<TelemetryEmitter>>();
+    let mut emitter = emitter_state.lock().await;
+    emitter.register(event, on_event);
+}
+
+#[tauri::command]
+async fn unregister_event_emitter(app: tauri::AppHandle, event: String) {
+    let emitter_state = app.app_handle().state::<Mutex<TelemetryEmitter>>();
+    let mut emitter = emitter_state.lock().await;
+    emitter.unregister(&event);
 }

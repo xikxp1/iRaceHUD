@@ -1,34 +1,61 @@
 <script lang="ts">
     import type { Gap, SessionState } from "$lib/types/telemetry";
-    import { listen } from "@tauri-apps/api/event";
-    import { onDestroy } from "svelte";
+    import { Channel, invoke } from "@tauri-apps/api/core";
+    import { onMount, onDestroy } from "svelte";
 
     let session_state: SessionState = "";
     let gap_next: Gap = "";
     let gap_prev: Gap = "";
 
-    let unlistens = [];
+    let session_state_channel = new Channel<SessionState>();
+    let gap_next_channel = new Channel<Gap>();
+    let gap_prev_channel = new Channel<Gap>();
 
-    unlistens.push(
-        listen("session_state", (event) => {
-            session_state = event.payload as SessionState;
-        }),
-    );
+    onMount(() => {
+        session_state_channel.onmessage = (message) => {
+            session_state = message;
+        };
 
-    unlistens.push(
-        listen("gap_next", (event) => {
-            gap_next = event.payload as Gap;
-        }),
-    );
+        gap_next_channel.onmessage = (message) => {
+            gap_next = message;
+        };
 
-    unlistens.push(
-        listen("gap_prev", (event) => {
-            gap_prev = event.payload as Gap;
-        }),
-    );
+        gap_prev_channel.onmessage = (message) => {
+            gap_prev = message;
+        };
+
+        invoke("register_event_emitter", {
+            event: "session_state",
+            onEvent: session_state_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "gap_next",
+            onEvent: gap_next_channel,
+        });
+
+        invoke("register_event_emitter", {
+            event: "gap_prev",
+            onEvent: gap_prev_channel,
+        });
+    });
 
     onDestroy(() => {
-        unlistens.forEach(async (unlisten) => (await unlisten)());
+        session_state_channel.onmessage = () => {};
+        gap_next_channel.onmessage = () => {};
+        gap_prev_channel.onmessage = () => {};
+
+        invoke("unregister_event_emitter", {
+            event: "session_state",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "gap_next",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "gap_prev",
+        });
     });
 </script>
 

@@ -1,20 +1,29 @@
 <script lang="ts">
     import type { LapTimes } from "$lib/types/telemetry";
-    import { listen } from "@tauri-apps/api/event";
-    import { onDestroy } from "svelte";
+    import { Channel, invoke } from "@tauri-apps/api/core";
+    import { onDestroy, onMount } from "svelte";
 
     let player_lap_times: LapTimes = [];
 
-    let unlistens = [];
+    let channel = new Channel<LapTimes>();
 
-    unlistens.push(
-        listen("player_lap_times", (event) => {
-            player_lap_times = event.payload as LapTimes;
-        }),
-    );
+    onMount(() => {
+        channel.onmessage = (message) => {
+            player_lap_times = message;
+        };
+
+        invoke("register_event_emitter", {
+            event: "player_lap_times",
+            onEvent: channel,
+        });
+    });
 
     onDestroy(() => {
-        unlistens.forEach(async (unlisten) => (await unlisten)());
+        channel.onmessage = () => {};
+
+        invoke("unregister_event_emitter", {
+            event: "player_lap_times",
+        });
     });
 </script>
 
