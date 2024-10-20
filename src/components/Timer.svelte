@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { DeltaTime, LapTime } from "$lib/types/telemetry";
     import { listen } from "@tauri-apps/api/event";
     import { onDestroy } from "svelte";
 
@@ -10,19 +11,19 @@
 
     unlistens.push(
         listen("lap_time", (event) => {
-            lap_time = event.payload as string;
+            lap_time = event.payload as LapTime;
         }),
     );
 
     unlistens.push(
         listen("delta_last_time", (event) => {
-            delta_last_time = event.payload as string;
+            delta_last_time = event.payload as DeltaTime;
         }),
     );
 
     unlistens.push(
         listen("delta_optimal_time", (event) => {
-            delta_optimal_time = event.payload as string;
+            delta_optimal_time = event.payload as DeltaTime;
         }),
     );
 

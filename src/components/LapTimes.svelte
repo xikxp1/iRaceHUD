@@ -1,22 +1,15 @@
 <script lang="ts">
+    import type { LapTimes } from "$lib/types/telemetry";
     import { listen } from "@tauri-apps/api/event";
     import { onDestroy } from "svelte";
 
-    interface LapTime {
-        lap: number;
-        lap_time: string;
-    }
-
-    let player_lap_times: LapTime[] = [];
+    let player_lap_times: LapTimes = [];
 
     let unlistens = [];
 
     unlistens.push(
         listen("player_lap_times", (event) => {
-            player_lap_times = event.payload as {
-                lap: number;
-                lap_time: string;
-            }[];
+            player_lap_times = event.payload as LapTimes;
         }),
     );
 

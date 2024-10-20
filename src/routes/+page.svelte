@@ -1,7 +1,8 @@
 <script lang="ts">
+    import type { Active } from "$lib/types/telemetry";
     import { listen } from "@tauri-apps/api/event";
     import Main from "../components/Main.svelte";
-    import Telemetery from "../components/Telemetry.svelte";
+    import Telemetry from "../components/Telemetry.svelte";
     import Timer from "../components/Timer.svelte";
     import Subtimer from "../components/SubTimer.svelte";
     import Proximity from "../components/Proximity.svelte";
@@ -13,7 +14,7 @@
     let active: boolean = false;
 
     listen("active", (event) => {
-        active = event.payload as boolean;
+        active = event.payload as Active;
     });
 </script>
 
@@ -28,7 +29,7 @@
     <div class="outer">
         <div class="middle">
             <div class="telemetry">
-                <Telemetery />
+                <Telemetry />
             </div>
         </div>
     </div>

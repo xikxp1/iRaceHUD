@@ -1,19 +1,7 @@
 <script lang="ts">
+    import type { TrackMap } from "$lib/types/telemetry";
     import { listen } from "@tauri-apps/api/event";
     import { onDestroy, onMount } from "svelte";
-
-    type TrackMapCar = {
-        car_id: number;
-        position: number;
-        is_leader: boolean;
-        is_player: boolean;
-        lap_dist_pct: number;
-        is_in_pits: boolean;
-        is_off_track: boolean;
-        is_off_world: boolean;
-        x: number;
-        y: number;
-    };
 
     let trackPathElement: SVGPathElement;
 
@@ -22,7 +10,7 @@
 
     let track_id: number;
     let trackPath: string | undefined;
-    let trackMapCars: TrackMapCar[] = [];
+    let trackMapCars: TrackMap = [];
 
     let offset: number = 0;
     let direction: number = 1;
@@ -64,7 +52,7 @@
 
     unlistens.push(
         listen("track_map", (event) => {
-            const track_map = event.payload as TrackMapCar[];
+            const track_map = event.payload as TrackMap;
             for (let car of track_map) {
                 const pathLength = trackPathElement.getTotalLength();
                 const offsetedLapDistPct =

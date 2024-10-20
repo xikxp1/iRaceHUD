@@ -1,18 +1,27 @@
 <script lang="ts">
+    import type {
+        Gear,
+        GearRPM,
+        Incidents,
+        Laps,
+        Position,
+        RPM,
+        Speed,
+    } from "$lib/types/telemetry";
     import { listen } from "@tauri-apps/api/event";
     import { onDestroy } from "svelte";
 
-    let gear = "N";
-    let speed = 0;
-    let rpm = 0;
-    let gear_shift_rpm = 0;
-    let gear_blink_rpm = 0;
-    let lap = 0;
-    let laps_total = 0;
-    let position = 0;
-    let positions_total = 0;
-    let incidents = 0;
-    let incident_limit = 0;
+    let gear: Gear = "N";
+    let speed: Speed = 0;
+    let rpm: RPM = 0;
+    let gear_shift_rpm: GearRPM = 0;
+    let gear_blink_rpm: GearRPM = 0;
+    let lap: Laps = 0;
+    let laps_total: Laps = 0;
+    let position: Position = 0;
+    let positions_total: Position = 0;
+    let incidents: Incidents = 0;
+    let incident_limit: Incidents = 0;
 
     let gear_indicator: HTMLDivElement;
     let rpm_incidator: HTMLProgressElement;
@@ -21,31 +30,31 @@
 
     unlistens.push(
         listen("gear", (event) => {
-            gear = event.payload as string;
+            gear = event.payload as Gear;
         }),
     );
 
     unlistens.push(
         listen("gear_shift_rpm", (event) => {
-            gear_shift_rpm = event.payload as number;
+            gear_shift_rpm = event.payload as GearRPM;
         }),
     );
 
     unlistens.push(
         listen("gear_blink_rpm", (event) => {
-            gear_blink_rpm = event.payload as number;
+            gear_blink_rpm = event.payload as GearRPM;
         }),
     );
 
     unlistens.push(
         listen("speed", (event) => {
-            speed = event.payload as number;
+            speed = event.payload as Speed;
         }),
     );
 
     unlistens.push(
         listen("rpm", (event) => {
-            rpm = event.payload as number;
+            rpm = event.payload as RPM;
 
             if (rpm >= gear_blink_rpm) {
                 gear_indicator.classList.remove("text-secondary");
@@ -77,37 +86,37 @@
 
     unlistens.push(
         listen("lap", (event) => {
-            lap = event.payload as number;
+            lap = event.payload as Laps;
         }),
     );
 
     unlistens.push(
         listen("laps_total", (event) => {
-            laps_total = event.payload as number;
+            laps_total = event.payload as Laps;
         }),
     );
 
     unlistens.push(
         listen("position", (event) => {
-            position = event.payload as number;
+            position = event.payload as Position;
         }),
     );
 
     unlistens.push(
         listen("positions_total", (event) => {
-            positions_total = event.payload as number;
+            positions_total = event.payload as Position;
         }),
     );
 
     unlistens.push(
         listen("incidents", (event) => {
-            incidents = event.payload as number;
+            incidents = event.payload as Incidents;
         }),
     );
 
     unlistens.push(
         listen("incident_limit", (event) => {
-            incident_limit = event.payload as number;
+            incident_limit = event.payload as Incidents;
         }),
     );
 

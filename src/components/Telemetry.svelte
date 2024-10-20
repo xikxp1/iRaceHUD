@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { Telemetry } from "$lib/types/telemetry";
     import { Chart } from "chart.js/auto";
     import { listen } from "@tauri-apps/api/event";
     import { onDestroy, onMount } from "svelte";
@@ -91,15 +92,10 @@
 
     unlistens.push(
         listen("telemetry", (event) => {
-            let payload = event.payload as {
-                ts: number;
-                throttle: number;
-                brake: number;
-                abs: boolean;
-            };
+            let payload = event.payload as Telemetry;
             throttle = payload.throttle;
             brake = payload.brake;
-            abs = payload.abs;
+            abs = payload.abs_active;
             throttleData.push(throttle);
             brakeData.push(brake);
             let currentThrottlePoints = throttleData.length;
@@ -120,7 +116,11 @@
 </script>
 
 <div class="flex flex-row items-center justify-center opacity-75">
-    <div class="join w-[14%] bg-primary-content {abs ? 'outline outline-1 outline-secondary' : ''}">
+    <div
+        class="join w-[14%] bg-primary-content {abs
+            ? 'outline outline-1 outline-secondary'
+            : ''}"
+    >
         <div
             class="join-item flex flex-row items-center justify-center rounded-md w-[82%] h-20"
         >

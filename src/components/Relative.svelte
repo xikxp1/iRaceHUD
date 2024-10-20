@@ -1,22 +1,10 @@
 <script lang="ts">
+    import type { Relative } from "$lib/types/telemetry";
     import { listen } from "@tauri-apps/api/event";
     import { onDestroy } from "svelte";
     import Badge from "./utils/Badge.svelte";
 
-    interface Relative {
-        car_id: number;
-        position: number;
-        user_name: string;
-        car_number: string;
-        irating: string;
-        license: string;
-        player_relative_gap: string;
-        is_player: boolean;
-        is_in_pits: boolean;
-        is_off_track: boolean;
-    }
-
-    let relative: (Relative | null)[] = [];
+    let relative: Relative = [];
 
     function getBadgeColor(license: string) {
         switch (license.charAt(0)) {
@@ -41,7 +29,7 @@
 
     unlistens.push(
         listen("relative", (event) => {
-            relative = event.payload as (Relative | null)[];
+            relative = event.payload as Relative;
         }),
     );
 
@@ -59,8 +47,12 @@
                     : 'odd:bg-secondary-content even:bg-primary-content text-primary'} h-[22px]"
             >
                 <td class="text text-sm text-right pr-2 w-[25px]">
-                    {rel?.position ?? "*"}</td
-                >
+                    {#if rel?.position == 0}
+                        *
+                    {:else}
+                        {rel?.position}
+                    {/if}
+                </td>
                 <td class="text text-sm text-right pr-2 w-[30px]">
                     {rel?.car_number ?? ""}</td
                 >

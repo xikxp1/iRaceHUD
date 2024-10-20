@@ -1,28 +1,29 @@
 <script lang="ts">
+    import type { Gap, SessionState } from "$lib/types/telemetry";
     import { listen } from "@tauri-apps/api/event";
     import { onDestroy } from "svelte";
 
-    let session_state = "";
-    let gap_next = "";
-    let gap_prev = "";
+    let session_state: SessionState = "";
+    let gap_next: Gap = "";
+    let gap_prev: Gap = "";
 
     let unlistens = [];
 
     unlistens.push(
         listen("session_state", (event) => {
-            session_state = event.payload as string;
+            session_state = event.payload as SessionState;
         }),
     );
 
     unlistens.push(
         listen("gap_next", (event) => {
-            gap_next = event.payload as string;
+            gap_next = event.payload as Gap;
         }),
     );
 
     unlistens.push(
         listen("gap_prev", (event) => {
-            gap_prev = event.payload as string;
+            gap_prev = event.payload as Gap;
         }),
     );
 

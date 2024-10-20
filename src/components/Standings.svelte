@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { Standings } from "$lib/types/telemetry";
     import { listen } from "@tauri-apps/api/event";
     import { onDestroy, onMount } from "svelte";
     import { flip } from "svelte/animate";
@@ -7,20 +8,7 @@
     let current_time = "––:––";
     let driver_count = 0;
 
-    let standings: Standings[] = [];
-
-    interface Standings {
-        car_id: number;
-        position: number;
-        user_name: string;
-        car_number: string;
-        irating: string;
-        leader_gap: string;
-        best_lap: string;
-        last_lap: string;
-        is_player: boolean;
-        is_in_pits: boolean;
-    }
+    let standings: Standings = [];
 
     const SWITCH_INTERVAL = 10000;
     let show_best_lap = false;
@@ -48,7 +36,7 @@
 
     unlistens.push(
         listen("standings", (event) => {
-            let newStandings = event.payload as Standings[];
+            let newStandings = event.payload as Standings;
             //TODO: Calculate changes
             standings = newStandings;
             driver_count = standings.length;

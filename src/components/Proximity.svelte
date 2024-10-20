@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { Proximity } from "$lib/types/telemetry";
     import { listen } from "@tauri-apps/api/event";
     import { onDestroy } from "svelte";
 
@@ -9,10 +10,7 @@
 
     unlistens.push(
         listen("proximity", (event) => {
-            let payload = event.payload as {
-                is_left: boolean;
-                is_right: boolean;
-            };
+            let payload = event.payload as Proximity;
             left_icon.style.opacity = payload.is_left ? "1" : "0";
             right_icon.style.opacity = payload.is_right ? "1" : "0";
         }),
