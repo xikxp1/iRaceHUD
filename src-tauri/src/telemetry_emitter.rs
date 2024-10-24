@@ -90,11 +90,20 @@ impl TelemetryEmitter {
     }
 
     pub fn register(&mut self, event: String, channel: Channel) {
+        if !TELEMETERY_EVENTS.contains(&event.as_str()) {
+            error!("Event {} is not supported", event);
+            return;
+        }
         self.registered_events.insert(event, channel);
     }
 
     pub fn unregister(&mut self, event: &str) {
-        self.registered_events.remove(event);
+        match self.registered_events.remove(event) {
+            Some(_) => {}
+            None => {
+                error!("Event {} is not registered", event);
+            }
+        }
     }
 }
 
