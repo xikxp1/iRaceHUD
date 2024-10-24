@@ -1,0 +1,14 @@
+{
+  "identifier": "desktop-capability",
+  "local": true,
+  "platforms": [
+    "windows"
+  ],
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "updater:default"
+  ]
+}

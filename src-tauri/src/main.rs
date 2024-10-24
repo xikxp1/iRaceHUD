@@ -25,6 +25,8 @@ use tauri::{
     Manager,
 };
 use tauri_plugin_log::{Target, TargetKind};
+#[cfg(not(debug_assertions))]
+use tauri_plugin_updater::UpdaterExt;
 use tokio::sync::Mutex;
 
 static BR1: f32 = 1600. / LN_2;
@@ -44,6 +46,7 @@ async fn main() {
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(
             tauri_plugin_log::Builder::default()
                 .target(Target::new(TargetKind::LogDir { file_name: None }))
@@ -52,6 +55,16 @@ async fn main() {
                 .build(),
         )
         .setup(|app| {
+            #[cfg(not(debug_assertions))]
+            {
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    if let Err(err) = update(handle).await {
+                        error!("Failed to update: {:?}", err);
+                    }
+                });
+            }
+
             let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
             let tray_menu = MenuBuilder::new(app).items(&[&quit]).build()?;
             TrayIconBuilder::new()
@@ -91,7 +104,10 @@ async fn main() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![register_event_emitter, unregister_event_emitter])
+        .invoke_handler(tauri::generate_handler![
+            register_event_emitter,
+            unregister_event_emitter
+        ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
 }
@@ -656,6 +672,32 @@ async fn connect() -> Result<()> {
             tokio::time::sleep(Duration::from_millis(SESSION_UPDATE_PERIOD_MILLIS)).await;
         }
     }
+}
+
+#[cfg(not(debug_assertions))]
+async fn update(app: tauri::AppHandle) -> Result<()> {
+    if let Some(update) = app.updater()?.check().await? {
+        info!("Update found: {:?}", update.version);
+
+        let mut downloaded = 0;
+
+        update
+            .download_and_install(
+                |chunk_length, content_length| {
+                    downloaded += chunk_length;
+                    info!("Downloaded {downloaded} from {content_length:?}");
+                },
+                || {
+                    info!("Download finished");
+                },
+            )
+            .await?;
+
+        info!("Update installed, restarting app");
+        app.restart();
+    }
+
+    Ok(())
 }
 
 #[tauri::command]

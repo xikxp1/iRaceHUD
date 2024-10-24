@@ -8,6 +8,7 @@
   "bundle": {
     "active": true,
     "category": "Utility",
+    "createUpdaterArtifacts": true,
     "targets": "nsis",
     "icon": [
       "icons/32x32.png",
@@ -21,7 +22,14 @@
   "mainBinaryName": "iracehud",
   "version": "0.0.0",
   "identifier": "dev.xikxp1.iracehud",
-  "plugins": {},
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJBQjAwMDdFNENDQkM2OUEKUldTYXhzdE1mZ0N3dWlCR3R3aGlxNlB6N0JReG1RdmdhOHNjcUd1SjRFdXB4ckgraVNxUjJkOW4K",
+      "endpoints": [
+        "https://github.com/xikxp1/iRaceHUD/releases/latest/download/latest.json"
+      ]
+    }
+  },
   "app": {
     "windows": [
       {
