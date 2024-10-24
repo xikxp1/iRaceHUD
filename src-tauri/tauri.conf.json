@@ -24,7 +24,7 @@
   "identifier": "dev.xikxp1.iracehud",
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJBQjAwMDdFNENDQkM2OUEKUldTYXhzdE1mZ0N3dWlCR3R3aGlxNlB6N0JReG1RdmdhOHNjcUd1SjRFdXB4ckgraVNxUjJkOW4K",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE0Mzc3QTUxNENEMUQ0RTYKUldUbTFORk1VWG8zcEU1NXhRQ1dWcFNCUWFIQUNHYmo1bjY0RnAyell1cDZKclk2Zld2OUNnU0cK",
       "endpoints": [
         "https://github.com/xikxp1/iRaceHUD/releases/latest/download/latest.json"
       ]
