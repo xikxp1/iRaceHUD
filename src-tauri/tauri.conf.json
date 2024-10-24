@@ -20,7 +20,6 @@
   },
   "productName": "iracehud",
   "mainBinaryName": "iracehud",
-  "version": "0.0.0",
   "identifier": "dev.xikxp1.iracehud",
   "plugins": {
     "updater": {

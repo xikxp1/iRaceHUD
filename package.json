@@ -1,5 +1,10 @@
 {
   "name": "iracehud",
+  "description": "iRacing HUD overlay built in Tauri",
+  "author": {
+    "name": "Ivan Kachalkin",
+    "email": "xikxp1@gmail.com"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite dev",
