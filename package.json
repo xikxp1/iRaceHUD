@@ -1,7 +1,5 @@
 {
   "name": "iracehud",
-  "version": "0.0.0",
-  "description": "",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
