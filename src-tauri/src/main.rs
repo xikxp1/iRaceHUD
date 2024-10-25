@@ -712,7 +712,17 @@ async fn connect() -> Result<()> {
 
 #[cfg(not(debug_assertions))]
 async fn update(app: tauri::AppHandle) -> Result<()> {
-    if let Some(update) = app.updater()?.check().await? {
+    let updater = app.updater();
+    if updater.is_err() {
+        info!("Updater not available, skipping update check");
+        return Ok(());
+    }
+    let updater_result = updater.unwrap().check().await;
+    if updater_result.is_err() {
+        info!("Failed to check for updates");
+        return Ok(());
+    }
+    if let Some(update) = updater_result.unwrap() {
         info!("Update found: {:?}", update.version);
 
         let mut downloaded = 0;
