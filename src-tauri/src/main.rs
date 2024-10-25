@@ -24,9 +24,9 @@ use tauri::{
     tray::TrayIconBuilder,
     Manager,
 };
+use tauri::{WebviewUrl, WebviewWindowBuilder};
+use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_log::{Target, TargetKind};
-#[cfg(not(debug_assertions))]
-use tauri_plugin_updater::UpdaterExt;
 use tokio::sync::Mutex;
 
 static BR1: f32 = 1600. / LN_2;
@@ -46,6 +46,17 @@ async fn main() {
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|_, args, cwd| {
+            info!(
+                "Single instance started with args: {:?}, cwd: {:?}",
+                args, cwd
+            );
+        }))
+        .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            None,
+        ))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(
             tauri_plugin_log::Builder::default()
@@ -57,6 +68,8 @@ async fn main() {
         .setup(|app| {
             #[cfg(not(debug_assertions))]
             {
+                use tauri_plugin_updater::UpdaterExt;
+
                 let handle = app.handle().clone();
                 tauri::async_runtime::spawn(async move {
                     if let Err(err) = update(handle).await {
@@ -66,14 +79,34 @@ async fn main() {
             }
 
             let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
-            let tray_menu = MenuBuilder::new(app).items(&[&quit]).build()?;
+            let settings = MenuItemBuilder::with_id("settings", "Settings").build(app)?;
+            let tray_menu = MenuBuilder::new(app)
+                .item(&settings)
+                .separator()
+                .item(&quit)
+                .build()?;
             TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&tray_menu)
-                .on_menu_event(|_, event| {
-                    if event.id().as_ref() == "quit" {
-                        info!("Quit menu item clicked, quitting application");
-                        std::process::exit(0);
+                .on_menu_event({
+                    let app_handle = app.handle().clone();
+                    move |_, event| {
+                        if event.id().as_ref() == "quit" {
+                            info!("Quit menu item clicked, quitting application");
+                            app_handle.exit(0);
+                        } else if event.id().as_ref() == "settings" {
+                            info!("Settings menu item clicked, opening settings");
+                            WebviewWindowBuilder::new(
+                                &app_handle,
+                                "settings",
+                                WebviewUrl::App("/settings".into()),
+                            )
+                            .title("iRaceHUD Settings")
+                            .resizable(false)
+                            .center()
+                            .build()
+                            .expect("Failed to open settings");
+                        }
                     }
                 })
                 .title("iRaceHUD")
@@ -106,7 +139,9 @@ async fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             register_event_emitter,
-            unregister_event_emitter
+            unregister_event_emitter,
+            set_autostart,
+            get_autostart,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
@@ -713,4 +748,25 @@ async fn unregister_event_emitter(app: tauri::AppHandle, event: String) {
     let emitter_state = app.app_handle().state::<Mutex<TelemetryEmitter>>();
     let mut emitter = emitter_state.lock().await;
     emitter.unregister(&event);
+}
+
+#[tauri::command]
+async fn set_autostart(app: tauri::AppHandle, enabled: bool) {
+    info!("Setting autostart to {}", enabled);
+    let autostart_manager = app.autolaunch();
+    if enabled {
+        autostart_manager
+            .enable()
+            .expect("Failed to enable autostart");
+    } else {
+        autostart_manager
+            .disable()
+            .expect("Failed to disable autostart");
+    }
+}
+
+#[tauri::command]
+async fn get_autostart(app: tauri::AppHandle) -> bool {
+    info!("Getting autostart status");
+    app.autolaunch().is_enabled().unwrap_or(false)
 }

@@ -9,6 +9,8 @@
   ],
   "permissions": [
     "core:default",
-    "updater:default"
+    "updater:default",
+    "autostart:default",
+    "store:default"
   ]
 }
