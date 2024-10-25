@@ -79,9 +79,16 @@ async fn main() {
                 });
             }
 
+            let verson = MenuItemBuilder::with_id(
+                "version",
+                format!("iRaceHUD v{}", app.package_info().version),
+            )
+            .enabled(false)
+            .build(app)?;
             let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
             let settings = MenuItemBuilder::with_id("settings", "Settings").build(app)?;
             let tray_menu = MenuBuilder::new(app)
+                .item(&verson)
                 .item(&settings)
                 .separator()
                 .item(&quit)
