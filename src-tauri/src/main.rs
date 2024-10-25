@@ -29,6 +29,9 @@ use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_log::{Target, TargetKind};
 use tokio::sync::Mutex;
 
+#[cfg(not(debug_assertions))]
+use tauri_plugin_updater::UpdaterExt;
+
 static BR1: f32 = 1600. / LN_2;
 static WINDOW: OnceLock<tauri::WebviewWindow> = OnceLock::new();
 const WAIT_FOR_SESSION_SECS: u64 = 600;
@@ -68,8 +71,6 @@ async fn main() {
         .setup(|app| {
             #[cfg(not(debug_assertions))]
             {
-                use tauri_plugin_updater::UpdaterExt;
-
                 let handle = app.handle().clone();
                 tauri::async_runtime::spawn(async move {
                     if let Err(err) = update(handle).await {
