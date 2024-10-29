@@ -1,6 +1,7 @@
 <script lang="ts">
     import type {
         CurrentTime,
+        Position,
         Standings,
         StrengthOfField,
     } from "$lib/types/telemetry";
@@ -21,6 +22,7 @@
     let standings_channel = new Channel<Standings>();
     let current_time_channel = new Channel<CurrentTime>();
     let stength_of_field_channel = new Channel<StrengthOfField>();
+    let positions_total_channel = new Channel<Position>();
 
     onMount(() => {
         interval = setInterval(() => {
@@ -39,6 +41,10 @@
             stength_of_field = message;
         };
 
+        positions_total_channel.onmessage = (message) => {
+            driver_count = message;
+        };
+
         invoke("register_event_emitter", {
             event: "standings",
             onEvent: standings_channel,
@@ -53,6 +59,11 @@
             event: "strength_of_field",
             onEvent: stength_of_field_channel,
         });
+
+        invoke("register_event_emitter", {
+            event: "positions_total",
+            onEvent: positions_total_channel
+        });
     });
 
     onDestroy(() => {
@@ -60,6 +71,7 @@
         standings_channel.onmessage = () => {};
         current_time_channel.onmessage = () => {};
         stength_of_field_channel.onmessage = () => {};
+        positions_total_channel.onmessage = () => {};
 
         invoke("unregister_event_emitter", {
             event: "standings",
@@ -71,6 +83,10 @@
 
         invoke("unregister_event_emitter", {
             event: "strength_of_field",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "positions_total",
         });
     });
 </script>
