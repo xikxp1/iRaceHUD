@@ -75,7 +75,7 @@
                 width="1920"
                 height="1080"
             />
-            <circle {cx} {cy} r="32" fill="blue" />
+            <circle {cx} {cy} r="32" fill="none" stroke="blue" stroke-width="16"/>
         </svg>
         <input
             type="range"

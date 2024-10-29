@@ -4,7 +4,7 @@
 </script>
 
 <div class="flex flex-row">
-    <div class="w-1/4">
+    <div class="w-1/4 h-screen overflow-x-auto">
         <Menu />
     </div>
     <div class="w-3/4">
