@@ -70,6 +70,9 @@ pub struct Position(u32);
 #[derive(Type, Serialize, Clone)]
 pub struct Gap(String);
 
+#[derive(Type, Serialize, Clone)]
+pub struct RelativeGap(String);
+
 #[derive(Type, Serialize)]
 pub struct TrackMapDriver {
     car_id: u32,
@@ -116,7 +119,7 @@ pub struct RelativeDriver {
     car_number: String,
     irating: IRating,
     license: String,
-    player_relative_gap: Gap,
+    player_relative_gap: RelativeGap,
     is_player: bool,
     is_in_pits: bool,
     is_off_track: bool,
@@ -372,6 +375,31 @@ impl Gap {
     }
 }
 
+impl RelativeGap {
+    pub fn new(position: u32, driver_positions: &[u32], drivers: &HashMap<u32, Driver>) -> Self {
+        if position < 1 || position as usize > driver_positions.len() {
+            return RelativeGap("-".to_string());
+        }
+        let car_id = driver_positions[position as usize - 1];
+        let driver = drivers.get(&car_id);
+        let relative_gap = match driver {
+            None => "-".to_string(),
+            Some(driver) => {
+                let raw_gap = driver.player_relative_gap;
+                match raw_gap.as_abs_secs_f32() {
+                    0.0 => "-".to_string(),
+                    value => format!(
+                        "{}.{}",
+                        value as i32,
+                        min((value.fract() * 10.0).round() as i32, 9)
+                    ),
+                }
+            }
+        };
+        RelativeGap(relative_gap)
+    }
+}
+
 impl TrackMapDriver {
     pub fn new(driver: &Driver) -> Self {
         TrackMapDriver {
@@ -444,7 +472,7 @@ impl RelativeDriver {
             car_number: driver.car_number.clone(),
             irating: IRating::new(driver.irating),
             license: driver.lic_string.clone(),
-            player_relative_gap: Gap::new(driver.position, driver_positions, drivers, false),
+            player_relative_gap: RelativeGap::new(driver.position, driver_positions, drivers),
             is_player: driver.is_player,
             is_in_pits: driver.is_in_pits,
             is_off_track: driver.is_off_track,
@@ -462,7 +490,7 @@ impl Default for RelativeDriver {
             car_number: "".to_string(),
             irating: IRating("".to_string()),
             license: "".to_string(),
-            player_relative_gap: Gap("".to_string()),
+            player_relative_gap: RelativeGap("".to_string()),
             is_player: false,
             is_in_pits: false,
             is_off_track: false,

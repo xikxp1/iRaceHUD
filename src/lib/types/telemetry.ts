@@ -8,53 +8,55 @@ export type Speed = number
 
 export type Telemetry = { ts: number; throttle: number; brake: number; abs_active: boolean }
 
+export type TrackMapDriver = { car_id: number; position: number; is_leader: boolean; is_player: boolean; lap_dist_pct: number; is_in_pits: boolean; is_off_track: boolean; is_off_world: boolean; x: number; y: number }
+
 export type SessionTime = string
 
-export type LapTimeData = { lap: number; lap_time: LapTime }
+export type RelativeDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: IRating; license: string; player_relative_gap: RelativeGap; is_player: boolean; is_in_pits: boolean; is_off_track: boolean; is_off_world: boolean }
+
+export type RelativeGap = string
 
 export type GearRPM = number
 
 export type Active = boolean
 
-export type Standings = StandingsDriver[]
-
-export type Relative = RelativeDriver[]
+export type IRating = string
 
 export type LapsTotal = number
 
-export type SessionTimeTotal = string
+export type LapTimes = LapTimeData[]
 
-export type TrackID = number
+export type LapTimeData = { lap: number; lap_time: LapTime }
+
+export type SessionTimeTotal = string
 
 export type Proximity = { is_left: boolean; is_right: boolean }
 
 export type CurrentTime = string
 
-export type TrackMapDriver = { car_id: number; position: number; is_leader: boolean; is_player: boolean; lap_dist_pct: number; is_in_pits: boolean; is_off_track: boolean; is_off_world: boolean; x: number; y: number }
-
 export type Laps = number
 
 export type RPM = number
 
+export type Relative = RelativeDriver[]
+
 export type SessionState = string
 
-export type TrackMap = TrackMapDriver[]
-
-export type StrengthOfField = number
+export type Standings = StandingsDriver[]
 
 export type Position = number
 
 export type DeltaTime = string
 
+export type TrackID = number
+
+export type TrackMap = TrackMapDriver[]
+
 export type Gear = string
 
-export type RelativeDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: IRating; license: string; player_relative_gap: Gap; is_player: boolean; is_in_pits: boolean; is_off_track: boolean; is_off_world: boolean }
+export type StrengthOfField = number
 
 export type Gap = string
-
-export type IRating = string
-
-export type LapTimes = LapTimeData[]
 
 export type StandingsDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: IRating; license: string; leader_gap: Gap; best_lap: LapTime; last_lap: LapTime; is_player: boolean; is_in_pits: boolean }
 
