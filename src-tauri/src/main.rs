@@ -60,7 +60,6 @@ async fn main() {
             MacosLauncher::LaunchAgent,
             None,
         ))
-        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(
             tauri_plugin_log::Builder::default()
                 .target(Target::new(TargetKind::LogDir { file_name: None }))
@@ -719,7 +718,10 @@ async fn connect() -> Result<()> {
 
 #[cfg(not(debug_assertions))]
 async fn update(app: tauri::AppHandle) -> Result<()> {
-    let updater = app.updater();
+    let updater = app
+        .updater_builder()
+        .version_comparator(|current, update| update.version != current)
+        .build();
     if updater.is_err() {
         info!("Updater not available, skipping update check");
         return Ok(());
