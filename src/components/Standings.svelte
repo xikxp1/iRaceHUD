@@ -8,6 +8,8 @@
     import { Channel, invoke } from "@tauri-apps/api/core";
     import { onDestroy, onMount } from "svelte";
     import { flip } from "svelte/animate";
+    import Badge from "./utils/Badge.svelte";
+    import { getBadgeColor } from "$lib/utils";
 
     let stength_of_field = 0;
     let current_time = "––:––";
@@ -62,7 +64,7 @@
 
         invoke("register_event_emitter", {
             event: "positions_total",
-            onEvent: positions_total_channel
+            onEvent: positions_total_channel,
         });
     });
 
@@ -92,7 +94,7 @@
 </script>
 
 <div class="flex flex-row items-center justify-center opacity-75">
-    <div class="flex flex-col bg-primary-content rounded-l-md w-[360px]">
+    <div class="flex flex-col bg-primary-content rounded-l-md w-[375px]">
         <div class="flex flex-row items-center justify-center">
             <div class="flex flex-row items-center justify-start w-1/6 pl-2">
                 <span class="text text-secondary">SoF&nbsp</span>
@@ -117,8 +119,16 @@
                     <td class="text text-sm text-right pr-2 w-[25px]">
                         {st?.position ?? ""}
                     </td>
-                    <td class="text text-sm text-right pr-2 w-[30px]">
-                        {st?.car_number ?? ""}
+                    <td class="text text-sm pr-2 w-[48px]">
+                        <Badge
+                            outlineClasses="text-center ring ring-2 ring-inset {st?.is_player
+                                ? 'ring-primary-content'
+                                : 'ring-primary'}"
+                            textClasses="text-sm {st?.is_player
+                                ? 'text-primary-content'
+                                : 'text-primary'}"
+                            text={st?.car_number ? "#" + st?.car_number : ""}
+                        />
                     </td>
                     <td class="text text-sm">
                         <span class="text text-sm">{st?.user_name ?? ""}</span>
@@ -129,7 +139,14 @@
                         {/if}
                     </td>
                     <td class="text text-sm text-right pr-1 w-[40px]">
-                        {st?.irating}
+                        {#if st?.license && st?.irating}
+                            <Badge
+                                colorClasses={getBadgeColor(st?.license ?? "")}
+                                outlineClasses="text-center"
+                                textClasses="text text-sm text-right text-primary"
+                                text={st?.irating}
+                            />
+                        {/if}
                     </td>
                     <td class="text text-sm text-right pr-1 w-[40px]">
                         {st?.leader_gap ?? ""}

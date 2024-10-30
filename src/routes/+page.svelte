@@ -158,7 +158,7 @@
     }
 
     .standings {
-        margin-left: -1330px;
+        margin-left: -1300px;
         margin-right: auto;
         margin-top: -520px;
         margin-bottom: auto;
