@@ -1,6 +1,7 @@
 <script lang="ts">
     import type {
         CurrentTime,
+        Laps,
         Position,
         Standings,
         StrengthOfField,
@@ -14,6 +15,7 @@
     let stength_of_field = 0;
     let current_time = "––:––";
     let driver_count = 0;
+    let leader_lap = 0;
 
     let standings: Standings = [];
 
@@ -25,6 +27,7 @@
     let current_time_channel = new Channel<CurrentTime>();
     let stength_of_field_channel = new Channel<StrengthOfField>();
     let positions_total_channel = new Channel<Position>();
+    let race_laps_channel = new Channel<Laps>();
 
     onMount(() => {
         interval = setInterval(() => {
@@ -47,6 +50,10 @@
             driver_count = message;
         };
 
+        race_laps_channel.onmessage = (message) => {
+            leader_lap = message;
+        };
+
         invoke("register_event_emitter", {
             event: "standings",
             onEvent: standings_channel,
@@ -66,6 +73,11 @@
             event: "positions_total",
             onEvent: positions_total_channel,
         });
+
+        invoke("register_event_emitter", {
+            event: "race_laps",
+            onEvent: race_laps_channel,
+        });
     });
 
     onDestroy(() => {
@@ -74,6 +86,7 @@
         current_time_channel.onmessage = () => {};
         stength_of_field_channel.onmessage = () => {};
         positions_total_channel.onmessage = () => {};
+        race_laps_channel.onmessage = () => {};
 
         invoke("unregister_event_emitter", {
             event: "standings",
@@ -89,6 +102,10 @@
 
         invoke("unregister_event_emitter", {
             event: "positions_total",
+        });
+
+        invoke("unregister_event_emitter", {
+            event: "race_laps",
         });
     });
 </script>
@@ -149,7 +166,11 @@
                         {/if}
                     </td>
                     <td class="text text-sm text-right pr-1 w-[40px]">
-                        {st?.leader_gap ?? ""}
+                        {#if st?.is_leader && leader_lap > 0}
+                            on L{leader_lap}
+                        {:else}
+                            {st?.leader_gap ?? ""}
+                        {/if}
                     </td>
                 </tr>
             {/each}

@@ -105,6 +105,7 @@ pub struct StandingsDriver {
     best_lap: LapTime,
     last_lap: LapTime,
     is_player: bool,
+    is_leader: bool,
     is_in_pits: bool,
 }
 
@@ -446,6 +447,7 @@ impl StandingsDriver {
             best_lap: LapTime::new_from_sd(driver.best_lap_time),
             last_lap: LapTime::new_from_sd(driver.last_lap_time),
             is_player: driver.is_player,
+            is_leader: driver.is_leader,
             is_in_pits: driver.is_in_pits,
         }
     }
