@@ -35,7 +35,15 @@
         }, SWITCH_INTERVAL);
 
         standings_channel.onmessage = (message) => {
-            standings = message;
+            let new_standings = message;
+            new_standings.forEach((st, index) => {
+                let old_st = standings.find(
+                    (old_st) => old_st.car_id === st.car_id,
+                );
+                st.position_change =
+                    st.position - (old_st?.position ?? st.position);
+            });
+            standings = new_standings;
         };
 
         current_time_channel.onmessage = (message) => {
@@ -133,7 +141,14 @@
                         : "odd:bg-secondary-content even:bg-primary-content text-primary"}
                     animate:flip
                 >
-                    <td class="text text-sm text-right pr-2 w-[25px]">
+                    <td
+                        class="transition-colors text text-sm text-right pr-2 w-[25px] {st?.position_change >
+                        0
+                            ? 'bg-error'
+                            : st?.position_change < 0
+                              ? 'bg-success'
+                              : ''}"
+                    >
                         {st?.position ?? ""}
                     </td>
                     <td class="text text-sm pr-2 w-[48px]">
@@ -167,7 +182,7 @@
                     </td>
                     <td class="text text-sm text-right pr-1 w-[40px]">
                         {#if st?.is_leader && leader_lap > 0}
-                            on L{leader_lap}
+                            L{leader_lap}
                         {:else}
                             {st?.leader_gap ?? ""}
                         {/if}

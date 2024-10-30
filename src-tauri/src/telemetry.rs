@@ -107,6 +107,7 @@ pub struct StandingsDriver {
     is_player: bool,
     is_leader: bool,
     is_in_pits: bool,
+    position_change: u8,
 }
 
 #[derive(Type, Serialize)]
@@ -449,6 +450,7 @@ impl StandingsDriver {
             is_player: driver.is_player,
             is_leader: driver.is_leader,
             is_in_pits: driver.is_in_pits,
+            position_change: 0,
         }
     }
 }
