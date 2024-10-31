@@ -1,5 +1,4 @@
 <script lang="ts">
-    import type { Active } from "$lib/types/telemetry";
     import Main from "../components/Main.svelte";
     import Telemetry from "../components/Telemetry.svelte";
     import Timer from "../components/Timer.svelte";
@@ -9,34 +8,10 @@
     import TrackMap from "../components/TrackMap.svelte";
     import LapTimes from "../components/LapTimes.svelte";
     import Relative from "../components/Relative.svelte";
-    import { Channel, invoke } from "@tauri-apps/api/core";
-    import { onDestroy, onMount } from "svelte";
-
-    let active: boolean = false;
-
-    let channel = new Channel<Active>();
-
-    onMount(() => {
-        channel.onmessage = (message) => {
-            active = message;
-        };
-
-        invoke("register_event_emitter", {
-            event: "active",
-            onEvent: channel,
-        });
-    });
-
-    onDestroy(() => {
-        channel.onmessage = () => {};
-
-        invoke("unregister_event_emitter", {
-            event: "active",
-        });
-    });
+    import { active } from "$lib/telemetry/telemetry.svelte";
 </script>
 
-{#if active}
+{#if $active}
     <div class="outer">
         <div class="middle">
             <div class="main">

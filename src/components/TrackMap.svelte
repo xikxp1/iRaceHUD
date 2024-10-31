@@ -1,14 +1,14 @@
 <script lang="ts">
+    import { trackID, trackMap } from "$lib/telemetry/telemetry.svelte";
     import type { TrackID, TrackMap } from "$lib/types/telemetry";
-    import { Channel, invoke } from "@tauri-apps/api/core";
-    import { onDestroy, onMount } from "svelte";
+    import { onMount } from "svelte";
 
     let trackPathElement: SVGPathElement;
 
     let trackInfo: { [k: number]: any } = {};
     let trackSettings: { [k: number]: any } = {};
 
-    let track_id: number;
+    let track_id: TrackID;
     let trackPath: string | undefined;
     let trackMapCars: TrackMap = [];
 
@@ -26,9 +26,6 @@
     const offtrackCircleColor: string = `oklch(${css.getPropertyValue("--er")})`;
     const inPitsCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
 
-    let track_id_channel = new Channel<TrackID>();
-    let track_map_channel = new Channel<TrackMap>();
-
     onMount(() => {
         fetch("/track_info_data/track_info.json")
             .then((response) => response.json())
@@ -41,19 +38,25 @@
                 trackSettings = data;
             });
 
-        track_id_channel.onmessage = (message) => {
-            track_id = message;
-            trackPath = trackInfo[track_id].activePath;
+        trackID.subscribe((value) => {
+            track_id = value;
+            let path = trackInfo[track_id]?.activePath;
+            if (path !== undefined) {
+                trackPath = path;
+            }
             offset = trackSettings[track_id]?.offset ?? 0;
             direction = trackSettings[track_id]?.direction ?? 1;
-        };
+        });
 
-        track_map_channel.onmessage = (message) => {
+        trackMap.subscribe((value) => {
+            if (trackPathElement === undefined) {
+                return;
+            }
             const pathLength = trackPathElement.getTotalLength();
             if (pathLength === 0) {
                 return;
             }
-            const track_map = message;
+            const track_map = value;
             for (let car of track_map) {
                 const offsetedLapDistPct =
                     (1 + offset + direction * car.lap_dist_pct) % 1;
@@ -64,29 +67,6 @@
                 car.y = point.y;
             }
             trackMapCars = track_map;
-        };
-
-        invoke("register_event_emitter", {
-            event: "track_id",
-            onEvent: track_id_channel,
-        });
-
-        invoke("register_event_emitter", {
-            event: "track_map",
-            onEvent: track_map_channel,
-        });
-    });
-
-    onDestroy(() => {
-        track_id_channel.onmessage = () => {};
-        track_map_channel.onmessage = () => {};
-
-        invoke("unregister_event_emitter", {
-            event: "track_id",
-        });
-
-        invoke("unregister_event_emitter", {
-            event: "track_map",
         });
     });
 </script>
@@ -106,7 +86,7 @@
                 stroke={trackColor}
                 stroke-width="20"
             />
-            {#if track_id != undefined}
+            {#if track_id != undefined && track_id != 0}
                 <image
                     href="/track_info_data/start_finish/{track_id}.svg"
                     x="0"
