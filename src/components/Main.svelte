@@ -12,39 +12,58 @@
         rpm,
         speed,
     } from "$lib/telemetry/telemetry.svelte";
+    import type { Rpm } from "$lib/types/telemetry";
     import { onMount } from "svelte";
 
     let gear_indicator: HTMLDivElement;
     let rpm_incidator: HTMLProgressElement;
 
-    onMount(() => {
-        rpm.subscribe((value) => {
-            if (value >= $gearBlinkRPM) {
+    function on_rpm(rpm: Rpm) {
+        if (rpm >= $gearBlinkRPM) {
+            if (gear_indicator != null) {
                 gear_indicator.classList.remove("text-secondary");
                 gear_indicator.classList.remove("text-info");
                 gear_indicator.classList.add("text-error");
+            }
 
+            if (rpm_incidator != null) {
                 rpm_incidator.classList.remove("progress-secondary");
                 rpm_incidator.classList.remove("progress-info");
                 rpm_incidator.classList.add("progress-error");
-            } else if (value >= $gearShiftRPM) {
+            }
+        } else if (rpm >= $gearShiftRPM) {
+            if (gear_indicator != null) {
                 gear_indicator.classList.remove("text-secondary");
                 gear_indicator.classList.add("text-info");
                 gear_indicator.classList.remove("text-error");
+            }
 
+            if (rpm_incidator != null) {
                 rpm_incidator.classList.remove("progress-secondary");
                 rpm_incidator.classList.add("progress-info");
                 rpm_incidator.classList.remove("progress-error");
-            } else {
+            }
+        } else {
+            if (gear_indicator != null) {
                 gear_indicator.classList.add("text-secondary");
                 gear_indicator.classList.remove("text-info");
                 gear_indicator.classList.remove("text-error");
+            }
 
+            if (rpm_incidator != null) {
                 rpm_incidator.classList.add("progress-secondary");
                 rpm_incidator.classList.remove("progress-info");
                 rpm_incidator.classList.remove("progress-error");
             }
+        }
+    }
+
+    onMount(() => {
+        rpm.subscribe((value) => {
+            on_rpm(value);
         });
+
+        on_rpm($rpm);
     });
 </script>
 
