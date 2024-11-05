@@ -1,16 +1,25 @@
 <script lang="ts">
+    import type {
+        TrackId,
+        TrackMap,
+        TrackMapDriver,
+    } from "$lib/types/telemetry";
     import { trackID, trackMap } from "$lib/telemetry/telemetry.svelte";
-    import type { TrackID, TrackMap } from "$lib/types/telemetry";
     import { onMount } from "svelte";
+
+    type TrackMapLocal = TrackMapDriver & {
+        x: number;
+        y: number;
+    };
 
     let trackPathElement: SVGPathElement;
 
     let trackInfo: { [k: number]: any } = {};
     let trackSettings: { [k: number]: any } = {};
 
-    let track_id: TrackID;
+    let track_id: TrackId;
     let trackPath: string | undefined;
-    let trackMapCars: TrackMap = [];
+    let trackMapCars: TrackMapLocal[] = [];
 
     let offset: number = 0;
     let direction: number = 1;
@@ -26,48 +35,64 @@
     const offtrackCircleColor: string = `oklch(${css.getPropertyValue("--er")})`;
     const inPitsCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
 
-    onMount(() => {
-        fetch("/track_info_data/track_info.json")
-            .then((response) => response.json())
-            .then((data) => {
-                trackInfo = data;
-            });
-        fetch("/track_info_data/track_settings.json")
-            .then((response) => response.json())
-            .then((data) => {
-                trackSettings = data;
-            });
+    function onTrackId(trackId: TrackId) {
+        track_id = trackId;
+        let path = trackInfo[track_id]?.activePath;
+        if (path != null) {
+            trackPath = path;
+        }
+        offset = trackSettings[track_id]?.offset ?? 0;
+        direction = trackSettings[track_id]?.direction ?? 1;
+    }
+
+    function onTrackMap(value: TrackMap) {
+        if (trackPathElement == null) {
+            return;
+        }
+        const pathLength = trackPathElement.getTotalLength();
+        if (pathLength === 0) {
+            return;
+        }
+        const track_map: TrackMapLocal[] = [];
+        for (let car of value) {
+            const offsetedLapDistPct =
+                (1 + offset + direction * car.lap_dist_pct) % 1;
+            const point = trackPathElement.getPointAtLength(
+                offsetedLapDistPct * pathLength,
+            );
+            let new_car: TrackMapLocal = {
+                ...car,
+                x: point.x,
+                y: point.y,
+            };
+            track_map.push(new_car);
+        }
+        trackMapCars = track_map;
+    }
+
+    onMount(async () => {
+        await Promise.all([
+            fetch("/track_info_data/track_info.json")
+                .then((response) => response.json())
+                .then((data) => {
+                    trackInfo = data;
+                }),
+            fetch("/track_info_data/track_settings.json")
+                .then((response) => response.json())
+                .then((data) => {
+                    trackSettings = data;
+                }),
+        ]);
 
         trackID.subscribe((value) => {
-            track_id = value;
-            let path = trackInfo[track_id]?.activePath;
-            if (path !== undefined) {
-                trackPath = path;
-            }
-            offset = trackSettings[track_id]?.offset ?? 0;
-            direction = trackSettings[track_id]?.direction ?? 1;
+            onTrackId(value);
         });
 
-        trackMap.subscribe((value) => {
-            if (trackPathElement === undefined) {
-                return;
-            }
-            const pathLength = trackPathElement.getTotalLength();
-            if (pathLength === 0) {
-                return;
-            }
-            const track_map = value;
-            for (let car of track_map) {
-                const offsetedLapDistPct =
-                    (1 + offset + direction * car.lap_dist_pct) % 1;
-                const point = trackPathElement.getPointAtLength(
-                    offsetedLapDistPct * pathLength,
-                );
-                car.x = point.x;
-                car.y = point.y;
-            }
-            trackMapCars = track_map;
-        });
+        onTrackId($trackID);
+
+        trackMap.subscribe((value) => onTrackMap(value));
+
+        onTrackMap($trackMap);
     });
 </script>
 

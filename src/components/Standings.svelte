@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Standings } from "$lib/types/telemetry";
+    import type { StandingsDriver } from "$lib/types/telemetry";
     import { onDestroy, onMount } from "svelte";
     import { flip } from "svelte/animate";
     import Badge from "./utils/Badge.svelte";
@@ -12,28 +12,42 @@
         strengthOfField,
     } from "$lib/telemetry/telemetry.svelte";
 
-    let current_standings: Standings = [];
+    type LocalStandings = StandingsDriver & {
+        position_change: number;
+    };
+
+    let current_standings: LocalStandings[] = [];
 
     const SWITCH_INTERVAL = 10000;
     let show_best_lap = false;
     let interval: NodeJS.Timeout;
+
+    function on_standings (value: StandingsDriver[]) {
+        let new_standings: LocalStandings[] = [];
+        value.forEach((st) => {
+            let new_value: LocalStandings = {
+                ...st,
+                position_change: 0,
+            };
+            let old_st = current_standings.find(
+                (old_st) => old_st.car_id === new_value.car_id,
+            );
+            new_value.position_change =
+                new_value.position -
+                (old_st?.position ?? new_value.position);
+            new_standings.push(new_value);
+        });
+        current_standings = new_standings;
+    }
 
     onMount(() => {
         interval = setInterval(() => {
             show_best_lap = !show_best_lap;
         }, SWITCH_INTERVAL);
 
-        standings.subscribe((value) => {
-            let new_standings = value;
-            new_standings.forEach((st) => {
-                let old_st = current_standings.find(
-                    (old_st) => old_st.car_id === st.car_id,
-                );
-                st.position_change =
-                    st.position - (old_st?.position ?? st.position);
-            });
-            current_standings = new_standings;
-        });
+        standings.subscribe((value) => on_standings(value));
+
+        on_standings($standings);
     });
 
     onDestroy(() => {

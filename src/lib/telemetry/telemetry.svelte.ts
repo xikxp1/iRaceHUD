@@ -1,4 +1,9 @@
-import type { Position, CurrentTime, LapTimes, Standings, StrengthOfField, Laps, Proximity, Relative, LapTime, DeltaTime, Telemetry, SessionState, Gap, TrackID, TrackMap, Gear, Speed, RPM, Active, GearRPM, Incidents } from "$lib/types/telemetry";
+import type {
+    Position, CurrentTime, PlayerLapTimes, Standings, StrengthOfField, Lap, Proximity, Relative,
+    LapTime, DeltaLastTime, DeltaOptimalTime, TelemetryGraph, SessionState, GapNext, GapPrev,
+    TrackId, TrackMap, Gear, Speed, Rpm, Active, GearShiftRpm, GearBlinkRpm, Incidents, RaceLaps,
+    LapsTotal
+} from "$lib/types/telemetry";
 import { Channel, invoke } from "@tauri-apps/api/core";
 
 import { readable } from 'svelte/store';
@@ -39,8 +44,8 @@ export const currentTime = readable<CurrentTime>("--:--", (set) => {
     };
 });
 
-export const lapTimes = readable<LapTimes>([], (set) => {
-    let lap_times_channel = new Channel<LapTimes>();
+export const lapTimes = readable<PlayerLapTimes>([], (set) => {
+    let lap_times_channel = new Channel<PlayerLapTimes>();
     lap_times_channel.onmessage = (message) => {
         set(message);
     };
@@ -111,8 +116,8 @@ export const positionsTotal = readable<Position>(0, (set) => {
     };
 });
 
-export const raceLaps = readable<Laps>(0, (set) => {
-    let race_laps_channel = new Channel<Laps>();
+export const raceLaps = readable<RaceLaps>(0, (set) => {
+    let race_laps_channel = new Channel<RaceLaps>();
     race_laps_channel.onmessage = (message) => {
         set(message);
     };
@@ -183,8 +188,8 @@ export const lapTime = readable<LapTime>("–:––.–––", (set) => {
     };
 });
 
-export const deltaOptimalTime = readable<DeltaTime>("–", (set) => {
-    let delta_optimal_time_channel = new Channel<DeltaTime>();
+export const deltaOptimalTime = readable<DeltaOptimalTime>("–", (set) => {
+    let delta_optimal_time_channel = new Channel<DeltaOptimalTime>();
     delta_optimal_time_channel.onmessage = (message) => {
         set(message);
     };
@@ -201,8 +206,8 @@ export const deltaOptimalTime = readable<DeltaTime>("–", (set) => {
     };
 });
 
-export const deltaLastTime = readable<DeltaTime>("–", (set) => {
-    let delta_last_time_channel = new Channel<DeltaTime>();
+export const deltaLastTime = readable<DeltaLastTime>("–", (set) => {
+    let delta_last_time_channel = new Channel<DeltaLastTime>();
     delta_last_time_channel.onmessage = (message) => {
         set(message);
     };
@@ -219,20 +224,20 @@ export const deltaLastTime = readable<DeltaTime>("–", (set) => {
     };
 });
 
-export const telemetry = readable<Telemetry>({ ts: 0, throttle: 0, brake: 0, abs_active: false }, (set) => {
-    let telemetry_channel = new Channel<Telemetry>();
+export const telemetry = readable<TelemetryGraph>({ ts: 0, throttle: 0, brake: 0, abs_active: false }, (set) => {
+    let telemetry_channel = new Channel<TelemetryGraph>();
     telemetry_channel.onmessage = (message) => {
         set(message);
     };
 
     invoke("register_event_emitter", {
-        event: "telemetry",
+        event: "telemetry_graph",
         onEvent: telemetry_channel,
     });
 
     return () => {
         invoke("unregister_event_emitter", {
-            event: "telemetry",
+            event: "telemetry_graph",
         });
     };
 });
@@ -255,8 +260,8 @@ export const sessionState = readable<SessionState>("", (set) => {
     };
 });
 
-export const gapNext = readable<Gap>("-", (set) => {
-    let gap_next_channel = new Channel<Gap>();
+export const gapNext = readable<GapNext>("-", (set) => {
+    let gap_next_channel = new Channel<GapNext>();
     gap_next_channel.onmessage = (message) => {
         set(message);
     };
@@ -273,8 +278,8 @@ export const gapNext = readable<Gap>("-", (set) => {
     };
 });
 
-export const gapPrev = readable<Gap>("-", (set) => {
-    let gap_prev_channel = new Channel<Gap>();
+export const gapPrev = readable<GapPrev>("-", (set) => {
+    let gap_prev_channel = new Channel<GapPrev>();
     gap_prev_channel.onmessage = (message) => {
         set(message);
     };
@@ -291,8 +296,8 @@ export const gapPrev = readable<Gap>("-", (set) => {
     };
 });
 
-export const trackID = readable<TrackID>(0, (set) => {
-    let track_id_channel = new Channel<TrackID>();
+export const trackID = readable<TrackId>(0, (set) => {
+    let track_id_channel = new Channel<TrackId>();
     track_id_channel.onmessage = (message) => {
         set(message);
     };
@@ -363,8 +368,8 @@ export const speed = readable<Speed>(0, (set) => {
     };
 });
 
-export const rpm = readable<RPM>(0, (set) => {
-    let rpm_channel = new Channel<RPM>();
+export const rpm = readable<Rpm>(0, (set) => {
+    let rpm_channel = new Channel<Rpm>();
     rpm_channel.onmessage = (message) => {
         set(message);
     };
@@ -381,8 +386,8 @@ export const rpm = readable<RPM>(0, (set) => {
     };
 });
 
-export const gearShiftRPM = readable<GearRPM>(0, (set) => {
-    let gear_shift_rpm_channel = new Channel<GearRPM>();
+export const gearShiftRPM = readable<GearShiftRpm>(0, (set) => {
+    let gear_shift_rpm_channel = new Channel<GearShiftRpm>();
     gear_shift_rpm_channel.onmessage = (message) => {
         set(message);
     };
@@ -399,8 +404,8 @@ export const gearShiftRPM = readable<GearRPM>(0, (set) => {
     };
 });
 
-export const gearBlinkRPM = readable<GearRPM>(0, (set) => {
-    let gear_blink_rpm_channel = new Channel<GearRPM>();
+export const gearBlinkRPM = readable<GearBlinkRpm>(0, (set) => {
+    let gear_blink_rpm_channel = new Channel<GearBlinkRpm>();
     gear_blink_rpm_channel.onmessage = (message) => {
         set(message);
     };
@@ -417,8 +422,8 @@ export const gearBlinkRPM = readable<GearRPM>(0, (set) => {
     };
 });
 
-export const lap = readable<Laps>(0, (set) => {
-    let lap_channel = new Channel<Laps>();
+export const lap = readable<Lap>(0, (set) => {
+    let lap_channel = new Channel<Lap>();
     lap_channel.onmessage = (message) => {
         set(message);
     };
@@ -435,8 +440,8 @@ export const lap = readable<Laps>(0, (set) => {
     };
 });
 
-export const lapsTotal = readable<Laps>(0, (set) => {
-    let laps_total_channel = new Channel<Laps>();
+export const lapsTotal = readable<LapsTotal>(0, (set) => {
+    let laps_total_channel = new Channel<LapsTotal>();
     laps_total_channel.onmessage = (message) => {
         set(message);
     };

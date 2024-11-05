@@ -5,19 +5,20 @@
 
     let trackInfoData: { [k: string]: any } = {};
 
-    onMount(() => {
-        fetch("/track_info_data/track_info.json")
-            .then((response) => response.json())
-            .then((data) => {
-                trackInfoData = data;
-                trackInfo.set(data);
-            });
-
-        fetch("/track_info_data/track_settings.json")
-            .then((response) => response.json())
-            .then((data) => {
-                trackSettings.set(data);
-            });
+    onMount(async () => {
+        await Promise.all([
+            fetch("/track_info_data/track_info.json")
+                .then((response) => response.json())
+                .then((data) => {
+                    trackInfoData = data;
+                    trackInfo.set(data);
+                }),
+            fetch("/track_info_data/track_settings.json")
+                .then((response) => response.json())
+                .then((data) => {
+                    trackSettings.set(data);
+                }),
+        ]);
     });
 </script>
 
