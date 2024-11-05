@@ -157,7 +157,7 @@
     }
 
     .relative {
-        margin-left: 1500px;
+        margin-left: 1480px;
         margin-right: auto;
         margin-top: 700px;
         margin-bottom: auto;

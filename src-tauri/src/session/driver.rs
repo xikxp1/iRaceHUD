@@ -1,4 +1,4 @@
-use crate::signed_duration::SignedDuration;
+use crate::util::signed_duration::SignedDuration;
 
 #[derive(Clone, Default)]
 pub struct Driver {

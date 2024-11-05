@@ -1,15 +1,24 @@
 <script lang="ts">
     import { proximity } from "$lib/telemetry/telemetry.svelte";
+    import type { Proximity } from "$lib/types/telemetry";
     import { onMount } from "svelte";
 
     let left_icon: HTMLImageElement;
     let right_icon: HTMLImageElement;
 
-    onMount(() => {
-        proximity.subscribe((value) => {
+    function on_proximity(value: Proximity) {
+        if (left_icon != null) {
             left_icon.style.opacity = value.is_left ? "1" : "0";
+        }
+        if (right_icon != null) {
             right_icon.style.opacity = value.is_right ? "1" : "0";
-        });
+        }
+    }
+
+    onMount(() => {
+        proximity.subscribe((value) => on_proximity(value));
+
+        on_proximity($proximity);
     });
 </script>
 

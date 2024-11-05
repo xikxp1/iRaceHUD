@@ -5,7 +5,7 @@
 </script>
 
 <div class="flex flex-row items-center justify-center opacity-90">
-    <table class="bg-secondary-content rounded-md w-[410px]">
+    <table class="bg-secondary-content rounded-md w-[415px]">
         <tbody>
             {#each $relative as rel}
                 <tr
@@ -13,7 +13,7 @@
                         ? 'bg-secondary text-primary-content'
                         : 'odd:bg-secondary-content even:bg-primary-content text-primary'} h-[22px]"
                 >
-                    <td class="text text-sm text-right pr-2 w-[25px]">
+                    <td class="text text-sm text-right pr-2 w-[30px]">
                         {#if rel?.position == 0}
                             *
                         {:else}
@@ -66,7 +66,4 @@
 </div>
 
 <style>
-    table tr {
-        clip-path: xywh(0 0 100% 100% round 0.375em);
-    }
 </style>

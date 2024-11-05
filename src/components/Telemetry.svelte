@@ -4,7 +4,6 @@
     import ProgressBar from "./utils/ProgressBar.svelte";
     import { telemetry } from "$lib/telemetry/telemetry.svelte";
 
-    let ctx;
     let telemetryCanvas: HTMLCanvasElement;
     let chart: Chart;
 
@@ -79,7 +78,7 @@
     };
 
     onMount(async () => {
-        ctx = telemetryCanvas.getContext("2d")!;
+        let ctx = telemetryCanvas.getContext("2d")!;
         chart = new Chart(ctx, {
             type: "line",
             data: telemetryData,
@@ -100,7 +99,9 @@
             if (currentBrakePoints > maxPoints) {
                 brakeData.splice(0, currentBrakePoints - maxPoints);
             }
-            chart.update("none");
+            if (chart != null) {
+                chart.update("none");
+            }
         });
     });
 </script>
