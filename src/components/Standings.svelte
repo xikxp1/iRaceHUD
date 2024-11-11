@@ -56,7 +56,7 @@
 </script>
 
 <div class="flex flex-row items-center justify-center opacity-75">
-    <div class="flex flex-col bg-primary-content rounded-l-md w-[375px]">
+    <div class="flex flex-col bg-primary-content rounded-l-md w-[360px]">
         <div class="flex flex-row items-center justify-center">
             <div class="flex flex-row items-center justify-start w-1/6 pl-2">
                 <span class="text text-secondary">SoF&nbsp</span>
@@ -74,13 +74,13 @@
             <tbody>
                 {#each current_standings as st, index (st.car_id)}
                     <tr
-                        class={st?.is_player
-                            ? "bg-secondary text-primary-content"
-                            : "odd:bg-secondary-content even:bg-primary-content text-primary"}
+                        class="{st?.is_player
+                            ? 'bg-secondary text-primary-content'
+                            : 'odd:bg-secondary-content even:bg-primary-content text-primary'} h-[22px]"
                         animate:flip
                     >
                         <td
-                            class="transition-colors duration-700 text text-sm text-right pr-2 w-[25px] {st?.position_change >
+                            class="transition-colors duration-700 text text-sm text-right pr-2 w-[30px] {st?.position_change >
                             0
                                 ? 'bg-error'
                                 : st?.position_change < 0
@@ -103,7 +103,7 @@
                             />
                         </td>
                         <td class="text text-sm">
-                            <span class="text text-sm"
+                            <span class="text text-sm tracking-tight"
                                 >{st?.user_name ?? ""}</span
                             >
                             {#if st?.is_in_pits}
@@ -137,7 +137,7 @@
             </tbody>
         </table>
     </div>
-    <div class="flex flex-col bg-primary-content rounded-r-md w-[100px]">
+    <div class="flex flex-col bg-primary-content rounded-r-md w-[75px]">
         <div class="flex flex-row items-center justify-end">
             <span class="text text-primary text-right pr-1">
                 {show_best_lap ? "BEST" : "LAST"}

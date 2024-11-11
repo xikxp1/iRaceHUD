@@ -31,7 +31,7 @@
                             text={rel?.car_number ? "#" + rel?.car_number : ""}
                         />
                     </td><td class="text text-sm">
-                        <span class="text text-sm">{rel?.user_name ?? ""}</span>
+                        <span class="text text-sm tracking-tight">{rel?.user_name ?? ""}</span>
                         {#if rel?.is_off_track}
                             <span class="text text-sm text-error text-right"
                                 >&nbspOFF</span
