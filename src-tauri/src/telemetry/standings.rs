@@ -56,4 +56,8 @@ impl EmittableEvent for Standings {
             .collect::<Vec<Value>>();
         Value::Array(drivers)
     }
+
+    fn is_forced(&self) -> bool {
+        true
+    }
 }

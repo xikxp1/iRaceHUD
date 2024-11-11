@@ -37,7 +37,8 @@ impl TelemetryEmitter {
             }
             let value = telemetry_event.get_event(session);
             let latest_value = self.latest_events.get(event);
-            if !self.forced_events.contains(event)
+            if !telemetry_event.is_forced()
+                && !self.forced_events.contains(event)
                 && latest_value.is_some()
                 && latest_value.unwrap() == &value
             {

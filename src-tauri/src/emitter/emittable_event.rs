@@ -39,7 +39,12 @@ pub trait EmittableEvent {
     fn is_ready(&self, session: &SessionData) -> bool {
         session.active
     }
+
     fn get_event(&self, session: &SessionData) -> Value;
+
+    fn is_forced(&self) -> bool {
+        false
+    }
 }
 
 #[derive(EnumString, EnumIter, Display)]
