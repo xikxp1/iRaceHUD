@@ -46,7 +46,7 @@ importers:
         specifier: 21.1.7
         version: 21.1.7
       '@types/luxon':
-        specifier: ^3.4.2
+        specifier: 3.4.2
         version: 3.4.2
       autoprefixer:
         specifier: 10.4.20
