@@ -22,7 +22,8 @@
     "@tauri-apps/plugin-log": "2.0.0",
     "@tauri-apps/plugin-store": "2.1.0",
     "@tauri-apps/plugin-updater": "2.0.0",
-    "chart.js": "4.4.6"
+    "chart.js": "4.4.6",
+    "luxon": "3.5.0"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "3.0.6",
@@ -30,6 +31,7 @@
     "@sveltejs/vite-plugin-svelte": "4.0.0",
     "@tauri-apps/cli": "2.0.4",
     "@types/jsdom": "21.1.7",
+    "@types/luxon": "3.4.2",
     "autoprefixer": "10.4.20",
     "axios": "1.7.7",
     "daisyui": "4.12.14",

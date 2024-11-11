@@ -170,7 +170,7 @@ export const relative = readable<Relative>([], (set) => {
     };
 });
 
-export const lapTime = readable<LapTime>("–:––.–––", (set) => {
+export const lapTime = readable<LapTime>(0, (set) => {
     let lap_time_channel = new Channel<LapTime>();
     lap_time_channel.onmessage = (message) => {
         set(message);

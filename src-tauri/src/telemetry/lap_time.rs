@@ -4,14 +4,17 @@ use specta::Type;
 
 use crate::emitter::emittable_event::EmittableEvent;
 use crate::session::session_data::SessionData;
-use crate::util::format_laptime::format_laptime;
 
 #[derive(Default, Type, Serialize)]
-pub struct LapTime(String);
+pub struct LapTime(f64);
 
 impl EmittableEvent for LapTime {
     fn get_event(&self, session: &SessionData) -> Value {
-        let value = format_laptime(session.lap_time);
-        Value::String(value)
+        match session.lap_time.is_positive() {
+            true => {
+                Value::Number(serde_json::Number::from_f64(session.lap_time.as_secs_f64()).unwrap())
+            }
+            false => Value::Number(serde_json::Number::from_f64(0.0).unwrap()),
+        }
     }
 }
