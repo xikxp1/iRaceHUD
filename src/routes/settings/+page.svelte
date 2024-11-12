@@ -1,6 +1,5 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
-    import { info } from "@tauri-apps/plugin-log";
     import { onMount } from "svelte";
 
     let is_autostart_enabled = false;

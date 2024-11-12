@@ -16,7 +16,7 @@
     import { onMount } from "svelte";
 
     let gear_indicator: HTMLDivElement;
-    let rpm_incidator: HTMLProgressElement;
+    let rpm_indicator: HTMLProgressElement;
 
     function on_rpm(rpm: Rpm) {
         if (rpm >= $gearBlinkRPM) {
@@ -26,10 +26,10 @@
                 gear_indicator.classList.add("text-error");
             }
 
-            if (rpm_incidator != null) {
-                rpm_incidator.classList.remove("progress-secondary");
-                rpm_incidator.classList.remove("progress-info");
-                rpm_incidator.classList.add("progress-error");
+            if (rpm_indicator != null) {
+                rpm_indicator.classList.remove("progress-secondary");
+                rpm_indicator.classList.remove("progress-info");
+                rpm_indicator.classList.add("progress-error");
             }
         } else if (rpm >= $gearShiftRPM) {
             if (gear_indicator != null) {
@@ -38,10 +38,10 @@
                 gear_indicator.classList.remove("text-error");
             }
 
-            if (rpm_incidator != null) {
-                rpm_incidator.classList.remove("progress-secondary");
-                rpm_incidator.classList.add("progress-info");
-                rpm_incidator.classList.remove("progress-error");
+            if (rpm_indicator != null) {
+                rpm_indicator.classList.remove("progress-secondary");
+                rpm_indicator.classList.add("progress-info");
+                rpm_indicator.classList.remove("progress-error");
             }
         } else {
             if (gear_indicator != null) {
@@ -50,10 +50,10 @@
                 gear_indicator.classList.remove("text-error");
             }
 
-            if (rpm_incidator != null) {
-                rpm_incidator.classList.add("progress-secondary");
-                rpm_incidator.classList.remove("progress-info");
-                rpm_incidator.classList.remove("progress-error");
+            if (rpm_indicator != null) {
+                rpm_indicator.classList.add("progress-secondary");
+                rpm_indicator.classList.remove("progress-info");
+                rpm_indicator.classList.remove("progress-error");
             }
         }
     }
@@ -84,7 +84,7 @@
             class="join-item flex flex-col items-center justify-evenly rounded-md w-3/4"
         >
             <progress
-                bind:this={rpm_incidator}
+                bind:this={rpm_indicator}
                 class="progress progress-secondary w-5/6 outline outline-2 outline-offset-2 outline-primary"
                 value={$rpm}
                 max={$gearBlinkRPM}

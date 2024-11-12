@@ -12,6 +12,8 @@ export function getBadgeColor(license: string) {
             return "bg-blue-800";
         case "P":
             return "bg-black";
+        case "W":
+            return "bg-black";
         default:
             return "";
     }
