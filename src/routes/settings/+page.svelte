@@ -1,33 +1,33 @@
 <script lang="ts">
-    import { invoke } from "@tauri-apps/api/core";
-    import { onMount } from "svelte";
+    import Main from "../../components/settings/Main.svelte";
+    import Widgets from "../../components/settings/Widgets.svelte";
 
-    let is_autostart_enabled = false;
+    const tabs = [
+        { name: "Main", component: Main },
+        { name: "Widgets", component: Widgets },
+    ];
 
-    onMount(() => {
-        invoke("get_autostart", {}).then((value) => {
-            is_autostart_enabled = value as boolean;
-        });
-    });
-
-    function handleAutostartChange(event: Event) {
-        const isChecked = (event.target as HTMLInputElement).checked;
-        invoke("set_autostart", { enabled: isChecked });
-    }
+    let activeTab = "Main";
 </script>
 
-<div
-    class="flex flex-col background items-center justify-center bg-primary h-screen w-screen fixed"
->
-    <label class="flex flex-row space-x-2 label cursor-pointer">
-        <input
-            type="checkbox"
-            class="toggle toggle-sm"
-            bind:checked={is_autostart_enabled}
-            on:change={handleAutostartChange}
-        />
-        <span class="label-text text-sm">Start iRaceHUD on system startup</span>
-    </label>
+<div class="flex flex-col bg-primary min-h-screen">
+    <div role="tablist" class="flex-item tabs tabs-boxed p-2">
+        {#each tabs as tab}
+            <button
+                role="tab"
+                class="tab {tab.name === activeTab ? 'tab-active' : ''}"
+                on:click={() => (activeTab = tab.name)}
+            >
+                {tab.name}
+            </button>
+        {/each}
+    </div>
+
+    <div class="relative flex flex-grow">
+        <svelte:component
+            this={tabs.find((tab) => tab.name === activeTab)?.component}
+        ></svelte:component>
+    </div>
 </div>
 
 <style>
