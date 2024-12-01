@@ -22,7 +22,7 @@
     let show_best_lap = false;
     let interval: NodeJS.Timeout;
 
-    function on_standings (value: StandingsDriver[]) {
+    function on_standings(value: StandingsDriver[]) {
         let new_standings: LocalStandings[] = [];
         value.forEach((st) => {
             let new_value: LocalStandings = {
@@ -33,8 +33,7 @@
                 (old_st) => old_st.car_id === new_value.car_id,
             );
             new_value.position_change =
-                new_value.position -
-                (old_st?.position ?? new_value.position);
+                new_value.position - (old_st?.position ?? new_value.position);
             new_standings.push(new_value);
         });
         current_standings = new_standings;
@@ -125,7 +124,13 @@
                                 />
                             {/if}
                         </td>
-                        <td class="text text-sm text-right pr-1 w-[40px]">
+                        <td
+                            class="text text-sm text-right {st?.is_leader &&
+                            $raceLaps > 0 &&
+                            !st?.is_player
+                                ? 'text-secondary'
+                                : ''} pr-1 w-[35px]"
+                        >
                             {#if st?.is_leader && $raceLaps > 0}
                                 L{$raceLaps}
                             {:else}

@@ -13,6 +13,7 @@
         speed,
     } from "$lib/telemetry/telemetry.svelte";
     import type { Rpm } from "$lib/types/telemetry";
+    import NumberFlow from "@number-flow/svelte";
     import { onMount } from "svelte";
 
     let gear_indicator: HTMLDivElement;
@@ -92,7 +93,8 @@
             <div class="flex flex-row items-center justify-evenly">
                 <div class="flex flex-col items-center justify-evenly">
                     <div class="text-primary">
-                        {$lap}{#if $lapsTotal > 0}/{$lapsTotal}{/if}
+                        <NumberFlow value={$lap} continuous={true}
+                        ></NumberFlow>{#if $lapsTotal > 0}/{$lapsTotal}{/if}
                     </div>
                     <div class="text-secondary text-xs">lap</div>
                 </div>
@@ -100,7 +102,8 @@
                 <div class="flex flex-col items-center justify-evenly">
                     <div class="text-primary">
                         {#if $position > 0}
-                            {$position}{#if $positionsTotal > 0}/{$positionsTotal}{/if}
+                            <NumberFlow value={$position} continuous={true}
+                            ></NumberFlow>{#if $positionsTotal > 0}/{$positionsTotal}{/if}
                         {:else}
                             -
                         {/if}
@@ -110,7 +113,8 @@
                 <div class="divider divider-horizontal divider-primary"></div>
                 <div class="flex flex-col items-center justify-evenly">
                     <div class="text-primary">
-                        {$incidents}{#if $incidentLimit > 0}/{$incidentLimit}{/if}
+                        <NumberFlow value={$incidents} continuous={true}
+                        ></NumberFlow>{#if $incidentLimit > 0}/{$incidentLimit}{/if}x
                     </div>
                     <div class="text-secondary text-xs">inc</div>
                 </div>

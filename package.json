@@ -17,6 +17,7 @@
   },
   "license": "GPL-3.0-only",
   "dependencies": {
+    "@number-flow/svelte": "^0.2.1",
     "@tauri-apps/api": "2.1.1",
     "@tauri-apps/plugin-autostart": "2.0.0",
     "@tauri-apps/plugin-log": "2.0.0",

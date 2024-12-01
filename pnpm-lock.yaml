@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@number-flow/svelte':
+        specifier: ^0.2.1
+        version: 0.2.1(svelte@5.1.15)
       '@tauri-apps/api':
         specifier: 2.1.1
         version: 2.1.1
@@ -416,6 +419,11 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@number-flow/svelte@0.2.1':
+    resolution: {integrity: sha512-lK5NFGdynNcovQOSsfH4KWKJP4ciwbD10/rofiON4vPViVQEOS1dOsOOK8vhpHrWw8Yi9CLLWELJxSvtGmVidw==}
+    peerDependencies:
+      svelte: ^4 || ^5
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -1089,6 +1097,9 @@ packages:
     resolution: {integrity: sha512-bdok/XvKII3nUpklnV6P2hxtMNrCboOjAcyBuQnWEhO665FwrSNRxU+AqpsyvO6LgGYPspN+lu5CLtw4jPRKNA==}
     engines: {node: '>=0.10.0'}
 
+  number-flow@0.4.0:
+    resolution: {integrity: sha512-sG2ngZe0y3M8DSa9VQfMA5J9Yi1i4RYaaZ/lgawTJpICftFAGaFgTUydaavZmUbOZcBnjDqNizcsyb1MDhrGaw==}
+
   nwsapi@2.2.13:
     resolution: {integrity: sha512-cTGB9ptp9dY9A5VbMSe7fQBcl/tt22Vcqdq8+eN93rblOuE0aCFu4aZ2vMwct/2t+lFnosm8RkQW1I0Omb1UtQ==}
 
@@ -1667,6 +1678,12 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.17.1
+
+  '@number-flow/svelte@0.2.1(svelte@5.1.15)':
+    dependencies:
+      esm-env: 1.1.4
+      number-flow: 0.4.0
+      svelte: 5.1.15
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
@@ -2310,6 +2327,10 @@ snapshots:
   normalize-path@3.0.0: {}
 
   normalize-range@0.1.2: {}
+
+  number-flow@0.4.0:
+    dependencies:
+      esm-env: 1.1.4
 
   nwsapi@2.2.13: {}
 
