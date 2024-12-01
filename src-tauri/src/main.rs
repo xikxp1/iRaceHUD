@@ -7,7 +7,7 @@ pub mod telemetry;
 pub mod util;
 
 use eyre::{eyre, OptionExt, Result};
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use simetry::iracing::Client;
 use std::{sync::OnceLock, time::Duration};
 use tauri::ipc::Channel;
@@ -98,16 +98,31 @@ async fn main() {
                             app_handle.exit(0);
                         } else if event.id().as_ref() == "settings" {
                             info!("Settings menu item clicked, opening settings");
-                            WebviewWindowBuilder::new(
-                                &app_handle,
-                                "settings",
-                                WebviewUrl::App("/settings".into()),
-                            )
-                            .title("iRaceHUD Settings")
-                            .resizable(false)
-                            .center()
-                            .build()
-                            .expect("Failed to open settings");
+                            match app_handle.get_webview_window("settings") {
+                                Some(window) => {
+                                    info!("Settings window already open");
+                                    if let Err(err) = window.unminimize() {
+                                        warn!("Failed to unminimize settings window: {:?}", err);
+                                    };
+                                    if let Err(err) = window.set_focus() {
+                                        warn!("Failed to focus settings window: {:?}", err);
+                                    };
+                                }
+                                None => {
+                                    if let Err(err) = WebviewWindowBuilder::new(
+                                        &app_handle,
+                                        "settings",
+                                        WebviewUrl::App("/settings".into()),
+                                    )
+                                    .title("iRaceHUD Settings")
+                                    .resizable(false)
+                                    .center()
+                                    .build()
+                                    {
+                                        error!("Failed to build settings window: {:?}", err);
+                                    }
+                                }
+                            }
                         }
                     }
                 })
