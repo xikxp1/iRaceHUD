@@ -1,10 +1,19 @@
 <script lang="ts">
-    export let value: number = 0;
-    export let min: number = 0;
-    export let max: number = 100;
-    export let cls: string =
-        "flex flex-col flex-nowrap justify-end w-2 h-20 rounded-full bg-neutral-content overflow-hidden outline outline-2 outline-offset-2 outline-primary";
-    export let elem_cls: string = "rounded-full overflow-hidden bg-accent";
+    interface Props {
+        value?: number;
+        min?: number;
+        max?: number;
+        cls?: string;
+        elem_cls?: string;
+    }
+
+    let {
+        value = 0,
+        min = 0,
+        max = 100,
+        cls = "flex flex-col flex-nowrap justify-end w-2 h-20 rounded-full bg-neutral-content overflow-hidden outline outline-2 outline-offset-2 outline-primary",
+        elem_cls = "rounded-full overflow-hidden bg-accent",
+    }: Props = $props();
 </script>
 
 <div

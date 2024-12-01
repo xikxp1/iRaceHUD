@@ -1,8 +1,17 @@
 <script lang="ts">
-    export let colorClasses: string = "";
-    export let outlineClasses: string = "";
-    export let textClasses: string = "";
-    export let text: string = "";
+    interface Props {
+        colorClasses?: string;
+        outlineClasses?: string;
+        textClasses?: string;
+        text?: string;
+    }
+
+    let {
+        colorClasses = "",
+        outlineClasses = "",
+        textClasses = "",
+        text = ""
+    }: Props = $props();
 </script>
 
 {#if text}
