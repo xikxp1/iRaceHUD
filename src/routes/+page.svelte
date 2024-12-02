@@ -141,9 +141,9 @@
     }
 
     .trackmap {
-        margin-left: 1300px;
+        margin-left: 1250px;
         margin-right: auto;
-        margin-top: -550px;
+        margin-top: -520px;
         margin-bottom: auto;
         align-items: center;
     }

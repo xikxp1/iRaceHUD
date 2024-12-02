@@ -97,10 +97,12 @@
 </script>
 
 <div class="flex flex-row items-center justify-center opacity-75">
-    <div class="flex flex-col items-center justify-center w-[600px]">
+    <div class="flex flex-col items-center justify-center w-[550px]">
         <svg
             fill="none"
             viewBox="0 0 1920 1080"
+            width="100%"
+            height="100%"
             overflow="visible"
             xmlns="http://www.w3.org/2000/svg"
         >
