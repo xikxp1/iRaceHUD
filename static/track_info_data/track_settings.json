@@ -1434,5 +1434,13 @@
     "530": {
         "direction": 1,
         "offset": 0.804
+    },
+    "531": {
+        "direction": -1,
+        "offset": 0.429
+    },
+    "532": {
+        "direction": 1,
+        "offset": 0.324
     }
 }
