@@ -5,7 +5,7 @@ import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import * as fs from 'fs'
 
-const trackPathFile = "./static/track_info/track_info.json";
+const trackPathFile = "./static/track_info_data/track_info.json";
 
 const newStartFinishColor = "oklch(80.1701% 0.156063 81.056275)";
 const oldStartFinishColor = "#D82520";
@@ -46,7 +46,7 @@ async function fetchAndExtractSvgPath(svgUrl: string): Promise<string | null> {
     }
 }
 
-async function featchTrackInfo() {
+async function fetchTrackInfo() {
     try {
         const iracing = new IracingAPI();
         if (!process.env.IRACING_LOGIN || !process.env.IRACING_PWD) {
@@ -56,9 +56,12 @@ async function featchTrackInfo() {
         console.log("Successfully logged in");
 
         const tracks = await iracing.track.getTracks();
+        if (tracks == undefined || tracks.length == 0) {
+            throw new Error("Failed to fetch track list");
+        }
         console.log("Successfully fetched track list");
         let trackInfo: Map<number, any> = new Map();
-        tracks?.forEach((track) => {
+        tracks.forEach((track) => {
             trackInfo.set(track.trackId, {
                 trackName: track.trackName,
                 configName: track.configName,
@@ -88,7 +91,7 @@ async function featchTrackInfo() {
             if (svg) {
                 const regex = new RegExp(`${oldStartFinishColor}`, "gi");
                 svg = svg.replace(regex, newStartFinishColor);
-                fs.writeFileSync(`./static/track_info/start_finish/${track.trackId}.svg`, svg);
+                fs.writeFileSync(`./static/track_info_data/start_finish/${track.trackId}.svg`, svg);
             } else {
                 console.error(`Failed to fetch SVG for trackId: ${track.trackId}`);
             }
@@ -102,4 +105,4 @@ async function featchTrackInfo() {
     }
 }
 
-featchTrackInfo();
+fetchTrackInfo();
