@@ -1,3 +1,6 @@
+import daisyui from 'daisyui'
+import tailwindStripes from './src/plugins/tailwind-stripes.ts'
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./src/**/*.{html,js,svelte,ts}"],
@@ -9,8 +12,8 @@ export default {
     },
   },
   plugins: [
-    require("daisyui"),
-    require("./src/plugins/tailwind-stripes.ts"),
+    daisyui,
+    tailwindStripes
   ],
   daisyui: {
     base: false,
