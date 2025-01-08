@@ -1,6 +1,6 @@
 [package]
 name = "iracehud"
-version = "0.3.10"
+version = "0.3.11"
 description = "iRacing HUD overlay built in Tauri"
 authors = ["Ivan Kachalkin<xikxp1@gmail.com>"]
 edition = "2021"
@@ -20,13 +20,14 @@ eyre = "0.6.12"
 humantime = "2.1.0"
 log = "0.4.22"
 serde = { version = "1.0.215", features = ["derive"] }
-serde_json = "1.0.132"
+serde_json = "1.0.133"
 simetry = { version = "0.2.3", features = [] }
 specta = { version = "1.0.5", features = ["export"] }
 strum = "0.26.3"
 strum_macros = "0.26.4"
 tauri = { version = "2.1.1", features = ["tray-icon"] }
-tauri-plugin-log = "2.0.2"
+tauri-plugin-log = "2.0.3"
+tauri-plugin-sql = { version = "2.0.3", features = ["sqlite"] }
 tauri-plugin-store = "2.1.0"
 tokio = "1.41.1"
 
@@ -36,5 +37,5 @@ custom-protocol = ["tauri/custom-protocol"]
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.0.1"
-tauri-plugin-single-instance = "2.0.1"
-tauri-plugin-updater = "2.0.2"
+tauri-plugin-single-instance = "2.0.2"
+tauri-plugin-updater = "2.1.0"

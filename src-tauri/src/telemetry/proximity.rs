@@ -11,7 +11,6 @@ pub struct Proximity {
     is_right: bool,
 }
 
-
 impl EmittableEvent for Proximity {
     fn get_event(&self, session: &SessionData) -> Value {
         let mut telemetry = serde_json::Map::new();

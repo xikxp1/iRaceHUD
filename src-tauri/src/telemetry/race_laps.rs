@@ -12,7 +12,7 @@ impl EmittableEvent for RaceLaps {
     fn is_ready(&self, session: &SessionData) -> bool {
         session.active && session.processed_slow
     }
-    
+
     fn get_event(&self, session: &SessionData) -> Value {
         Value::Number(serde_json::Number::from(session.race_laps))
     }

@@ -8,7 +8,7 @@ pub mod util;
 
 use eyre::{eyre, OptionExt, Result};
 use log::{debug, error, info, warn};
-use simetry::iracing::Client;
+use simetry::iracing::{Client, DiskClient};
 use std::{sync::OnceLock, time::Duration};
 use tauri::ipc::Channel;
 use tauri::{
@@ -20,6 +20,7 @@ use tauri::{
 use tauri::{WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_log::{Target, TargetKind};
+use tauri_plugin_sql::{DbInstances, Migration, MigrationKind};
 use tokio::sync::Mutex;
 
 use crate::emitter::telemetry_emitter::TelemetryEmitter;
@@ -42,7 +43,30 @@ async fn main() {
 
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
+    let migrations = vec![Migration {
+        version: 1,
+        description: "create telemetry_reference table",
+        sql: "CREATE TABLE IF NOT EXISTS telemetry_reference (
+                track_id INTEGER NOT NULL,
+                car_id INTEGER NOT NULL,
+                lap_dist INTEGER,
+                speed INTEGER,
+                throttle INTEGER,
+                brake INTEGER,
+                gear INTEGER,
+                rpm INTEGER,
+                steering INTEGER,
+                PRIMARY KEY (track_id, car_id)
+            )",
+        kind: MigrationKind::Up,
+    }];
+
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_sql::Builder::new()
+                .add_migrations("sqlite:iracehud.db", migrations)
+                .build(),
+        )
         .plugin(tauri_plugin_single_instance::init(|_, args, cwd| {
             info!(
                 "Single instance started with args: {:?}, cwd: {:?}",
@@ -269,4 +293,42 @@ async fn set_autostart(app: tauri::AppHandle, enabled: bool) {
 async fn get_autostart(app: tauri::AppHandle) -> bool {
     info!("Getting autostart status");
     app.autolaunch().is_enabled().unwrap_or(false)
+}
+
+#[tauri::command]
+async fn save_telemetry_reference(app: tauri::AppHandle) {
+    let mut client = DiskClient::open("C:\\Users\\xikxp\\Projects\\iracing-ibt\\13 - VRS_24S4_MazdaW13_Charlotte_1.29.845.rpy\\irsdk_session 2024-12-02 19-58-12.ibt")
+        .expect("Failed to open disk client");
+    let mut conn = app
+        .app_handle()
+        .state::<DbInstances>()
+        .inner()
+        .0
+        .blocking_write()
+        .get("sqlite:iracehud.db")
+        .expect("Failed to get db connection");
+    while let Some(sim_state) = client.next_sim_state() {
+        let session_info = client.session_info();
+        let variables = client.variables();
+        let header = client.header();
+        let sub_header = client.sub_header();
+        let session_data =
+            SessionData::from_iracing(&session_info, &variables, &header, &sub_header);
+        let telemetry = session_data.get_telemetry();
+        let telemetry_reference = session_data.get_telemetry_reference();
+        conn.execute(
+            "INSERT OR REPLACE INTO telemetry_reference (track_id, car_id, lap_dist, speed, throttle, brake, gear, rpm, steering) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            params![
+                telemetry_reference.track_id,
+                telemetry_reference.car_id,
+                telemetry.lap_dist,
+                telemetry.speed,
+                telemetry.throttle,
+                telemetry.brake,
+                telemetry.gear,
+                telemetry.rpm,
+                telemetry.steering
+            ],
+        )
+\    }
 }
