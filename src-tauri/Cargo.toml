@@ -1,6 +1,6 @@
 [package]
 name = "iracehud"
-version = "0.3.11"
+version = "0.3.12"
 description = "iRacing HUD overlay built in Tauri"
 authors = ["Ivan Kachalkin<xikxp1@gmail.com>"]
 edition = "2021"
@@ -10,31 +10,31 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2.0.3", features = [] }
+tauri-build = { version = "2.0.4", features = [] }
 
 [dependencies]
-chrono = "0.4.38"
+chrono = "0.4.39"
 color-eyre = "0.6.3"
 enum_dispatch = "0.3.13"
 eyre = "0.6.12"
 humantime = "2.1.0"
 log = "0.4.22"
-serde = { version = "1.0.215", features = ["derive"] }
-serde_json = "1.0.132"
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.135"
 simetry = { version = "0.2.3", features = [] }
 specta = { version = "1.0.5", features = ["export"] }
 strum = "0.26.3"
 strum_macros = "0.26.4"
-tauri = { version = "2.1.1", features = ["tray-icon"] }
-tauri-plugin-log = "2.0.2"
-tauri-plugin-store = "2.1.0"
-tokio = "1.41.1"
+tauri = { version = "2.2.0", features = ["tray-icon"] }
+tauri-plugin-log = "2.2.0"
+tauri-plugin-store = "2.2.0"
+tokio = "1.42.0"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-autostart = "2.0.1"
-tauri-plugin-single-instance = "2.0.1"
-tauri-plugin-updater = "2.0.2"
+tauri-plugin-autostart = "2.2.0"
+tauri-plugin-single-instance = "2.2.0"
+tauri-plugin-updater = "2.3.1"
