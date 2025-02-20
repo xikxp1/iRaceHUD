@@ -5,12 +5,12 @@ pub mod emitter;
 pub mod session;
 pub mod telemetry;
 pub mod util;
+pub mod websocket;
 
 use eyre::{eyre, OptionExt, Result};
 use log::{debug, error, info, warn};
 use simetry::iracing::Client;
 use std::{sync::OnceLock, time::Duration};
-use tauri::ipc::Channel;
 use tauri::{
     async_runtime,
     menu::{MenuBuilder, MenuItemBuilder},
@@ -60,6 +60,7 @@ async fn main() {
                 .target(Target::new(TargetKind::LogDir { file_name: None }))
                 .target(Target::new(TargetKind::Stdout))
                 .target(Target::new(TargetKind::Webview))
+                .filter(|metadata| !metadata.target().contains("tungstenite"))
                 .build(),
         )
         .setup(|app| {
@@ -129,7 +130,12 @@ async fn main() {
                 .title("iRaceHUD")
                 .build(app)?;
 
-            app.manage(Mutex::new(TelemetryEmitter::default()));
+            let emitter = TelemetryEmitter::default();
+            app.manage(Mutex::new(emitter));
+
+            tokio::spawn(async move {
+                TelemetryEmitter::init().await;
+            });
 
             let window = app
                 .get_webview_window("main")
@@ -236,11 +242,11 @@ async fn update(app: tauri::AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-async fn register_event_emitter(app: tauri::AppHandle, event: String, on_event: Channel) {
+async fn register_event_emitter(app: tauri::AppHandle, event: String) {
     debug!("Registering event emitter for {}", event);
     let emitter_state = app.app_handle().state::<Mutex<TelemetryEmitter>>();
     let mut emitter = emitter_state.lock().await;
-    emitter.register(&event, on_event);
+    emitter.register(&event);
 }
 
 #[tauri::command]
