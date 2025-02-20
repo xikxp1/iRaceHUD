@@ -25,7 +25,7 @@ function createTelemetryStore<T>(event: string, initialValue: T) {
     });
 }
 
-export const active = createTelemetryStore<Active>("active", true);
+export const active = createTelemetryStore<Active>("active", false);
 export const currentTime = createTelemetryStore<CurrentTime>("current_time", "--:--");
 export const lapTimes = createTelemetryStore<PlayerLapTimes>("player_lap_times", []);
 export const standings = createTelemetryStore<Standings>("standings", []);
