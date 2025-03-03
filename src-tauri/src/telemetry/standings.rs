@@ -8,6 +8,7 @@ use crate::session::session_data::SessionData;
 use crate::util::format_irating::format_irating;
 use crate::util::format_laptime::format_laptime;
 use crate::util::get_gap::get_gap;
+use crate::util::session_type::SessionType;
 
 #[derive(Default, Type, Serialize)]
 pub struct StandingsDriver {
@@ -30,7 +31,11 @@ pub struct Standings(Vec<StandingsDriver>);
 
 impl EmittableEvent for Standings {
     fn is_ready(&self, session: &SessionData) -> bool {
-        session.active && !session.drivers.is_empty() && session.processed_slow
+        // TODO: qualify implementation
+        session.active
+            && session.session_type == SessionType::Race
+            && !session.drivers.is_empty()
+            && session.processed_slow
     }
 
     fn get_event(&self, session: &SessionData) -> Value {

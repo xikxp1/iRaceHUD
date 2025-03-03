@@ -1,10 +1,10 @@
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, str::FromStr, time::Duration};
 
 use chrono::{DateTime, Local};
 use log::{debug, error, info};
 use simetry::iracing::{SimState, UNLIMITED_LAPS, UNLIMITED_TIME};
 
-use crate::util::{get_strength_of_field::get_strength_of_field, signed_duration::SignedDuration};
+use crate::util::{get_strength_of_field::get_strength_of_field, session_type::SessionType, signed_duration::SignedDuration};
 
 use super::{driver::Driver, lap_time::LapTime};
 
@@ -49,6 +49,7 @@ pub struct SessionData {
     pub throttle: u32,
     pub track_id: u32,
     pub processed_slow: bool,
+    pub session_type: SessionType,
 }
 
 #[derive(PartialEq)]
@@ -410,6 +411,21 @@ impl SessionData {
             // track_id
             let track_id = session["WeekendInfo"]["TrackID"].as_i64().unwrap_or(0) as u32;
             self.track_id = track_id;
+
+            // session
+            let sessions = session["SessionInfo"]["Sessions"].as_vec();
+            if sessions.is_some() {
+                let sessions = sessions.unwrap();
+                let session = sessions.last();
+                if session.is_some() {
+                    let session = session.unwrap();
+                    let session_type = session["SessionType"].as_str();
+                    if session_type.is_some() {
+                        let session_type = session_type.unwrap().to_string();
+                        self.session_type = SessionType::from_str(&session_type).unwrap();
+                    }
+                }
+            }
 
             let drivers = session["DriverInfo"]["Drivers"].as_vec();
 
