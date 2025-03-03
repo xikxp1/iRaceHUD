@@ -49,7 +49,7 @@ pub struct Relative(Vec<RelativeDriver>);
 
 impl EmittableEvent for Relative {
     fn is_ready(&self, session: &SessionData) -> bool {
-        session.active && !session.drivers.is_empty() && session.processed_slow
+        session.active && !session.drivers.is_empty()
     }
 
     fn get_event(&self, session: &SessionData) -> Value {
