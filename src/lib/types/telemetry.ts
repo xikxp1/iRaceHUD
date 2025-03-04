@@ -4,6 +4,8 @@ export type Proximity = { is_left: boolean; is_right: boolean }
 
 export type Gear = string
 
+export type Standings = StandingsDriver[]
+
 export type PlayerLapTimes = PlayerLapTimesData[]
 
 export type RaceLaps = number
@@ -19,8 +21,6 @@ export type PositionsTotal = number
 export type Rpm = number
 
 export type DeltaOptimalTime = string
-
-export type StandingsDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: string; license: string; leader_gap: string; best_lap: string; last_lap: string; is_player: boolean; is_leader: boolean; is_in_pits: boolean }
 
 export type TrackId = number
 
@@ -58,7 +58,7 @@ export type GearShiftRpm = number
 
 export type GapPrev = string
 
-export type Standings = StandingsDriver[]
+export type StandingsDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: string; license: string; leader_gap: string; best_lap: string; last_lap: string; is_player: boolean; is_leader: boolean; is_in_pits: boolean }
 
 export type SessionTimeTotal = string
 
