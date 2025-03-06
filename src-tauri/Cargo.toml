@@ -1,6 +1,6 @@
 [package]
 name = "iracehud"
-version = "0.4.5"
+version = "0.5.0"
 description = "iRacing HUD overlay built in Tauri"
 authors = ["Ivan Kachalkin<xikxp1@gmail.com>"]
 edition = "2021"
@@ -15,6 +15,7 @@ tauri-build = { version = "2.0.6", features = [] }
 [dependencies]
 chrono = "0.4.40"
 color-eyre = "0.6.3"
+eframe = "0.31.1"
 enum_dispatch = "0.3.13"
 eyre = "0.6.12"
 futures-util = "0.3.31"

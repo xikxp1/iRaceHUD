@@ -7,6 +7,7 @@ pub mod telemetry;
 pub mod util;
 pub mod websocket;
 
+use eframe::egui;
 use eyre::{eyre, OptionExt, Result};
 use log::{debug, error, info, warn};
 use simetry::iracing::Client;
@@ -137,20 +138,41 @@ async fn main() {
                 TelemetryEmitter::init().await;
             });
 
+            let options = eframe::NativeOptions {
+                viewport: egui::ViewportBuilder::default()
+                    .with_active(false)
+                    .with_always_on_top()
+                    .with_close_button(false)
+                    .with_decorations(false)
+                    .with_drag_and_drop(false)
+                    .with_inner_size((f32::INFINITY, f32::INFINITY))
+                    .with_fullscreen(true)
+                    .with_maximize_button(false)
+                    .with_minimize_button(false)
+                    .with_mouse_passthrough(true)
+                    .with_position((0.0, 0.0))
+                    .with_resizable(false)
+                    .with_transparent(true)
+                    .build(),
+                ..Default::default()
+            };
+
+            eframe::run_native(
+                "iRaceHUD",
+                options,
+                Box::new(|cc| Ok(Box::new(OverlayWindow::new(cc)))),
+            );
+
             let window = app
                 .get_webview_window("main")
                 .ok_or_eyre("Failed to get window")?;
 
-            #[cfg(debug_assertions)]
-            window.open_devtools();
+            // #[cfg(debug_assertions)]
+            // window.open_devtools();
 
             window
                 .set_ignore_cursor_events(true)
                 .map_err(|err| eyre!("Failed to set ignore cursor events: {:?}", err))?;
-
-            WINDOW
-                .set(window)
-                .map_err(|err| eyre!("Failed to set window: {:?}", err))?;
 
             async_runtime::spawn(async move {
                 if let Err(err) = connect().await {
@@ -239,6 +261,23 @@ async fn update(app: tauri::AppHandle) -> Result<()> {
     }
 
     Ok(())
+}
+
+#[derive(Default)]
+struct OverlayWindow {}
+
+impl OverlayWindow {
+    fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        Self::default()
+    }
+}
+
+impl eframe::App for OverlayWindow {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.heading("iRaceHUD");
+        });
+    }
 }
 
 #[tauri::command]

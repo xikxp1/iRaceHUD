@@ -11,7 +11,7 @@
     import { active } from "$lib/telemetry/telemetry.svelte";
 </script>
 
-{#if $active}
+{#if false}
     <div class="outer">
         <div class="middle">
             <div class="main">
