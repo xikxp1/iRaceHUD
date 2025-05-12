@@ -28,7 +28,7 @@ use crate::session::session_data::SessionData;
 #[cfg(not(debug_assertions))]
 use tauri_plugin_updater::UpdaterExt;
 
-static WINDOW: OnceLock<tauri::WebviewWindow> = OnceLock::new();
+static WINDOW: OnceLock<tauri::WebviewWindow<tauri_runtime_verso::VersoRuntime>> = OnceLock::new();
 const RETRY_TIMEOUT_SECS: u64 = 5;
 const SESSION_UPDATE_PERIOD_MILLIS: u64 = 25;
 const SLOW_VAR_RESET_TICKS: u32 = 50;
@@ -42,7 +42,7 @@ async fn main() {
 
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
-    tauri::Builder::default()
+    tauri_runtime_verso::builder()
         .plugin(tauri_plugin_single_instance::init(|_, args, cwd| {
             info!(
                 "Single instance started with args: {:?}, cwd: {:?}",
@@ -203,7 +203,7 @@ async fn connect() -> Result<()> {
 }
 
 #[cfg(not(debug_assertions))]
-async fn update(app: tauri::AppHandle) -> Result<()> {
+async fn update(app: tauri::AppHandle<tauri_runtime_verso::VersoRuntime>) -> Result<()> {
     let updater = app
         .updater_builder()
         .version_comparator(|current, update| update.version != current)
@@ -242,7 +242,7 @@ async fn update(app: tauri::AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-async fn register_event_emitter(app: tauri::AppHandle, event: String) {
+async fn register_event_emitter(app: tauri::AppHandle<tauri_runtime_verso::VersoRuntime>, event: String) {
     debug!("Registering event emitter for {}", event);
     let emitter_state = app.app_handle().state::<Mutex<TelemetryEmitter>>();
     let mut emitter = emitter_state.lock().await;
@@ -250,14 +250,14 @@ async fn register_event_emitter(app: tauri::AppHandle, event: String) {
 }
 
 #[tauri::command]
-async fn unregister_event_emitter(app: tauri::AppHandle, event: String) {
+async fn unregister_event_emitter(app: tauri::AppHandle<tauri_runtime_verso::VersoRuntime>, event: String) {
     let emitter_state = app.app_handle().state::<Mutex<TelemetryEmitter>>();
     let mut emitter = emitter_state.lock().await;
     emitter.unregister(&event);
 }
 
 #[tauri::command]
-async fn set_autostart(app: tauri::AppHandle, enabled: bool) {
+async fn set_autostart(app: tauri::AppHandle<tauri_runtime_verso::VersoRuntime>, enabled: bool) {
     info!("Setting autostart to {}", enabled);
     let autostart_manager = app.autolaunch();
     if enabled {
@@ -272,7 +272,7 @@ async fn set_autostart(app: tauri::AppHandle, enabled: bool) {
 }
 
 #[tauri::command]
-async fn get_autostart(app: tauri::AppHandle) -> bool {
+async fn get_autostart(app: tauri::AppHandle<tauri_runtime_verso::VersoRuntime>) -> bool {
     info!("Getting autostart status");
     app.autolaunch().is_enabled().unwrap_or(false)
 }

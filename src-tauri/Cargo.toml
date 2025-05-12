@@ -1,6 +1,6 @@
 [package]
 name = "iracehud"
-version = "0.4.5"
+version = "0.4.6"
 description = "iRacing HUD overlay built in Tauri"
 authors = ["Ivan Kachalkin<xikxp1@gmail.com>"]
 edition = "2021"
@@ -11,6 +11,7 @@ publish = false
 
 [build-dependencies]
 tauri-build = { version = "2.0.6", features = [] }
+tauri-runtime-verso-build = { git = "https://github.com/versotile-org/tauri-runtime-verso.git" }
 
 [dependencies]
 chrono = "0.4.40"
@@ -27,9 +28,10 @@ simetry = { version = "0.2.3", features = [] }
 specta = { version = "1.0.5", features = ["export"] }
 strum = "0.27.1"
 strum_macros = "0.27.1"
-tauri = { version = "2.3.1", features = ["tray-icon"] }
+tauri = { version = "2.3.1", default-features = false, features = ["tray-icon"] }
 tauri-plugin-log = "2.2.3"
 tauri-plugin-store = "2.2.0"
+tauri-runtime-verso = { git = "https://github.com/versotile-org/tauri-runtime-verso.git" }
 tokio = { version = "1.43.0", features = ["full"] }
 tokio-tungstenite = "0.26.2"
 
