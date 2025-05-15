@@ -78,10 +78,6 @@ export class WebSocketClient {
         try {
           // Decode the inner MessagePack data with the handler's expected type
           const decodedData = decode(eventData) as T;
-          if (!decodedData) {
-            return;
-          }
-          console.log(decodedData);
           handler(decodedData);
         } catch (error) {
           console.error(`Error decoding data for ${eventName}: ${error}\nRaw event data:`, eventData);
