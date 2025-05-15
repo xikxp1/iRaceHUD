@@ -1,12 +1,11 @@
-use serde::Serialize;
-use serde_json::Value;
+use serde::{Serialize, Serializer as SerdeSerializer};
 use specta::Type;
 
 use crate::emitter::emittable_event::EmittableEvent;
 use crate::session::driver::Driver;
 use crate::session::session_data::SessionData;
 
-#[derive(Default, Type, Serialize)]
+#[derive(Default, Type)]
 pub struct TrackMapDriver {
     car_id: u32,
     position: u32,
@@ -16,6 +15,26 @@ pub struct TrackMapDriver {
     is_in_pits: bool,
     is_off_track: bool,
     is_off_world: bool,
+}
+
+// Custom serialization to ensure we get a MessagePack map/object instead of an array
+impl Serialize for TrackMapDriver {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: SerdeSerializer,
+    {
+        use serde::ser::SerializeMap;
+        let mut map = serializer.serialize_map(Some(8))?;
+        map.serialize_entry("car_id", &self.car_id)?;
+        map.serialize_entry("position", &self.position)?;
+        map.serialize_entry("is_leader", &self.is_leader)?;
+        map.serialize_entry("is_player", &self.is_player)?;
+        map.serialize_entry("lap_dist_pct", &self.lap_dist_pct)?;
+        map.serialize_entry("is_in_pits", &self.is_in_pits)?;
+        map.serialize_entry("is_off_track", &self.is_off_track)?;
+        map.serialize_entry("is_off_world", &self.is_off_world)?;
+        map.end()
+    }
 }
 
 impl TrackMapDriver {
@@ -41,13 +60,14 @@ impl EmittableEvent for TrackMap {
         session.active && !session.drivers.is_empty()
     }
 
-    fn get_event(&self, session: &SessionData) -> Value {
-        let drivers = session
+    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+        let drivers: Vec<TrackMapDriver> = session
             .drivers
             .values()
             .map(TrackMapDriver::new)
-            .map(|driver| serde_json::to_value(driver).unwrap())
             .collect();
-        Value::Array(drivers)
+
+        // Serialize the vector of drivers directly
+        rmp_serde::to_vec(&drivers).unwrap_or_default()
     }
 }

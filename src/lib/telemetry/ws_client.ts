@@ -1,12 +1,14 @@
 import { decode } from '@msgpack/msgpack';
 
-export interface WsMessageHandler {
-  (data: any): void;
+type WsEvent = [string, Uint8Array];
+
+export interface WsMessageHandler<T> {
+  (data: T): void;
 }
 
 export class WebSocketClient {
   private ws: WebSocket | null = null;
-  private messageHandlers: Map<string, WsMessageHandler> = new Map();
+  private messageHandlers: Map<string, WsMessageHandler<any>> = new Map();
   private isConnected = false;
   private reconnectTimer: number | null = null;
 
@@ -40,15 +42,7 @@ export class WebSocketClient {
       };
 
       this.ws.onmessage = (event) => {
-        try {
-          const wsEvent = decode(new Uint8Array(event.data)) as [string, any];
-          const handler = this.messageHandlers.get(wsEvent[0]);
-          if (handler) {
-            handler(wsEvent[1]);
-          }
-        } catch (error) {
-          console.error('Error processing message:', error);
-        }
+        this.handleMessage(event);
       };
     } catch (error) {
       console.error('Error connecting to WebSocket:', error);
@@ -66,12 +60,36 @@ export class WebSocketClient {
     }
   }
 
-  subscribe(event: string, handler: WsMessageHandler) {
-    this.messageHandlers.set(event, handler);
+  subscribe<T>(event: string, handler: WsMessageHandler<T>) {
+    this.messageHandlers.set(event, handler as WsMessageHandler<any>);
   }
 
   unsubscribe(event: string) {
     this.messageHandlers.delete(event);
+  }
+
+  private handleMessage<T>(event: MessageEvent) {
+    try {
+      const data = new Uint8Array(event.data);
+      const [eventName, eventData] = decode(data) as WsEvent;
+      const handler = this.messageHandlers.get(eventName) as WsMessageHandler<T> | undefined;
+      
+      if (handler) {
+        try {
+          // Decode the inner MessagePack data with the handler's expected type
+          const decodedData = decode(eventData) as T;
+          if (!decodedData) {
+            return;
+          }
+          console.log(decodedData);
+          handler(decodedData);
+        } catch (error) {
+          console.error(`Error decoding data for ${eventName}: ${error}\nRaw event data:`, eventData);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing message:', error);
+    }
   }
 
   close() {

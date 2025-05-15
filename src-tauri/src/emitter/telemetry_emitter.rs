@@ -7,7 +7,6 @@ use std::{
 use eyre::Result;
 use log::{error, info};
 use serde::Serialize;
-use serde_json::Value;
 use strum::IntoEnumIterator;
 use tokio::sync::OnceCell;
 
@@ -20,14 +19,14 @@ use crate::{
 static WS_SERVER: OnceCell<Arc<WebSocketServer>> = OnceCell::const_new();
 
 #[derive(Serialize)]
-struct WsEvent {
-    event: String,
-    data: Value,
+struct WsEvent<'a> {
+    event: &'a str,
+    data: &'a [u8],
 }
 
 #[derive(Default)]
 pub struct TelemetryEmitter {
-    latest_events: HashMap<String, Value>,
+    latest_events: HashMap<String, Vec<u8>>,
     registered_events: HashSet<String>,
     forced_events: HashSet<String>,
 }
@@ -50,10 +49,7 @@ impl TelemetryEmitter {
 
     pub fn emit_all(&mut self, session: &SessionData) -> Result<()> {
         for event in &self.registered_events {
-            let telemetry_event = match TelemetryEvent::from_str(event) {
-                Ok(event) => Some(event),
-                Err(_) => None,
-            };
+            let telemetry_event = TelemetryEvent::from_str(event).ok();
             if telemetry_event.is_none() {
                 continue;
             }
@@ -73,8 +69,8 @@ impl TelemetryEmitter {
                 // Emit via WebSocket if available
                 if let Some(ws_server) = WS_SERVER.get() {
                     let ws_event = WsEvent {
-                        event: event.to_string(),
-                        data: value.clone(),
+                        event: event.as_str(),
+                        data: &value,
                     };
                     ws_server.broadcast(&ws_event);
                 }

@@ -1,5 +1,4 @@
 use serde::Serialize;
-use serde_json::Value;
 use specta::Type;
 
 use crate::emitter::emittable_event::EmittableEvent;
@@ -9,7 +8,7 @@ use crate::session::session_data::SessionData;
 pub struct Speed(u32);
 
 impl EmittableEvent for Speed {
-    fn get_event(&self, session: &SessionData) -> Value {
-        Value::Number(serde_json::Number::from(session.speed))
+    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+        rmp_serde::to_vec(&session.speed).unwrap()
     }
 }

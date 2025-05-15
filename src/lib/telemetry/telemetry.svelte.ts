@@ -13,7 +13,7 @@ function createTelemetryStore<T>(event: string, initialValue: T) {
         invoke("register_event_emitter", { event });
 
         // Set up WebSocket subscription
-        wsClient.subscribe(event, (message) => {
+        wsClient.subscribe(event, (message: T) => {
             set(message);
         });
 

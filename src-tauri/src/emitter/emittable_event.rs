@@ -1,5 +1,4 @@
 use enum_dispatch::enum_dispatch;
-use serde_json::Value;
 use strum_macros::{Display, EnumIter, EnumString};
 
 use crate::session::session_data::SessionData;
@@ -40,7 +39,7 @@ pub trait EmittableEvent {
         session.active
     }
 
-    fn get_event(&self, session: &SessionData) -> Value;
+    fn get_event(&self, session: &SessionData) -> Vec<u8>;
 
     fn is_forced(&self) -> bool {
         false
@@ -63,8 +62,8 @@ pub enum TelemetryEvent {
     IncidentLimit(IncidentLimit),
     Incidents(Incidents),
     Lap(Lap),
-    LapsTotal(LapsTotal),
     LapTime(LapTime),
+    LapsTotal(LapsTotal),
     PlayerLapTimes(PlayerLapTimes),
     Position(Position),
     PositionsTotal(PositionsTotal),

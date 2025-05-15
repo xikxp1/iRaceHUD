@@ -1,5 +1,4 @@
 use serde::Serialize;
-use serde_json::Value;
 use specta::Type;
 
 use crate::emitter::emittable_event::EmittableEvent;
@@ -14,8 +13,8 @@ impl EmittableEvent for GapNext {
         session.active && !session.drivers.is_empty()
     }
 
-    fn get_event(&self, session: &SessionData) -> Value {
+    fn get_event(&self, session: &SessionData) -> Vec<u8> {
         let gap = get_gap(session.position - 1, session, false);
-        Value::String(gap)
+        rmp_serde::to_vec(&gap).unwrap()
     }
 }

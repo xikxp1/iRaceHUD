@@ -1,5 +1,4 @@
 use serde::Serialize;
-use serde_json::Value;
 use specta::Type;
 
 use crate::emitter::emittable_event::EmittableEvent;
@@ -9,7 +8,7 @@ use crate::session::session_data::SessionData;
 pub struct SessionState(String);
 
 impl EmittableEvent for SessionState {
-    fn get_event(&self, session: &SessionData) -> Value {
+    fn get_event(&self, session: &SessionData) -> Vec<u8> {
         let session_state = match session.laps_total {
             0 => {
                 let session_time_remaining = session.session_time_remaining;
@@ -34,6 +33,6 @@ impl EmittableEvent for SessionState {
                 }
             },
         };
-        Value::String(session_state)
+        rmp_serde::to_vec(&session_state).unwrap()
     }
 }
