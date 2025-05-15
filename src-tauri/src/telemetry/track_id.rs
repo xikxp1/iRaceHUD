@@ -1,5 +1,4 @@
 use serde::Serialize;
-use serde_json::Value;
 use specta::Type;
 
 use crate::emitter::emittable_event::EmittableEvent;
@@ -13,7 +12,7 @@ impl EmittableEvent for TrackId {
         session.active && session.processed_slow
     }
 
-    fn get_event(&self, session: &SessionData) -> Value {
-        Value::Number(serde_json::Number::from(session.track_id))
+    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+        rmp_serde::to_vec(&session.track_id).unwrap()
     }
 }

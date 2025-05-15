@@ -1,5 +1,4 @@
 use serde::Serialize;
-use serde_json::Value;
 use specta::Type;
 
 use crate::emitter::emittable_event::EmittableEvent;
@@ -9,7 +8,7 @@ use crate::session::session_data::SessionData;
 pub struct Lap(u32);
 
 impl EmittableEvent for Lap {
-    fn get_event(&self, session: &SessionData) -> Value {
-        Value::Number(serde_json::Number::from(session.lap))
+    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+        rmp_serde::to_vec(&session.lap).unwrap()
     }
 }

@@ -1,12 +1,10 @@
-use log::error;
-use serde::Serialize;
-use serde_json::Value;
+use serde::{Serialize, Serializer};
 use specta::Type;
 
 use crate::emitter::emittable_event::EmittableEvent;
 use crate::session::session_data::SessionData;
 
-#[derive(Default, Type, Serialize)]
+#[derive(Default, Type)]
 pub struct TelemetryGraph {
     ts: f64,
     throttle: u32,
@@ -14,28 +12,30 @@ pub struct TelemetryGraph {
     abs_active: bool,
 }
 
+// Custom serialization to ensure we get a MessagePack map/object
+impl Serialize for TelemetryGraph {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::SerializeMap;
+        let mut map = serializer.serialize_map(Some(4))?;
+        map.serialize_entry("ts", &self.ts)?;
+        map.serialize_entry("throttle", &self.throttle)?;
+        map.serialize_entry("brake", &self.brake)?;
+        map.serialize_entry("abs_active", &self.abs_active)?;
+        map.end()
+    }
+}
+
 impl EmittableEvent for TelemetryGraph {
-    fn get_event(&self, session: &SessionData) -> Value {
-        let mut telemetry = serde_json::Map::new();
-        let session_time = session.session_time.as_secs_f64();
-        let session_time = serde_json::Number::from_f64(session_time);
-        match session_time {
-            Some(session_time) => {
-                telemetry.insert("ts".to_string(), Value::Number(session_time));
-            }
-            None => {
-                error!("Failed to convert session time to f64");
-            }
-        }
-        telemetry.insert(
-            "throttle".to_string(),
-            Value::Number(serde_json::Number::from(session.throttle)),
-        );
-        telemetry.insert(
-            "brake".to_string(),
-            Value::Number(serde_json::Number::from(session.brake)),
-        );
-        telemetry.insert("abs_active".to_string(), Value::Bool(session.abs_active));
-        Value::Object(telemetry)
+    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+        let telemetry = TelemetryGraph {
+            ts: session.session_time.as_secs_f64(),
+            throttle: session.throttle,
+            brake: session.brake,
+            abs_active: session.abs_active,
+        };
+        rmp_serde::to_vec(&telemetry).unwrap_or_default()
     }
 }

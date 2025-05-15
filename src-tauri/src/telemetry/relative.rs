@@ -1,5 +1,4 @@
-use serde::Serialize;
-use serde_json::Value;
+use serde::{Serialize, Serializer};
 use specta::Type;
 
 use crate::emitter::emittable_event::EmittableEvent;
@@ -11,7 +10,7 @@ use crate::util::get_relative_gap::get_relative_gap;
 const RELATIVE_DRIVERS_BEFORE: usize = 3;
 const RELATIVE_DRIVERS_AFTER: usize = 3;
 
-#[derive(Default, Type, Serialize, Clone)]
+#[derive(Default, Type, Clone)]
 pub struct RelativeDriver {
     car_id: u32,
     position: u32,
@@ -24,6 +23,28 @@ pub struct RelativeDriver {
     is_in_pits: bool,
     is_off_track: bool,
     is_off_world: bool,
+}
+
+impl Serialize for RelativeDriver {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::SerializeMap;
+        let mut map = serializer.serialize_map(Some(11))?;
+        map.serialize_entry("car_id", &self.car_id)?;
+        map.serialize_entry("position", &self.position)?;
+        map.serialize_entry("user_name", &self.user_name)?;
+        map.serialize_entry("car_number", &self.car_number)?;
+        map.serialize_entry("irating", &self.irating)?;
+        map.serialize_entry("license", &self.license)?;
+        map.serialize_entry("player_relative_gap", &self.player_relative_gap)?;
+        map.serialize_entry("is_player", &self.is_player)?;
+        map.serialize_entry("is_in_pits", &self.is_in_pits)?;
+        map.serialize_entry("is_off_track", &self.is_off_track)?;
+        map.serialize_entry("is_off_world", &self.is_off_world)?;
+        map.end()
+    }
 }
 
 impl RelativeDriver {
@@ -44,15 +65,24 @@ impl RelativeDriver {
     }
 }
 
-#[derive(Default, Type, Serialize)]
+#[derive(Default, Type)]
 pub struct Relative(Vec<RelativeDriver>);
+
+impl Serialize for Relative {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.0.serialize(serializer)
+    }
+}
 
 impl EmittableEvent for Relative {
     fn is_ready(&self, session: &SessionData) -> bool {
         session.active && !session.drivers.is_empty()
     }
 
-    fn get_event(&self, session: &SessionData) -> Value {
+    fn get_event(&self, session: &SessionData) -> Vec<u8> {
         let mut drivers: Vec<Driver> = session
             .drivers
             .values()
@@ -101,11 +131,6 @@ impl EmittableEvent for Relative {
             };
             result[RELATIVE_DRIVERS_BEFORE + idx + 1] = value;
         }
-        Value::Array(
-            result
-                .into_iter()
-                .map(|driver| serde_json::to_value(driver).unwrap())
-                .collect(),
-        )
+        rmp_serde::to_vec(&result).unwrap_or_default()
     }
 }

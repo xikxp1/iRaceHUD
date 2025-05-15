@@ -1,5 +1,4 @@
 use serde::Serialize;
-use serde_json::Value;
 use specta::Type;
 
 use crate::emitter::emittable_event::EmittableEvent;
@@ -13,7 +12,7 @@ impl EmittableEvent for GearShiftRpm {
         session.active && session.processed_slow
     }
 
-    fn get_event(&self, session: &SessionData) -> Value {
-        Value::Number(serde_json::Number::from(session.gear_shift_rpm))
+    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+        rmp_serde::to_vec(&session.gear_shift_rpm).unwrap()
     }
 }
