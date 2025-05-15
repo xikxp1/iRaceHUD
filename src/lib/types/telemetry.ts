@@ -40,15 +40,13 @@ export type Standings = StandingsDriver[]
 
 export type SessionState = string
 
-export type TrackMapDriver = { car_id: number; position: number; is_leader: boolean; is_player: boolean; lap_dist_pct: number; is_in_pits: boolean; is_off_track: boolean; is_off_world: boolean }
-
 export type Relative = RelativeDriver[]
-
-export type TrackMap = TrackMapDriver[]
 
 export type RaceLaps = number
 
 export type Gear = string
+
+export type TrackMapDriver = { car_id: number; position: number; is_leader: boolean; is_player: boolean; lap_dist_pct: number; is_in_pits: boolean; is_off_track: boolean; is_off_world: boolean }
 
 export type SessionTime = string
 
@@ -67,4 +65,6 @@ export type Proximity = { is_left: boolean; is_right: boolean }
 export type GapPrev = string
 
 export type SessionTimeTotal = string
+
+export type TrackMap = TrackMapDriver[]
 
