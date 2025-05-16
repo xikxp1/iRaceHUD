@@ -1,10 +1,10 @@
 use serde::{Serialize, Serializer};
 use specta::Type;
 
-use crate::emitter::emittable_event::EmittableEvent;
+use crate::emitter::emittable_event::{EmittableEvent, EmittableValue};
 use crate::session::session_data::SessionData;
 
-#[derive(Default, Type)]
+#[derive(Default, Type, PartialEq)]
 pub struct Proximity {
     is_left: bool,
     is_right: bool,
@@ -24,11 +24,11 @@ impl Serialize for Proximity {
 }
 
 impl EmittableEvent for Proximity {
-    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+    fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
         let proximity = Proximity {
             is_left: session.is_left,
             is_right: session.is_right,
         };
-        rmp_serde::to_vec(&proximity).unwrap_or_default()
+        Box::new(proximity)
     }
 }

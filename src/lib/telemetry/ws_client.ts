@@ -1,6 +1,6 @@
 import { decode } from '@msgpack/msgpack';
 
-type WsEvent = [string, Uint8Array];
+type WsEvent = [string, any];
 
 export interface WsMessageHandler<T> {
   (data: T): void;
@@ -76,8 +76,7 @@ export class WebSocketClient {
       
       if (handler) {
         try {
-          // Decode the inner MessagePack data with the handler's expected type
-          const decodedData = decode(eventData) as T;
+          const decodedData = eventData as T;
           handler(decodedData);
         } catch (error) {
           console.error(`Error decoding data for ${eventName}: ${error}\nRaw event data:`, eventData);

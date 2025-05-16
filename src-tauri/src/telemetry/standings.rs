@@ -1,7 +1,7 @@
 use serde::{Serialize, Serializer};
 use specta::Type;
 
-use crate::emitter::emittable_event::EmittableEvent;
+use crate::emitter::emittable_event::{EmittableEvent, EmittableValue};
 use crate::session::driver::Driver;
 use crate::session::session_data::SessionData;
 use crate::util::format_irating::format_irating;
@@ -9,7 +9,7 @@ use crate::util::format_laptime::format_laptime;
 use crate::util::get_gap::get_gap;
 use crate::util::session_type::SessionType;
 
-#[derive(Default, Type)]
+#[derive(Default, Type, PartialEq)]
 pub struct StandingsDriver {
     car_id: u32,
     position: u32,
@@ -69,7 +69,7 @@ impl EmittableEvent for Standings {
             && session.processed_slow
     }
 
-    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+    fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
         let mut drivers = session.drivers.values().cloned().collect::<Vec<Driver>>();
         drivers.sort_by(|a, b| a.position.cmp(&b.position));
         let drivers = drivers
@@ -88,7 +88,7 @@ impl EmittableEvent for Standings {
                 is_leader: driver.is_leader,
                 is_in_pits: driver.is_in_pits,
             }).collect::<Vec<StandingsDriver>>();
-        rmp_serde::to_vec(&drivers).unwrap_or_default()
+        Box::new(drivers)
     }
 
     fn is_forced(&self) -> bool {

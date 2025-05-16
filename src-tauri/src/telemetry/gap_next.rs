@@ -1,7 +1,7 @@
 use serde::Serialize;
 use specta::Type;
 
-use crate::emitter::emittable_event::EmittableEvent;
+use crate::emitter::emittable_event::{EmittableEvent, EmittableValue};
 use crate::session::session_data::SessionData;
 use crate::util::get_gap::get_gap;
 
@@ -13,8 +13,8 @@ impl EmittableEvent for GapNext {
         session.active && !session.drivers.is_empty()
     }
 
-    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+    fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
         let gap = get_gap(session.position - 1, session, false);
-        rmp_serde::to_vec(&gap).unwrap()
+        Box::new(gap)
     }
 }

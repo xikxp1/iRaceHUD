@@ -1,7 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
-    str::FromStr,
-    sync::Arc,
+    collections::{HashMap, HashSet}, str::FromStr, sync::Arc
 };
 
 use eyre::Result;
@@ -11,7 +9,7 @@ use strum::IntoEnumIterator;
 use tokio::sync::OnceCell;
 
 use crate::{
-    emitter::emittable_event::{EmittableEvent, TelemetryEvent},
+    emitter::emittable_event::{EmittableEvent, TelemetryEvent, EmittableValue},
     session::session_data::SessionData,
     websocket::WebSocketServer,
 };
@@ -21,12 +19,12 @@ static WS_SERVER: OnceCell<Arc<WebSocketServer>> = OnceCell::const_new();
 #[derive(Serialize)]
 struct WsEvent<'a> {
     event: &'a str,
-    data: &'a [u8],
+    data: &'a dyn EmittableValue,
 }
 
 #[derive(Default)]
 pub struct TelemetryEmitter {
-    latest_events: HashMap<String, Vec<u8>>,
+    latest_events: HashMap<String, Box<dyn EmittableValue>>,
     registered_events: HashSet<String>,
     forced_events: HashSet<String>,
 }
@@ -57,25 +55,25 @@ impl TelemetryEmitter {
             if !telemetry_event.is_ready(session) {
                 continue;
             }
-            let value = telemetry_event.get_event(session);
+            let event_data = telemetry_event.get_event(session);
             let latest_value = self.latest_events.get(event);
 
             let should_emit = telemetry_event.is_forced()
                 || self.forced_events.contains(event)
                 || latest_value.is_none()
-                || latest_value.unwrap() != &value;
+                || !latest_value.is_some_and(|v| v.equals(event_data.as_ref()));
 
             if should_emit {
                 // Emit via WebSocket if available
                 if let Some(ws_server) = WS_SERVER.get() {
                     let ws_event = WsEvent {
                         event: event.as_str(),
-                        data: &value,
+                        data: event_data.as_ref(),
                     };
                     ws_server.broadcast(&ws_event);
                 }
 
-                self.latest_events.insert(event.to_string(), value);
+                self.latest_events.insert(event.to_string(), event_data);
                 self.forced_events.remove(event);
             }
         }

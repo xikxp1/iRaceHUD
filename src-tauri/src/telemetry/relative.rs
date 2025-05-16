@@ -1,7 +1,7 @@
 use serde::{Serialize, Serializer};
 use specta::Type;
 
-use crate::emitter::emittable_event::EmittableEvent;
+use crate::emitter::emittable_event::{EmittableEvent, EmittableValue};
 use crate::session::driver::Driver;
 use crate::session::session_data::SessionData;
 use crate::util::format_irating::format_irating;
@@ -10,7 +10,7 @@ use crate::util::get_relative_gap::get_relative_gap;
 const RELATIVE_DRIVERS_BEFORE: usize = 3;
 const RELATIVE_DRIVERS_AFTER: usize = 3;
 
-#[derive(Default, Type, Clone)]
+#[derive(Default, Type, Clone, PartialEq)]
 pub struct RelativeDriver {
     car_id: u32,
     position: u32,
@@ -65,7 +65,7 @@ impl RelativeDriver {
     }
 }
 
-#[derive(Default, Type)]
+#[derive(Default, Type, PartialEq)]
 pub struct Relative(Vec<RelativeDriver>);
 
 impl Serialize for Relative {
@@ -82,7 +82,7 @@ impl EmittableEvent for Relative {
         session.active && !session.drivers.is_empty()
     }
 
-    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+    fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
         let mut drivers: Vec<Driver> = session
             .drivers
             .values()
@@ -131,6 +131,6 @@ impl EmittableEvent for Relative {
             };
             result[RELATIVE_DRIVERS_BEFORE + idx + 1] = value;
         }
-        rmp_serde::to_vec(&result).unwrap_or_default()
+        Box::new(result)
     }
 }

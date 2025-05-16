@@ -1,14 +1,14 @@
 use serde::Serialize;
 use specta::Type;
 
-use crate::emitter::emittable_event::EmittableEvent;
+use crate::emitter::emittable_event::{EmittableEvent, EmittableValue};
 use crate::session::session_data::SessionData;
 
 #[derive(Default, Type, Serialize)]
 pub struct SessionState(String);
 
 impl EmittableEvent for SessionState {
-    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+    fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
         let session_state = match session.laps_total {
             0 => {
                 let session_time_remaining = session.session_time_remaining;
@@ -33,6 +33,6 @@ impl EmittableEvent for SessionState {
                 }
             },
         };
-        rmp_serde::to_vec(&session_state).unwrap()
+        Box::new(session_state)
     }
 }

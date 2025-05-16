@@ -1,10 +1,10 @@
 use serde::{Serialize, Serializer};
 use specta::Type;
 
-use crate::emitter::emittable_event::EmittableEvent;
+use crate::emitter::emittable_event::{EmittableEvent, EmittableValue};
 use crate::session::session_data::SessionData;
 
-#[derive(Default, Type)]
+#[derive(Default, Type, PartialEq)]
 pub struct TelemetryGraph {
     ts: f64,
     throttle: u32,
@@ -29,13 +29,13 @@ impl Serialize for TelemetryGraph {
 }
 
 impl EmittableEvent for TelemetryGraph {
-    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+    fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
         let telemetry = TelemetryGraph {
             ts: session.session_time.as_secs_f64(),
             throttle: session.throttle,
             brake: session.brake,
             abs_active: session.abs_active,
         };
-        rmp_serde::to_vec(&telemetry).unwrap_or_default()
+        Box::new(telemetry)
     }
 }

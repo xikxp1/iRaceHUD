@@ -1,14 +1,14 @@
 use serde::{Serialize, Serializer};
 use specta::Type;
 
-use crate::emitter::emittable_event::EmittableEvent;
+use crate::emitter::emittable_event::{EmittableEvent, EmittableValue};
 use crate::session::session_data::SessionData;
 use crate::util::format_laptime::format_laptime;
 use crate::util::signed_duration::SignedDuration;
 
 const MAX_LAP_TIMES: usize = 5;
 
-#[derive(Default, Type)]
+#[derive(Default, Type, PartialEq)]
 pub struct PlayerLapTimesData {
     lap: u32,
     lap_time: String,
@@ -27,7 +27,7 @@ impl Serialize for PlayerLapTimesData {
     }
 }
 
-#[derive(Default, Type)]
+#[derive(Default, Type, PartialEq)]
 pub struct PlayerLapTimes(Vec<PlayerLapTimesData>);
 
 impl Serialize for PlayerLapTimes {
@@ -53,13 +53,13 @@ impl EmittableEvent for PlayerLapTimes {
         session.active && session.processed_slow
     }
 
-    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+    fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
         let lap_times: Vec<PlayerLapTimesData> = session
             .player_lap_times
             .iter()
             .take(MAX_LAP_TIMES)
             .map(|lap_time| PlayerLapTimesData::new(lap_time.lap(), lap_time.lap_time()))
             .collect();
-        rmp_serde::to_vec(&lap_times).unwrap_or_default()
+        Box::new(PlayerLapTimes(lap_times))
     }
 }

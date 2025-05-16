@@ -1,7 +1,7 @@
 use serde::Serialize;
 use specta::Type;
 
-use crate::emitter::emittable_event::EmittableEvent;
+use crate::emitter::emittable_event::{EmittableEvent, EmittableValue};
 use crate::session::session_data::SessionData;
 use crate::util::format_delta::format_delta;
 
@@ -9,7 +9,7 @@ use crate::util::format_delta::format_delta;
 pub struct DeltaOptimalTime(String);
 
 impl EmittableEvent for DeltaOptimalTime {
-    fn get_event(&self, session: &SessionData) -> Vec<u8> {
-        rmp_serde::to_vec(&format_delta(&session.delta_optimal_time)).unwrap()
+    fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
+        Box::new(format_delta(&session.delta_optimal_time))
     }
 }

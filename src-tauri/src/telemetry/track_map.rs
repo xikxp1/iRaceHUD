@@ -1,11 +1,11 @@
 use serde::{Serialize, Serializer as SerdeSerializer};
 use specta::Type;
 
-use crate::emitter::emittable_event::EmittableEvent;
+use crate::emitter::emittable_event::{EmittableEvent, EmittableValue};
 use crate::session::driver::Driver;
 use crate::session::session_data::SessionData;
 
-#[derive(Default, Type)]
+#[derive(Default, Type, PartialEq)]
 pub struct TrackMapDriver {
     car_id: u32,
     position: u32,
@@ -60,7 +60,7 @@ impl EmittableEvent for TrackMap {
         session.active && !session.drivers.is_empty()
     }
 
-    fn get_event(&self, session: &SessionData) -> Vec<u8> {
+    fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
         let drivers: Vec<TrackMapDriver> = session
             .drivers
             .values()
@@ -68,6 +68,6 @@ impl EmittableEvent for TrackMap {
             .collect();
 
         // Serialize the vector of drivers directly
-        rmp_serde::to_vec(&drivers).unwrap_or_default()
+        Box::new(drivers)
     }
 }

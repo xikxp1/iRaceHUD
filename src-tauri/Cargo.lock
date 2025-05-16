@@ -2155,11 +2155,12 @@ checksum = "469fb0b9cefa57e3ef31275ee7cacb78f2fdca44e4765491884a2b119d4eb130"
 
 [[package]]
 name = "iracehud"
-version = "0.4.12"
+version = "0.4.13"
 dependencies = [
  "chrono",
  "color-eyre",
  "enum_dispatch",
+ "erased-serde",
  "eyre",
  "futures-util",
  "humantime",

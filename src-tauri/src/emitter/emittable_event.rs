@@ -1,4 +1,6 @@
 use enum_dispatch::enum_dispatch;
+use serde::Serialize;
+use std::any::Any;
 use strum_macros::{Display, EnumIter, EnumString};
 
 use crate::session::session_data::SessionData;
@@ -39,12 +41,33 @@ pub trait EmittableEvent {
         session.active
     }
 
-    fn get_event(&self, session: &SessionData) -> Vec<u8>;
+    fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue>;
 
     fn is_forced(&self) -> bool {
         false
     }
 }
+
+pub trait EmittableValue: erased_serde::Serialize + Any + Send + Sync {
+    fn as_any(&self) -> &dyn Any;
+    fn equals(&self, other: &dyn EmittableValue) -> bool;
+}
+
+impl<T: Serialize + PartialEq + Send + Sync + 'static> EmittableValue for T {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn equals(&self, other: &dyn EmittableValue) -> bool {
+        if let Some(other) = other.as_any().downcast_ref::<T>() {
+            self == other
+        } else {
+            false
+        }
+    }
+}
+
+erased_serde::serialize_trait_object!(EmittableValue);
 
 #[derive(EnumString, EnumIter, Display)]
 #[strum(serialize_all = "snake_case")]
