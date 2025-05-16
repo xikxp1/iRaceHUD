@@ -249,7 +249,10 @@ impl SessionData {
             .unwrap_or_default();
 
         for (car_id, driver) in self.drivers.iter_mut() {
-            let lap_dist_pct_value = lap_dist_pct[*car_id as usize];
+            let lap_dist_pct_value = match lap_dist_pct[*car_id as usize] {
+                value if value < 0.0 => 0.0,
+                value => value,
+            };
             let mut laps_completed_value = match laps_completed[*car_id as usize] {
                 value if value >= UNLIMITED_LAPS || value <= 0 => 0,
                 value => value,

@@ -84,6 +84,9 @@
     }
 
     function onTrackMap(value: TrackMap) {
+        if (trackPathElement == null) {
+            return;
+        }
         if (trackPathLength === 0) {
             return;
         }
