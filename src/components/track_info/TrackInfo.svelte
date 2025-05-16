@@ -1,11 +1,10 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
-    import { trackInfo } from "$lib/stores/track_info";
-    import { trackSettings } from "$lib/stores/track_settings";
-    import { page } from "$app/stores";
+    import { page } from "$app/state";
+    import { getTrackInfoState } from "$lib/stores/TrackInfoState.svelte";
+    import { getTrackSettingsState } from "$lib/stores/TrackSettingsState.svelte";
 
-    let trackInfoData: { [k: string]: any } = {};
-    let trackSettingsData: { [k: string]: any } = {};
+    const trackInfoState = getTrackInfoState();
+    const trackSettingsState = getTrackSettingsState();
 
     let path: SVGPathElement;
 
@@ -14,19 +13,6 @@
 
     let cx: number;
     let cy: number;
-
-    const unsubscribeInfo = trackInfo.subscribe((value) => {
-        trackInfoData = value;
-    });
-
-    const unsubscribeSettings = trackSettings.subscribe((value) => {
-        trackSettingsData = value;
-    });
-
-    onDestroy(() => {
-        unsubscribeInfo();
-        unsubscribeSettings();
-    });
 
     function setPointOnPath(lapPointPosition: number) {
         const pathLength = path.getTotalLength();
@@ -44,17 +30,21 @@
     }
 </script>
 
-{#if $page.params.track_id}
+{#if trackInfoState.isLoading || trackSettingsState.isLoading}
+    <div class="flex justify-center items-center h-full">
+        <div class="loading loading-spinner loading-lg"></div>
+    </div>
+{:else if page.params.track_id}
     <div class="flex flex-col items-center">
         <h3 class="text-lg font-bold">
-            {$page.params.track_id}
-            {trackInfoData[$page.params.track_id].trackName} ({trackInfoData[
-                $page.params.track_id
+            {page.params.track_id}
+            {trackInfoState.data[Number(page.params.track_id)].trackName} ({trackInfoState.data[
+                Number(page.params.track_id)
             ].configName})
         </h3>
         <span class="text-lg">
-            Offset: {trackSettingsData[$page.params.track_id]?.offset} / Direction:
-            {trackSettingsData[$page.params.track_id]?.direction}
+            Offset: {trackSettingsState.data[Number(page.params.track_id)]?.offset} / Direction:
+            {trackSettingsState.data[Number(page.params.track_id)]?.direction}
         </span>
         <svg
             fill="none"
@@ -64,12 +54,12 @@
         >
             <path
                 bind:this={path}
-                d={trackInfoData[$page.params.track_id].activePath}
+                d={trackInfoState.data[Number(page.params.track_id)].activePath}
                 stroke="black"
                 stroke-width="30"
             />
             <image
-                href="/track_info_data/start_finish/{$page.params.track_id}.svg"
+                href="/track_info_data/start_finish/{page.params.track_id}.svg"
                 x="0"
                 y="0"
                 width="1920"

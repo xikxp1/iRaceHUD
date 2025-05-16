@@ -1,38 +1,25 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { trackInfo } from "$lib/stores/track_info";
-    import { trackSettings } from "$lib/stores/track_settings";
+    import { getTrackInfoState } from "$lib/stores/TrackInfoState.svelte";
 
-    let trackInfoData: { [k: string]: any } = {};
-
-    onMount(async () => {
-        await Promise.all([
-            fetch("/track_info_data/track_info.json")
-                .then((response) => response.json())
-                .then((data) => {
-                    trackInfoData = data;
-                    trackInfo.set(data);
-                }),
-            fetch("/track_info_data/track_settings.json")
-                .then((response) => response.json())
-                .then((data) => {
-                    trackSettings.set(data);
-                }),
-        ]);
-    });
+    const trackInfoState = getTrackInfoState();
 </script>
 
-<ul class="menu">
-    {#each Object.keys(trackInfoData) as track_id}
-        <li class="text-lg font-bold">
-            <a href="/track_info/{track_id}">
-                {track_id}
-                {trackInfoData[track_id].trackName} ({trackInfoData[track_id]
-                    .configName})
-            </a>
-        </li>
-    {/each}
-</ul>
+{#if trackInfoState.isLoading}
+    <div class="flex justify-center items-center h-full">
+        <div class="loading loading-spinner loading-lg"></div>
+    </div>
+{:else}
+    <ul class="menu">
+        {#each Object.entries(trackInfoState.data) as [id, track]}
+            <li class="text-lg font-bold">
+                <a href="/track_info/{id}">
+                    {id}
+                    {track.trackName} ({track.configName})
+                </a>
+            </li>
+        {/each}
+    </ul>
+{/if}
 
 <style>
 </style>
