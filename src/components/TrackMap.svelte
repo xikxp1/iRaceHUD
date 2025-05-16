@@ -13,6 +13,7 @@
     };
 
     let trackPathElement: SVGPathElement;
+    let trackPathLength: number = 0;
 
     let trackInfo: { [k: number]: any } = {};
     let trackSettings: { [k: number]: any } = {};
@@ -43,14 +44,14 @@
         }
         offset = trackSettings[track_id]?.offset ?? 0;
         direction = trackSettings[track_id]?.direction ?? 1;
-    }
-
-    function onTrackMap(value: TrackMap) {
         if (trackPathElement == null) {
             return;
         }
-        const pathLength = trackPathElement.getTotalLength();
-        if (pathLength === 0) {
+        trackPathLength = trackPathElement.getTotalLength();
+    }
+
+    function onTrackMap(value: TrackMap) {
+        if (trackPathLength === 0) {
             return;
         }
         const track_map: TrackMapLocal[] = [];
@@ -58,7 +59,7 @@
             const offsetedLapDistPct =
                 (1 + offset + direction * car.lap_dist_pct) % 1;
             const point = trackPathElement.getPointAtLength(
-                offsetedLapDistPct * pathLength,
+                offsetedLapDistPct * trackPathLength,
             );
             let new_car: TrackMapLocal = {
                 ...car,
