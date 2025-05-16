@@ -25,16 +25,44 @@
     let offset: number = 0;
     let direction: number = 1;
 
+    let startFinishPoint: { x: number; y: number } | null = null;
+    let startFinishPerp: { x: number; y: number } | null = null;
+    const START_LINE_LENGTH = 50; // Length of the start/finish line in pixels
+
     const css = window.getComputedStyle(document.documentElement);
 
     const textColor: string = `oklch(${css.getPropertyValue("--pc")})`;
     const trackColor: string = `oklch(${css.getPropertyValue("--sc")})`;
+    const startFinishColor: string = `oklch(${css.getPropertyValue("--s")})`;
     const trackBorderColor: string = `oklch(${css.getPropertyValue("--p")})`;
     const carCircleColor: string = `oklch(${css.getPropertyValue("--p")})`;
     const leaderCircleColor: string = `oklch(${css.getPropertyValue("--in")})`;
     const playerCircleColor: string = `oklch(${css.getPropertyValue("--s")})`;
     const offtrackCircleColor: string = `oklch(${css.getPropertyValue("--er")})`;
     const inPitsCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
+
+    function calculateStartFinishLine() {
+        if (!trackPathElement) return;
+        
+        // Get point at the offset position
+        const point = trackPathElement.getPointAtLength(offset * trackPathLength);
+        
+        // Get point slightly ahead to calculate direction
+        const delta = 0.001;
+        const nextPoint = trackPathElement.getPointAtLength((offset + delta) * trackPathLength);
+        
+        // Calculate tangent vector
+        const dx = nextPoint.x - point.x;
+        const dy = nextPoint.y - point.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        
+        // Calculate perpendicular vector
+        const perpX = -dy / length;
+        const perpY = dx / length;
+        
+        startFinishPoint = point;
+        startFinishPerp = { x: perpX, y: perpY };
+    }
 
     function onTrackId(trackId: TrackId) {
         track_id = trackId;
@@ -47,7 +75,12 @@
         if (trackPathElement == null) {
             return;
         }
+        if (trackPath == null) {
+            return;
+        }
+        trackPathElement.setAttribute("d", trackPath);
         trackPathLength = trackPathElement.getTotalLength();
+        calculateStartFinishLine();
     }
 
     function onTrackMap(value: TrackMap) {
@@ -114,15 +147,15 @@
                 stroke={trackColor}
                 stroke-width="20"
             />
-            {#if track_id != undefined && track_id != 0}
-                <image
-                    href="/track_info_data/start_finish/{track_id}.svg"
-                    x="0"
-                    y="0"
-                    width="1920"
-                    height="1080"
-                >
-                </image>
+            {#if startFinishPoint && startFinishPerp}
+                <line
+                    x1={startFinishPoint.x - startFinishPerp.x * START_LINE_LENGTH}
+                    y1={startFinishPoint.y - startFinishPerp.y * START_LINE_LENGTH}
+                    x2={startFinishPoint.x + startFinishPerp.x * START_LINE_LENGTH}
+                    y2={startFinishPoint.y + startFinishPerp.y * START_LINE_LENGTH}
+                    stroke={startFinishColor}
+                    stroke-width="12"
+                />
             {/if}
             {#each trackMapCars as car}
                 {#if !car.is_off_world && !car.is_leader && !car.is_player}
