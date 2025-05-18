@@ -4,7 +4,10 @@ use chrono::{DateTime, Local};
 use log::{debug, error, info};
 use simetry::iracing::{SimState, UNLIMITED_LAPS, UNLIMITED_TIME};
 
-use crate::util::{get_strength_of_field::get_strength_of_field, session_type::SessionType, signed_duration::SignedDuration};
+use crate::util::{
+    get_strength_of_field::get_strength_of_field, session_type::SessionType,
+    signed_duration::SignedDuration,
+};
 
 use super::{driver::Driver, lap_time::LapTime};
 

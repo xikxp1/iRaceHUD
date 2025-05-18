@@ -1,20 +1,23 @@
 use std::{
-    collections::{HashMap, HashSet}, str::FromStr, sync::Arc
+    collections::{HashMap, HashSet},
+    str::FromStr,
+    sync::Arc,
 };
 
 use eyre::Result;
 use log::{error, info};
 use serde::Serialize;
 use strum::IntoEnumIterator;
-use tokio::sync::OnceCell;
+use tokio::{sync::OnceCell, task::JoinHandle};
 
 use crate::{
-    emitter::emittable_event::{EmittableEvent, TelemetryEvent, EmittableValue},
+    emitter::emittable_event::{EmittableEvent, EmittableValue, TelemetryEvent},
     session::session_data::SessionData,
     websocket::WebSocketServer,
 };
 
 static WS_SERVER: OnceCell<Arc<WebSocketServer>> = OnceCell::const_new();
+static WS_SERVER_TASK_HANDLE: OnceCell<JoinHandle<()>> = OnceCell::const_new();
 
 #[derive(Serialize)]
 struct WsEvent<'a> {
@@ -34,7 +37,7 @@ impl TelemetryEmitter {
         let server = Arc::new(WebSocketServer::new());
         let server_clone = server.clone();
 
-        tokio::spawn(async move {
+        let handle = tokio::spawn(async move {
             server_clone.run("127.0.0.1:8384").await;
         });
 
@@ -42,6 +45,12 @@ impl TelemetryEmitter {
             error!("Failed to initialize WebSocket server: {:?}", e);
         } else {
             info!("WebSocket server initialized");
+        }
+
+        if let Err(e) = WS_SERVER_TASK_HANDLE.set(handle) {
+            error!("Failed to set WebSocket server task handle: {:?}", e);
+        } else {
+            info!("WebSocket server task handle set");
         }
     }
 
@@ -106,6 +115,15 @@ impl TelemetryEmitter {
         self.latest_events.clear();
         for event in TelemetryEvent::iter() {
             self.forced_events.insert(event.to_string());
+        }
+    }
+
+    pub fn close_server(&self) {
+        if let Some(ws_server) = WS_SERVER.get() {
+            ws_server.shutdown();
+        }
+        if let Some(handle) = WS_SERVER_TASK_HANDLE.get() {
+            handle.abort();
         }
     }
 }

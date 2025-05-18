@@ -95,4 +95,16 @@ impl WebSocketServer {
             }
         }
     }
+
+    pub fn shutdown(&self) {
+        info!("WebSocket server shutdown");
+
+        let clients = self.clients.lock().unwrap();
+        for (_addr, tx) in clients.iter() {
+            tx.send(Vec::new()).unwrap();
+        }
+        self.clients.lock().unwrap().clear();
+
+        info!("WebSocket server shutdown complete");
+    }
 }

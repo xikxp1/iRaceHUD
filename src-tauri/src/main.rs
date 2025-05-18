@@ -9,7 +9,7 @@ pub mod websocket;
 
 use eyre::{eyre, OptionExt, Result};
 use log::{debug, error, info, warn};
-use simetry::iracing::Client;
+use simetry::iracing::{Client, DiskClient};
 use std::{sync::OnceLock, time::Duration};
 use tauri::{
     async_runtime,
@@ -20,6 +20,7 @@ use tauri::{
 use tauri::{WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_log::{Target, TargetKind};
+use tauri_plugin_store::StoreExt;
 use tokio::sync::Mutex;
 
 use crate::emitter::telemetry_emitter::TelemetryEmitter;
@@ -43,6 +44,7 @@ async fn main() {
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_single_instance::init(|_, args, cwd| {
             info!(
                 "Single instance started with args: {:?}, cwd: {:?}",
@@ -152,8 +154,31 @@ async fn main() {
                 .set(window)
                 .map_err(|err| eyre!("Failed to set window: {:?}", err))?;
 
+            let store = app
+                .store("settings.json")
+                .expect("Failed to get settings store");
+            let demo_mode_enabled = store
+                .get("demo_mode_enabled")
+                .unwrap_or(serde_json::Value::Bool(false));
+            let demo_mode_enabled = demo_mode_enabled.as_bool().unwrap_or(false);
+            let mut ibt_file_path: Option<String> = None;
+            if demo_mode_enabled {
+                let ibt_file_path_setting = store
+                    .get("demo_mode_ibt_file_path")
+                    .unwrap_or(serde_json::Value::String("".to_string()));
+                let ibt_file_path_setting = ibt_file_path_setting
+                    .as_str()
+                    .expect("Failed to get IBT file path");
+                // Check if file exists
+                if !std::path::Path::new(ibt_file_path_setting).exists() {
+                    error!("IBT file does not exist");
+                } else {
+                    ibt_file_path = Some(ibt_file_path_setting.to_string());
+                }
+            }
+
             async_runtime::spawn(async move {
-                if let Err(err) = connect().await {
+                if let Err(err) = connect(ibt_file_path).await {
                     error!("Failed to connect: {:?}", err);
                 }
             });
@@ -165,40 +190,74 @@ async fn main() {
             unregister_event_emitter,
             set_autostart,
             get_autostart,
+            toggle_demo_mode,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
 }
 
-async fn connect() -> Result<()> {
+async fn connect(ibt_file_path: Option<String>) -> Result<()> {
     loop {
-        info!("Start iRacing");
-        let mut client = Client::connect(Duration::from_secs(RETRY_TIMEOUT_SECS)).await;
-        let mut data = SessionData::default();
-        let mut slow_var_ticks: u32 = SLOW_VAR_RESET_TICKS;
-        while let Some(sim_state) = client.next_sim_state().await {
-            slow_var_ticks += 1;
+        match ibt_file_path {
+            Some(ref path) => {
+                info!("Start iRacing in demo mode with IBT file: {}", path);
+                let mut client = DiskClient::open(path).unwrap();
+                let mut data = SessionData::default();
+                let mut slow_var_ticks: u32 = SLOW_VAR_RESET_TICKS;
+                while let Some(sim_state) = client.next_sim_state() {
+                    slow_var_ticks += 1;
 
-            let should_process_slow = slow_var_ticks >= SLOW_VAR_RESET_TICKS;
+                    let should_process_slow = slow_var_ticks >= SLOW_VAR_RESET_TICKS;
 
-            let result = data.process_tick(&sim_state, should_process_slow);
+                    let result = data.process_tick(&sim_state, should_process_slow);
 
-            if should_process_slow {
-                slow_var_ticks = 0;
+                    if should_process_slow {
+                        slow_var_ticks = 0;
+                    }
+
+                    let window = WINDOW.get().ok_or_eyre("Failed to get window")?;
+                    let emitter_state = window.app_handle().state::<Mutex<TelemetryEmitter>>();
+                    let mut emitter = emitter_state.lock().await;
+
+                    if result == session::session_data::ProcessTickResult::StateChanged {
+                        emitter.reset();
+                    }
+
+                    emitter.emit_all(&data)?;
+
+                    tokio::time::sleep(Duration::from_millis(SESSION_UPDATE_PERIOD_MILLIS)).await;
+                }
             }
+            None => {
+                info!("Start iRacing");
+                let mut client = Client::connect(Duration::from_secs(RETRY_TIMEOUT_SECS)).await;
+                let mut data = SessionData::default();
+                let mut slow_var_ticks: u32 = SLOW_VAR_RESET_TICKS;
+                while let Some(sim_state) = client.next_sim_state().await {
+                    slow_var_ticks += 1;
 
-            let window = WINDOW.get().ok_or_eyre("Failed to get window")?;
-            let emitter_state = window.app_handle().state::<Mutex<TelemetryEmitter>>();
-            let mut emitter = emitter_state.lock().await;
+                    let should_process_slow = slow_var_ticks >= SLOW_VAR_RESET_TICKS;
 
-            if result == session::session_data::ProcessTickResult::StateChanged {
-                emitter.reset();
+                    let result = data.process_tick(&sim_state, should_process_slow);
+
+                    if should_process_slow {
+                        slow_var_ticks = 0;
+                    }
+
+                    let window = WINDOW.get().ok_or_eyre("Failed to get window")?;
+                    let emitter_state = window.app_handle().state::<Mutex<TelemetryEmitter>>();
+                    let mut emitter = emitter_state.lock().await;
+
+                    if result == session::session_data::ProcessTickResult::StateChanged {
+                        emitter.reset();
+                    }
+
+                    emitter.emit_all(&data)?;
+
+                    tokio::time::sleep(Duration::from_millis(SESSION_UPDATE_PERIOD_MILLIS)).await;
+                }
             }
-
-            emitter.emit_all(&data)?;
-
-            tokio::time::sleep(Duration::from_millis(SESSION_UPDATE_PERIOD_MILLIS)).await;
-        }
+        };
     }
 }
 
@@ -275,4 +334,31 @@ async fn set_autostart(app: tauri::AppHandle, enabled: bool) {
 async fn get_autostart(app: tauri::AppHandle) -> bool {
     info!("Getting autostart status");
     app.autolaunch().is_enabled().unwrap_or(false)
+}
+
+#[tauri::command]
+async fn toggle_demo_mode(app: tauri::AppHandle) {
+    info!("Toggling demo mode");
+    let store = app
+        .store("settings.json")
+        .expect("Failed to get settings store");
+    let demo_mode_enabled = store
+        .get("demo_mode_enabled")
+        .unwrap_or(serde_json::Value::Bool(false));
+    let demo_mode_enabled = demo_mode_enabled.as_bool().unwrap_or(false);
+    let ibt_file_path = store
+        .get("demo_mode_ibt_file_path")
+        .unwrap_or(serde_json::Value::String("".to_string()));
+    let ibt_file_path = ibt_file_path.as_str().expect("Failed to get IBT file path");
+    // Check if file exists
+    if !std::path::Path::new(ibt_file_path).exists() {
+        error!("IBT file does not exist");
+        return;
+    }
+    store.set("demo_mode_enabled", !demo_mode_enabled);
+    info!("Demo mode toggled to: {}", !demo_mode_enabled);
+    let emitter_state = app.app_handle().state::<Mutex<TelemetryEmitter>>();
+    let emitter = emitter_state.lock().await;
+    emitter.close_server();
+    app.request_restart();
 }

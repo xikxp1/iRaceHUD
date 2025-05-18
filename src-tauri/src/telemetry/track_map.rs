@@ -61,11 +61,8 @@ impl EmittableEvent for TrackMap {
     }
 
     fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
-        let drivers: Vec<TrackMapDriver> = session
-            .drivers
-            .values()
-            .map(TrackMapDriver::new)
-            .collect();
+        let drivers: Vec<TrackMapDriver> =
+            session.drivers.values().map(TrackMapDriver::new).collect();
 
         // Serialize the vector of drivers directly
         Box::new(drivers)

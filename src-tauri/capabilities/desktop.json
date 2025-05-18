@@ -5,12 +5,15 @@
     "windows"
   ],
   "windows": [
-    "main"
+    "main",
+    "settings"
   ],
   "permissions": [
     "core:default",
     "updater:default",
     "autostart:default",
-    "store:default"
+    "store:default",
+    "dialog:default",
+    "dialog:default"
   ]
 }
