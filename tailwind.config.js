@@ -1,5 +1,4 @@
 import daisyui from 'daisyui'
-import tailwindStripes from './src/plugins/tailwind-stripes.ts'
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -13,7 +12,6 @@ export default {
   },
   plugins: [
     daisyui,
-    tailwindStripes
   ],
   daisyui: {
     base: false,

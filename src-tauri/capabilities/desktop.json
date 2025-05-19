@@ -5,7 +5,8 @@
     "windows"
   ],
   "windows": [
-    "main"
+    "main",
+    "settings"
   ],
   "permissions": [
     "core:default",
