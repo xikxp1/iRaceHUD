@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Badge from "./utils/Badge.svelte";
+    import Badge from "../utils/Badge.svelte";
     import { getBadgeColor } from "$lib/utils";
     import { relative } from "$lib/telemetry/telemetry.svelte";
 </script>

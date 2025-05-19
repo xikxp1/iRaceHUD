@@ -1,13 +1,13 @@
 <script lang="ts">
-    import Main from "../components/Main.svelte";
-    import Telemetry from "../components/Telemetry.svelte";
-    import Timer from "../components/Timer.svelte";
-    import Subtimer from "../components/SubTimer.svelte";
-    import Proximity from "../components/Proximity.svelte";
-    import Standings from "../components/Standings.svelte";
-    import TrackMap from "../components/TrackMap.svelte";
-    import LapTimes from "../components/LapTimes.svelte";
-    import Relative from "../components/Relative.svelte";
+    import Main from "../components/widgets/Main.svelte";
+    import Telemetry from "../components/widgets/Telemetry.svelte";
+    import Timer from "../components/widgets/Timer.svelte";
+    import Subtimer from "../components/widgets/SubTimer.svelte";
+    import Proximity from "../components/widgets/Proximity.svelte";
+    import Standings from "../components/widgets/Standings.svelte";
+    import TrackMap from "../components/widgets/TrackMap.svelte";
+    import LapTimes from "../components/widgets/LapTimes.svelte";
+    import Relative from "../components/widgets/Relative.svelte";
     import { active } from "$lib/telemetry/telemetry.svelte";
 </script>
 

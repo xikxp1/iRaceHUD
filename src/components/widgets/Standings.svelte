@@ -2,7 +2,7 @@
     import type { StandingsDriver } from "$lib/types/telemetry";
     import { onDestroy, onMount } from "svelte";
     import { flip } from "svelte/animate";
-    import Badge from "./utils/Badge.svelte";
+    import Badge from "../utils/Badge.svelte";
     import { getBadgeColor } from "$lib/utils";
     import {
         currentTime,

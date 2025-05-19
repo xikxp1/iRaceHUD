@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Chart } from "chart.js/auto";
     import { onMount } from "svelte";
-    import ProgressBar from "./utils/ProgressBar.svelte";
+    import ProgressBar from "../utils/ProgressBar.svelte";
     import { telemetry } from "$lib/telemetry/telemetry.svelte";
     let telemetryCanvas: HTMLCanvasElement | undefined = $state();
     let chart: Chart | undefined = $state();
