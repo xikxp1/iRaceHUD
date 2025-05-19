@@ -112,7 +112,7 @@
 <div class="flex flex-row items-center justify-center opacity-75">
     <div
         class="join w-[14%] bg-primary-content {abs
-            ? 'outline outline-1 outline-secondary'
+            ? 'outline outline-2 outline-secondary'
             : ''}"
     >
         <div
