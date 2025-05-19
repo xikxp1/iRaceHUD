@@ -1,12 +1,14 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
-    let is_autostart_enabled = false;
+    let is_autostart_enabled = $state(false);
+
     onMount(() => {
         invoke("get_autostart", {}).then((value) => {
             is_autostart_enabled = value as boolean;
         });
     });
+
     function handleAutostartChange(event: Event) {
         const isChecked = (event.target as HTMLInputElement).checked;
         invoke("set_autostart", { enabled: isChecked });
