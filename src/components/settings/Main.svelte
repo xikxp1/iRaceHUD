@@ -2,7 +2,7 @@
     import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
 
-    let is_autostart_enabled = false;
+    let is_autostart_enabled = $state(false);
 
     onMount(() => {
         invoke("get_autostart", {}).then((value) => {
@@ -22,7 +22,7 @@
             type="checkbox"
             class="toggle toggle-sm"
             bind:checked={is_autostart_enabled}
-            on:change={handleAutostartChange}
+            onchange={handleAutostartChange}
         />
         <span class="label-text text-sm">Start iRaceHUD on system startup</span>
     </label>

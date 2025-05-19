@@ -6,15 +6,16 @@
     const trackInfoState = getTrackInfoState();
     const trackSettingsState = getTrackSettingsState();
 
-    let path: SVGPathElement;
+    let path: SVGPathElement | undefined = $state();
 
-    let lapPointPositionInput: number = 0;
-    let lapPointPositionValue: number = 0;
+    let lapPointPositionInput: number = $state(0);
+    let lapPointPositionValue: number = $state(0);
 
-    let cx: number;
-    let cy: number;
+    let cx: number = $state(0);
+    let cy: number = $state(0);
 
     function setPointOnPath(lapPointPosition: number) {
+        if (!path) return;
         const pathLength = path.getTotalLength();
         const pointOnPath = path.getPointAtLength(
             pathLength * lapPointPosition,
@@ -38,12 +39,12 @@
     <div class="flex flex-col items-center">
         <h3 class="text-lg font-bold">
             {page.params.track_id}
-            {trackInfoState.data[Number(page.params.track_id)].trackName} ({trackInfoState.data[
-                Number(page.params.track_id)
-            ].configName})
+            {trackInfoState.data[Number(page.params.track_id)].trackName} ({trackInfoState
+                .data[Number(page.params.track_id)].configName})
         </h3>
         <span class="text-lg">
-            Offset: {trackSettingsState.data[Number(page.params.track_id)]?.offset} / Direction:
+            Offset: {trackSettingsState.data[Number(page.params.track_id)]
+                ?.offset} / Direction:
             {trackSettingsState.data[Number(page.params.track_id)]?.direction}
         </span>
         <svg
@@ -65,7 +66,14 @@
                 width="1920"
                 height="1080"
             />
-            <circle {cx} {cy} r="32" fill="none" stroke="blue" stroke-width="16"/>
+            <circle
+                {cx}
+                {cy}
+                r="32"
+                fill="none"
+                stroke="blue"
+                stroke-width="16"
+            />
         </svg>
         <input
             type="range"
@@ -73,8 +81,8 @@
             max="1000"
             value={lapPointPositionInput}
             class="range"
-            on:change={handleOnChange}
-            on:input={handleOnChange}
+            onchange={handleOnChange}
+            oninput={handleOnChange}
         />
         <span class="text">{lapPointPositionValue}</span>
     </div>

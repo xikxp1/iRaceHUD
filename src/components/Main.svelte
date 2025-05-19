@@ -16,8 +16,8 @@
     import NumberFlow, { continuous } from "@number-flow/svelte";
     import { onMount } from "svelte";
 
-    let gear_indicator: HTMLDivElement;
-    let rpm_indicator: HTMLProgressElement;
+    let gear_indicator: HTMLDivElement | undefined = $state();
+    let rpm_indicator: HTMLProgressElement | undefined = $state();
 
     function on_rpm(rpm: Rpm) {
         if (rpm >= $gearBlinkRPM) {

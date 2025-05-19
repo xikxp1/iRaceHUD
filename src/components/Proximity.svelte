@@ -3,8 +3,8 @@
     import type { Proximity } from "$lib/types/telemetry";
     import { onMount } from "svelte";
 
-    let left_icon: HTMLImageElement;
-    let right_icon: HTMLImageElement;
+    let left_icon: HTMLImageElement | undefined = $state();
+    let right_icon: HTMLImageElement | undefined = $state();
 
     function on_proximity(value: Proximity) {
         if (left_icon != null) {

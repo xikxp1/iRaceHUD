@@ -12,21 +12,21 @@
         y: number;
     };
 
-    let trackPathElement: SVGPathElement;
+    let trackPathElement: SVGPathElement | undefined = $state();
     let trackPathLength: number = 0;
 
     let trackInfo: { [k: number]: any } = {};
     let trackSettings: { [k: number]: any } = {};
 
     let track_id: TrackId;
-    let trackPath: string | undefined;
-    let trackMapCars: TrackMapLocal[] = [];
+    let trackPath: string | undefined = $state();
+    let trackMapCars: TrackMapLocal[] = $state([]);
 
     let offset: number = 0;
     let direction: number = 1;
 
-    let startFinishPoint: { x: number; y: number } | null = null;
-    let startFinishPerp: { x: number; y: number } | null = null;
+    let startFinishPoint: { x: number; y: number } | null = $state(null);
+    let startFinishPerp: { x: number; y: number } | null = $state(null);
     const START_LINE_LENGTH = 50; // Length of the start/finish line in pixels
 
     const css = window.getComputedStyle(document.documentElement);

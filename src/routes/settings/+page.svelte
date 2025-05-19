@@ -7,7 +7,9 @@
         { name: "Widgets", component: Widgets },
     ];
 
-    let activeTab = "Main";
+    let activeTab = $state("Main");
+
+    const SvelteComponent = $derived(tabs.find((tab) => tab.name === activeTab)?.component);
 </script>
 
 <div class="flex flex-col bg-primary min-h-screen">
@@ -16,7 +18,7 @@
             <button
                 role="tab"
                 class="tab {tab.name === activeTab ? 'tab-active' : ''}"
-                on:click={() => (activeTab = tab.name)}
+                onclick={() => (activeTab = tab.name)}
             >
                 {tab.name}
             </button>
@@ -24,9 +26,8 @@
     </div>
 
     <div class="relative flex flex-grow">
-        <svelte:component
-            this={tabs.find((tab) => tab.name === activeTab)?.component}
-        ></svelte:component>
+        <SvelteComponent
+        ></SvelteComponent>
     </div>
 </div>
 

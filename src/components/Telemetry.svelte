@@ -3,13 +3,23 @@
     import { onMount } from "svelte";
     import ProgressBar from "./utils/ProgressBar.svelte";
     import { telemetry } from "$lib/telemetry/telemetry.svelte";
+    let telemetryCanvas: HTMLCanvasElement | undefined = $state();
+    let chart: Chart | undefined = $state();
 
-    let telemetryCanvas: HTMLCanvasElement;
-    let chart: Chart;
+    $effect(() => {
+        if (telemetryCanvas != undefined) {
+            let ctx = telemetryCanvas.getContext("2d")!;
+            chart = new Chart(ctx, {
+                type: "line",
+                data: telemetryData,
+                options: telemetryOptions,
+            });
+        }
+    });
 
-    let throttle = 0;
-    let brake = 0;
-    let abs = false;
+    let throttle = $state(0);
+    let brake = $state(0);
+    let abs = $state(false);
 
     const maxPoints = 300;
 
@@ -78,13 +88,6 @@
     };
 
     onMount(async () => {
-        let ctx = telemetryCanvas.getContext("2d")!;
-        chart = new Chart(ctx, {
-            type: "line",
-            data: telemetryData,
-            options: telemetryOptions,
-        });
-
         telemetry.subscribe((data) => {
             throttle = data.throttle;
             brake = data.brake;
@@ -99,7 +102,7 @@
             if (currentBrakePoints > maxPoints) {
                 brakeData.splice(0, currentBrakePoints - maxPoints);
             }
-            if (chart != null) {
+            if (chart != undefined) {
                 chart.update("none");
             }
         });

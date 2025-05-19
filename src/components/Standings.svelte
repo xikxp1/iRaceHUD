@@ -16,10 +16,10 @@
         position_change: number;
     };
 
-    let current_standings: LocalStandings[] = [];
+    let current_standings: LocalStandings[] = $state([]);
 
     const SWITCH_INTERVAL = 10000;
-    let show_best_lap = false;
+    let show_best_lap = $state(false);
     let interval: NodeJS.Timeout;
 
     function on_standings(value: StandingsDriver[]) {
