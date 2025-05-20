@@ -11,6 +11,7 @@
         standings,
         strengthOfField,
     } from "$lib/telemetry/telemetry.svelte";
+    import { standingsWidgetSettings } from "$lib/settings/settings.svelte";
 
     type LocalStandings = StandingsDriver & {
         position_change: number;
@@ -54,8 +55,14 @@
     });
 </script>
 
-<div class="flex flex-row items-center justify-center opacity-75">
-    <div class="flex flex-col bg-primary-content rounded-l-md w-[360px]">
+<div
+    class="flex flex-row items-center justify-center"
+    style="opacity: {$standingsWidgetSettings?.opacity / 100}"
+>
+    <div
+        class="flex flex-col bg-primary-content rounded-l-md"
+        style="width: {$standingsWidgetSettings?.width}px"
+    >
         <div class="flex flex-row items-center justify-center">
             <div class="flex flex-row items-center justify-start w-1/6 pl-2">
                 <span class="text text-secondary">SoF&nbsp</span>

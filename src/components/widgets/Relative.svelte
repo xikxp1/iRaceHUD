@@ -2,10 +2,17 @@
     import Badge from "../utils/Badge.svelte";
     import { getBadgeColor } from "$lib/utils";
     import { relative } from "$lib/telemetry/telemetry.svelte";
+    import { relativeWidgetSettings } from "$lib/settings/settings.svelte";
 </script>
 
-<div class="flex flex-row items-center justify-center opacity-90">
-    <table class="bg-secondary-content rounded-md w-[415px]">
+<div
+    class="flex flex-row items-center justify-center"
+    style="opacity: {$relativeWidgetSettings?.opacity / 100}"
+>
+    <table
+        class="bg-secondary-content rounded-md"
+        style="width: {$relativeWidgetSettings?.width}px"
+    >
         <tbody>
             {#each $relative as rel}
                 <tr
@@ -31,7 +38,9 @@
                             text={rel?.car_number ? "#" + rel?.car_number : ""}
                         />
                     </td><td class="text text-sm">
-                        <span class="text text-sm tracking-tight">{rel?.user_name ?? ""}</span>
+                        <span class="text text-sm tracking-tight"
+                            >{rel?.user_name ?? ""}</span
+                        >
                         {#if rel?.is_off_track}
                             <span class="text text-sm text-error text-right"
                                 >&nbspOFF</span

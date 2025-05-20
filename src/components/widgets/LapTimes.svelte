@@ -1,9 +1,16 @@
 <script lang="ts">
     import { lapTimes } from "$lib/telemetry/telemetry.svelte";
+    import { lapTimesWidgetSettings } from "$lib/settings/settings.svelte";
 </script>
 
-<div class="flex flex-row items-center justify-center opacity-75">
-    <table class="bg-secondary-content rounded-md w-[110px]">
+<div
+    class="flex flex-row items-center justify-center"
+    style="opacity: {$lapTimesWidgetSettings?.opacity / 100}"
+>
+    <table
+        class="bg-secondary-content rounded-md"
+        style="width: {$lapTimesWidgetSettings?.width}px"
+    >
         <tbody>
             {#each $lapTimes as { lap, lap_time }}
                 <tr

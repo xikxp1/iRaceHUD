@@ -4,6 +4,8 @@ export type PlayerLapTimes = PlayerLapTimesData[]
 
 export type DeltaLastTime = string
 
+export type ProximityWidgetSettings = { enabled: boolean; x: number; y: number; gap_width: number }
+
 export type PlayerLapTimesData = { lap: number; lap_time: string }
 
 export type RelativeDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: string; license: string; player_relative_gap: string; is_player: boolean; is_in_pits: boolean; is_off_track: boolean; is_off_world: boolean }
@@ -12,15 +14,25 @@ export type StrengthOfField = number
 
 export type DeltaOptimalTime = string
 
+export type RelativeWidgetSettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
+
+export type TimerWidgetSettings = { enabled: boolean; x: number; y: number; lap_time_width: number; delta_enabled: boolean; delta_width: number; opacity: number }
+
 export type StandingsDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: string; license: string; leader_gap: string; best_lap: string; last_lap: string; is_player: boolean; is_leader: boolean; is_in_pits: boolean }
 
 export type GearBlinkRpm = number
+
+export type MainWidgetSettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
 
 export type TelemetryGraph = { ts: number; throttle: number; brake: number; abs_active: boolean }
 
 export type Speed = number
 
+export type TelemetryWidgetSettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
+
 export type GearShiftRpm = number
+
+export type SubTimerWidgetSettings = { enabled: boolean; x: number; y: number; session_state_width: number; gap_enabled: boolean; gap_width: number; opacity: number }
 
 export type Lap = number
 
@@ -28,7 +40,11 @@ export type LapsTotal = number
 
 export type Active = boolean
 
+export type StandingsWidgetSettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
+
 export type TrackId = number
+
+export type TrackMapWidgetSettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
 
 export type PositionsTotal = number
 
@@ -41,6 +57,8 @@ export type Standings = StandingsDriver[]
 export type SessionState = string
 
 export type Relative = RelativeDriver[]
+
+export type LapTimesWidgetSettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
 
 export type RaceLaps = number
 

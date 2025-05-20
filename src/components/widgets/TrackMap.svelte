@@ -6,6 +6,7 @@
     } from "$lib/types/telemetry";
     import { trackID, trackMap } from "$lib/telemetry/telemetry.svelte";
     import { onMount } from "svelte";
+    import { trackMapWidgetSettings } from "$lib/settings/settings.svelte";
 
     type TrackMapLocal = TrackMapDriver & {
         x: number;
@@ -43,23 +44,27 @@
 
     function calculateStartFinishLine() {
         if (!trackPathElement) return;
-        
+
         // Get point at the offset position
-        const point = trackPathElement.getPointAtLength(offset * trackPathLength);
-        
+        const point = trackPathElement.getPointAtLength(
+            offset * trackPathLength,
+        );
+
         // Get point slightly ahead to calculate direction
         const delta = 0.001;
-        const nextPoint = trackPathElement.getPointAtLength((offset + delta) * trackPathLength);
-        
+        const nextPoint = trackPathElement.getPointAtLength(
+            (offset + delta) * trackPathLength,
+        );
+
         // Calculate tangent vector
         const dx = nextPoint.x - point.x;
         const dy = nextPoint.y - point.y;
         const length = Math.sqrt(dx * dx + dy * dy);
-        
+
         // Calculate perpendicular vector
         const perpX = -dy / length;
         const perpY = dx / length;
-        
+
         startFinishPoint = point;
         startFinishPerp = { x: perpX, y: perpY };
     }
@@ -133,8 +138,14 @@
     });
 </script>
 
-<div class="flex flex-row items-center justify-center opacity-75">
-    <div class="flex flex-col items-center justify-center w-[550px]">
+<div
+    class="flex flex-row items-center justify-center"
+    style="opacity: {$trackMapWidgetSettings?.opacity / 100}"
+>
+    <div
+        class="flex flex-col items-center justify-center"
+        style="width: {$trackMapWidgetSettings?.width}px"
+    >
         <svg
             fill="none"
             viewBox="0 0 1920 1080"
@@ -152,10 +163,14 @@
             />
             {#if startFinishPoint && startFinishPerp}
                 <line
-                    x1={startFinishPoint.x - startFinishPerp.x * START_LINE_LENGTH}
-                    y1={startFinishPoint.y - startFinishPerp.y * START_LINE_LENGTH}
-                    x2={startFinishPoint.x + startFinishPerp.x * START_LINE_LENGTH}
-                    y2={startFinishPoint.y + startFinishPerp.y * START_LINE_LENGTH}
+                    x1={startFinishPoint.x -
+                        startFinishPerp.x * START_LINE_LENGTH}
+                    y1={startFinishPoint.y -
+                        startFinishPerp.y * START_LINE_LENGTH}
+                    x2={startFinishPoint.x +
+                        startFinishPerp.x * START_LINE_LENGTH}
+                    y2={startFinishPoint.y +
+                        startFinishPerp.y * START_LINE_LENGTH}
                     stroke={startFinishColor}
                     stroke-width="12"
                 />

@@ -15,6 +15,7 @@
     import type { Rpm } from "$lib/types/telemetry";
     import NumberFlow, { continuous } from "@number-flow/svelte";
     import { onMount } from "svelte";
+    import { mainWidgetSettings } from "$lib/settings/settings.svelte";
 
     let gear_indicator: HTMLDivElement | undefined = $state();
     let rpm_indicator: HTMLProgressElement | undefined = $state();
@@ -68,8 +69,14 @@
     });
 </script>
 
-<div class="flex flex-row items-center justify-center opacity-75">
-    <div class="join w-[17%] bg-primary-content">
+<div
+    class="flex flex-row items-center justify-center"
+    style="opacity: {$mainWidgetSettings?.opacity / 100}"
+>
+    <div
+        class="join bg-primary-content"
+        style="width: {$mainWidgetSettings?.width}px"
+    >
         <div
             class="join-item flex flex-col items-center justify-center rounded-md w-1/4"
         >

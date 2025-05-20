@@ -2,6 +2,7 @@
     import { proximity } from "$lib/telemetry/telemetry.svelte";
     import type { Proximity } from "$lib/types/telemetry";
     import { onMount } from "svelte";
+    import { proximityWidgetSettings } from "$lib/settings/settings.svelte";
 
     let left_icon: HTMLImageElement | undefined = $state();
     let right_icon: HTMLImageElement | undefined = $state();
@@ -30,7 +31,10 @@
             alt=""
             style="opacity: 0;"
         />
-        <div class="flex w-[650px]"></div>
+        <div
+            class="flex"
+            style="width: {$proximityWidgetSettings?.gap_width}px"
+        ></div>
         <img
             bind:this={right_icon}
             src="/icons/alert.svg"

@@ -3,6 +3,8 @@
     import { onMount } from "svelte";
     import ProgressBar from "../utils/ProgressBar.svelte";
     import { telemetry } from "$lib/telemetry/telemetry.svelte";
+    import { telemetryWidgetSettings } from "$lib/settings/settings.svelte";
+
     let telemetryCanvas: HTMLCanvasElement | undefined = $state();
     let chart: Chart | undefined = $state();
 
@@ -109,11 +111,15 @@
     });
 </script>
 
-<div class="flex flex-row items-center justify-center opacity-75">
+<div
+    class="flex flex-row items-center justify-center"
+    style="opacity: {$telemetryWidgetSettings?.opacity / 100}"
+>
     <div
-        class="join w-[14%] bg-primary-content {abs
+        class="join bg-primary-content {abs
             ? 'outline outline-2 outline-secondary'
             : ''}"
+        style="width: {$telemetryWidgetSettings?.width}px"
     >
         <div
             class="join-item flex flex-row items-center justify-center rounded-md w-[82%] h-20"

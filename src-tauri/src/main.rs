@@ -3,6 +3,7 @@
 
 pub mod emitter;
 pub mod session;
+pub mod settings;
 pub mod telemetry;
 pub mod util;
 pub mod websocket;
@@ -24,6 +25,16 @@ use tokio::sync::Mutex;
 
 use crate::emitter::telemetry_emitter::TelemetryEmitter;
 use crate::session::session_data::SessionData;
+use crate::settings::widgets::lap_times::LapTimesWidgetSettings;
+use crate::settings::widgets::main::MainWidgetSettings;
+use crate::settings::widgets::proximity::ProximityWidgetSettings;
+use crate::settings::widgets::relative::RelativeWidgetSettings;
+use crate::settings::widgets::standings::StandingsWidgetSettings;
+use crate::settings::widgets::subtimer::SubTimerWidgetSettings;
+use crate::settings::widgets::telemetry::TelemetryWidgetSettings;
+use crate::settings::widgets::timer::TimerWidgetSettings;
+use crate::settings::widgets::track_map::TrackMapWidgetSettings;
+use crate::util::settings_commands_helper::{get_settings, set_settings};
 
 #[cfg(not(debug_assertions))]
 use tauri_plugin_updater::UpdaterExt;
@@ -165,6 +176,24 @@ async fn main() {
             unregister_event_emitter,
             set_autostart,
             get_autostart,
+            get_lap_times_widget_settings,
+            set_lap_times_widget_settings,
+            get_main_widget_settings,
+            set_main_widget_settings,
+            get_proximity_widget_settings,
+            set_proximity_widget_settings,
+            get_relative_widget_settings,
+            set_relative_widget_settings,
+            get_standings_widget_settings,
+            set_standings_widget_settings,
+            get_subtimer_widget_settings,
+            set_subtimer_widget_settings,
+            get_telemetry_widget_settings,
+            set_telemetry_widget_settings,
+            get_timer_widget_settings,
+            set_timer_widget_settings,
+            get_track_map_widget_settings,
+            set_track_map_widget_settings,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
@@ -275,4 +304,94 @@ async fn set_autostart(app: tauri::AppHandle, enabled: bool) {
 async fn get_autostart(app: tauri::AppHandle) -> bool {
     info!("Getting autostart status");
     app.autolaunch().is_enabled().unwrap_or(false)
+}
+
+#[tauri::command]
+async fn get_lap_times_widget_settings(app: tauri::AppHandle) -> LapTimesWidgetSettings {
+    get_settings(app, "lap_times")
+}
+
+#[tauri::command]
+async fn set_lap_times_widget_settings(app: tauri::AppHandle, settings: LapTimesWidgetSettings) {
+    set_settings(app, "lap_times", settings);
+}
+
+#[tauri::command]
+async fn get_main_widget_settings(app: tauri::AppHandle) -> MainWidgetSettings {
+    get_settings(app, "main")
+}
+
+#[tauri::command]
+async fn set_main_widget_settings(app: tauri::AppHandle, settings: MainWidgetSettings) {
+    set_settings(app, "main", settings);
+}
+
+#[tauri::command]
+async fn get_proximity_widget_settings(app: tauri::AppHandle) -> ProximityWidgetSettings {
+    get_settings(app, "proximity")
+}
+
+#[tauri::command]
+async fn set_proximity_widget_settings(app: tauri::AppHandle, settings: ProximityWidgetSettings) {
+    set_settings(app, "proximity", settings);
+}
+
+#[tauri::command]
+async fn get_relative_widget_settings(app: tauri::AppHandle) -> RelativeWidgetSettings {
+    get_settings(app, "relative")
+}
+
+#[tauri::command]
+async fn set_relative_widget_settings(app: tauri::AppHandle, settings: RelativeWidgetSettings) {
+    set_settings(app, "relative", settings);
+}
+
+#[tauri::command]
+async fn get_standings_widget_settings(app: tauri::AppHandle) -> StandingsWidgetSettings {
+    get_settings(app, "standings")
+}
+
+#[tauri::command]
+async fn set_standings_widget_settings(app: tauri::AppHandle, settings: StandingsWidgetSettings) {
+    set_settings(app, "standings", settings);
+}
+
+#[tauri::command]
+async fn get_subtimer_widget_settings(app: tauri::AppHandle) -> SubTimerWidgetSettings {
+    get_settings(app, "subtimer")
+}
+
+#[tauri::command]
+async fn set_subtimer_widget_settings(app: tauri::AppHandle, settings: SubTimerWidgetSettings) {
+    set_settings(app, "subtimer", settings);
+}
+
+#[tauri::command]
+async fn get_telemetry_widget_settings(app: tauri::AppHandle) -> TelemetryWidgetSettings {
+    get_settings(app, "telemetry")
+}
+
+#[tauri::command]
+async fn set_telemetry_widget_settings(app: tauri::AppHandle, settings: TelemetryWidgetSettings) {
+    set_settings(app, "telemetry", settings);
+}
+
+#[tauri::command]
+async fn get_timer_widget_settings(app: tauri::AppHandle) -> TimerWidgetSettings {
+    get_settings(app, "timer")
+}
+
+#[tauri::command]
+async fn set_timer_widget_settings(app: tauri::AppHandle, settings: TimerWidgetSettings) {
+    set_settings(app, "timer", settings);
+}
+
+#[tauri::command]
+async fn get_track_map_widget_settings(app: tauri::AppHandle) -> TrackMapWidgetSettings {
+    get_settings(app, "track_map")
+}
+
+#[tauri::command]
+async fn set_track_map_widget_settings(app: tauri::AppHandle, settings: TrackMapWidgetSettings) {
+    set_settings(app, "track_map", settings);
 }

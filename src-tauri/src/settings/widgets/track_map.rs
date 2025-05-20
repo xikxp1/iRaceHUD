@@ -1,0 +1,11 @@
+use serde::{Deserialize, Serialize};
+use specta::Type;
+
+#[derive(Type, Serialize, Deserialize, Clone)]
+pub struct TrackMapWidgetSettings {
+    pub enabled: bool,
+    pub x: i32,
+    pub y: i32,
+    pub width: u32,
+    pub opacity: u32,
+}
