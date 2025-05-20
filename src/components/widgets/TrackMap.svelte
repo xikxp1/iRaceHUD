@@ -3,10 +3,12 @@
         TrackId,
         TrackMap,
         TrackMapDriver,
+        TrackMapWidgetSettings,
     } from "$lib/types/telemetry";
-    import { trackID, trackMap } from "$lib/telemetry/telemetry.svelte";
-    import { onMount } from "svelte";
-    import { trackMapWidgetSettings } from "$lib/settings/settings.svelte";
+    import { trackID, trackMap } from "$lib/backend/telemetry.svelte";
+    import { onDestroy, onMount } from "svelte";
+
+    let { settings }: { settings: TrackMapWidgetSettings } = $props();
 
     type TrackMapLocal = TrackMapDriver & {
         x: number;
@@ -112,6 +114,9 @@
         trackMapCars = track_map;
     }
 
+    let unsubscribe_track_id: () => void = () => {};
+    let unsubscribe_track_map: () => void = () => {};
+
     onMount(async () => {
         await Promise.all([
             fetch("/track_info_data/track_info.json")
@@ -126,25 +131,32 @@
                 }),
         ]);
 
-        trackID.subscribe((value) => {
+        unsubscribe_track_id = trackID.subscribe((value) => {
             onTrackId(value);
         });
 
         onTrackId($trackID);
 
-        trackMap.subscribe((value) => onTrackMap(value));
+        unsubscribe_track_map = trackMap.subscribe((value) =>
+            onTrackMap(value),
+        );
 
         onTrackMap($trackMap);
+    });
+
+    onDestroy(() => {
+        unsubscribe_track_id();
+        unsubscribe_track_map();
     });
 </script>
 
 <div
     class="flex flex-row items-center justify-center"
-    style="opacity: {$trackMapWidgetSettings?.opacity / 100}"
+    style="opacity: {settings.opacity / 100}"
 >
     <div
         class="flex flex-col items-center justify-center"
-        style="width: {$trackMapWidgetSettings?.width}px"
+        style="width: {settings.width}px"
     >
         <svg
             fill="none"

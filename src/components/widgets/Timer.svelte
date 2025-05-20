@@ -3,9 +3,11 @@
         deltaLastTime,
         deltaOptimalTime,
         lapTime,
-    } from "$lib/telemetry/telemetry.svelte";
+    } from "$lib/backend/telemetry.svelte";
     import { Duration } from "luxon";
-    import { timerWidgetSettings } from "$lib/settings/settings.svelte";
+    import type { TimerWidgetSettings } from "$lib/types/telemetry";
+
+    let { settings }: { settings: TimerWidgetSettings } = $props();
 
     let lapTimeFormatted = $derived(
         Duration.fromObject({ seconds: $lapTime }).toFormat("m:ss.SSS"),
@@ -14,13 +16,13 @@
 
 <div
     class="flex flex-row items-center justify-center"
-    style="opacity: {$timerWidgetSettings?.opacity / 100}"
+    style="opacity: {settings.opacity / 100}"
 >
     <div class="join flex flex-row bg-primary-content rounded-md">
-        {#if $timerWidgetSettings?.delta_enabled}
+        {#if settings.delta_enabled}
             <div
                 class="join-item flex flex-col items-end justify-center"
-                style="width: {$timerWidgetSettings?.delta_width}px"
+                style="width: {settings.delta_width}px"
             >
                 <div class="text-primary text-xl font-square">
                     {$deltaOptimalTime}
@@ -32,19 +34,19 @@
         {/if}
         <div
             class="join-item flex flex-col items-center justify-center"
-            style="width: {$timerWidgetSettings?.lap_time_width}px"
+            style="width: {settings.lap_time_width}px"
         >
             <div class="text-primary text-3xl font-square">
                 {lapTimeFormatted}
             </div>
         </div>
-        {#if $timerWidgetSettings?.delta_enabled}
+        {#if settings.delta_enabled}
             <div
                 class="join-item divider divider-horizontal divider-primary w-[2px]"
             ></div>
             <div
                 class="join-item flex flex-col items-start justify-center"
-                style="width: {$timerWidgetSettings?.delta_width}px"
+                style="width: {settings.delta_width}px"
             >
                 <div class="text-primary text-xl font-square">
                     {$deltaLastTime}

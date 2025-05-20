@@ -22,6 +22,7 @@ use tauri::{WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_log::{Target, TargetKind};
 use tokio::sync::Mutex;
+use websocket::WebSocketServer;
 
 use crate::emitter::telemetry_emitter::TelemetryEmitter;
 use crate::session::session_data::SessionData;
@@ -40,6 +41,7 @@ use crate::util::settings_commands_helper::{get_settings, set_settings};
 use tauri_plugin_updater::UpdaterExt;
 
 static WINDOW: OnceLock<tauri::WebviewWindow> = OnceLock::new();
+static WS_SERVER: OnceLock<WebSocketServer> = OnceLock::new();
 const RETRY_TIMEOUT_SECS: u64 = 5;
 const SESSION_UPDATE_PERIOD_MILLIS: u64 = 25;
 const SLOW_VAR_RESET_TICKS: u32 = 50;
@@ -144,8 +146,16 @@ async fn main() {
             let emitter = TelemetryEmitter::default();
             app.manage(Mutex::new(emitter));
 
+            // Initialize WebSocket server
+            let server = WebSocketServer::new();
+            let server_clone = server.clone();
+            let _ = WS_SERVER
+                .set(server)
+                .map_err(|err| error!("Failed to set WebSocket server: {:?}", err));
+
+            // Run WebSocket server in a separate task
             tokio::spawn(async move {
-                TelemetryEmitter::init().await;
+                server_clone.run("127.0.0.1:8384").await;
             });
 
             let window = app

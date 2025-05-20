@@ -1,5 +1,8 @@
 <script lang="ts">
-    import type { StandingsDriver } from "$lib/types/telemetry";
+    import type {
+        StandingsDriver,
+        StandingsWidgetSettings,
+    } from "$lib/types/telemetry";
     import { onDestroy, onMount } from "svelte";
     import { flip } from "svelte/animate";
     import Badge from "../utils/Badge.svelte";
@@ -10,8 +13,9 @@
         raceLaps,
         standings,
         strengthOfField,
-    } from "$lib/telemetry/telemetry.svelte";
-    import { standingsWidgetSettings } from "$lib/settings/settings.svelte";
+    } from "$lib/backend/telemetry.svelte";
+
+    let { settings }: { settings: StandingsWidgetSettings } = $props();
 
     type LocalStandings = StandingsDriver & {
         position_change: number;
@@ -40,28 +44,33 @@
         current_standings = new_standings;
     }
 
+    let unsubscribe_standings: () => void = () => {};
+
     onMount(() => {
         interval = setInterval(() => {
             show_best_lap = !show_best_lap;
         }, SWITCH_INTERVAL);
 
-        standings.subscribe((value) => on_standings(value));
+        unsubscribe_standings = standings.subscribe((value) =>
+            on_standings(value),
+        );
 
         on_standings($standings);
     });
 
     onDestroy(() => {
         clearInterval(interval);
+        unsubscribe_standings();
     });
 </script>
 
 <div
     class="flex flex-row items-center justify-center"
-    style="opacity: {$standingsWidgetSettings?.opacity / 100}"
+    style="opacity: {settings.opacity / 100}"
 >
     <div
         class="flex flex-col bg-primary-content rounded-l-md"
-        style="width: {$standingsWidgetSettings?.width}px"
+        style="width: {settings.width}px"
     >
         <div class="flex flex-row items-center justify-center">
             <div class="flex flex-row items-center justify-start w-1/6 pl-2">

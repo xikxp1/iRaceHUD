@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
-#[derive(Type, Serialize, Deserialize, Default, Clone)]
+#[derive(Default, Type, Serialize, Deserialize, Clone)]
 pub struct MainWidgetSettings {
     pub enabled: bool,
     pub x: i32,

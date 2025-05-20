@@ -1,9 +1,11 @@
 <script lang="ts">
     import { Chart } from "chart.js/auto";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import ProgressBar from "../utils/ProgressBar.svelte";
-    import { telemetry } from "$lib/telemetry/telemetry.svelte";
-    import { telemetryWidgetSettings } from "$lib/settings/settings.svelte";
+    import { telemetry } from "$lib/backend/telemetry.svelte";
+    import type { TelemetryWidgetSettings } from "$lib/types/telemetry";
+
+    let { settings }: { settings: TelemetryWidgetSettings } = $props();
 
     let telemetryCanvas: HTMLCanvasElement | undefined = $state();
     let chart: Chart | undefined = $state();
@@ -89,8 +91,10 @@
         ],
     };
 
+    let unsubscribe_telemetry: () => void = () => {};
+
     onMount(async () => {
-        telemetry.subscribe((data) => {
+        unsubscribe_telemetry = telemetry.subscribe((data) => {
             throttle = data.throttle;
             brake = data.brake;
             abs = data.abs_active;
@@ -109,17 +113,21 @@
             }
         });
     });
+
+    onDestroy(() => {
+        unsubscribe_telemetry();
+    });
 </script>
 
 <div
     class="flex flex-row items-center justify-center"
-    style="opacity: {$telemetryWidgetSettings?.opacity / 100}"
+    style="opacity: {settings.opacity / 100}"
 >
     <div
         class="join bg-primary-content {abs
             ? 'outline outline-2 outline-secondary'
             : ''}"
-        style="width: {$telemetryWidgetSettings?.width}px"
+        style="width: {settings.width}px"
     >
         <div
             class="join-item flex flex-row items-center justify-center rounded-md w-[82%] h-20"

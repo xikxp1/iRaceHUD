@@ -19,31 +19,31 @@
     async function handleEnabledChange(event: Event) {
         if (!settings) return;
         settings.enabled = (event.target as HTMLInputElement).checked;
-        invoke("set_main_widget_settings", {settings: settings});
+        invoke("set_main_widget_settings", { settings: settings });
     }
 
     async function handleWidthChange(event: Event) {
         if (!settings) return;
         settings.width = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_main_widget_settings", {settings: settings});
+        invoke("set_main_widget_settings", { settings: settings });
     }
 
     async function handleHorizontalOffsetChange(event: Event) {
         if (!settings) return;
         settings.x = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_main_widget_settings", {settings: settings});
+        invoke("set_main_widget_settings", { settings: settings });
     }
 
     async function handleVerticalOffsetChange(event: Event) {
         if (!settings) return;
         settings.y = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_main_widget_settings", {settings: settings});
+        invoke("set_main_widget_settings", { settings: settings });
     }
 
     async function handleOpacityChange(event: Event) {
         if (!settings) return;
         settings.opacity = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_main_widget_settings", {settings: settings});
+        invoke("set_main_widget_settings", { settings: settings });
     }
 </script>
 

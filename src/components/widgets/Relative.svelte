@@ -1,17 +1,19 @@
 <script lang="ts">
     import Badge from "../utils/Badge.svelte";
     import { getBadgeColor } from "$lib/utils";
-    import { relative } from "$lib/telemetry/telemetry.svelte";
-    import { relativeWidgetSettings } from "$lib/settings/settings.svelte";
+    import { relative } from "$lib/backend/telemetry.svelte";
+    import type { RelativeWidgetSettings } from "$lib/types/telemetry";
+
+    let { settings }: { settings: RelativeWidgetSettings } = $props();
 </script>
 
 <div
     class="flex flex-row items-center justify-center"
-    style="opacity: {$relativeWidgetSettings?.opacity / 100}"
+    style="opacity: {settings.opacity / 100}"
 >
     <table
         class="bg-secondary-content rounded-md"
-        style="width: {$relativeWidgetSettings?.width}px"
+        style="width: {settings.width}px"
     >
         <tbody>
             {#each $relative as rel}

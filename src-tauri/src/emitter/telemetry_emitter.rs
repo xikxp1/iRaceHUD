@@ -1,26 +1,19 @@
 use std::{
-    collections::{HashMap, HashSet}, str::FromStr, sync::Arc
+    collections::{HashMap, HashSet},
+    str::FromStr,
 };
 
 use eyre::Result;
-use log::{error, info};
-use serde::Serialize;
+use log::error;
 use strum::IntoEnumIterator;
-use tokio::sync::OnceCell;
 
 use crate::{
-    emitter::emittable_event::{EmittableEvent, TelemetryEvent, EmittableValue},
+    emitter::emittable_event::{EmittableEvent, EmittableValue, TelemetryEvent},
     session::session_data::SessionData,
-    websocket::WebSocketServer,
+    WS_SERVER,
 };
 
-static WS_SERVER: OnceCell<Arc<WebSocketServer>> = OnceCell::const_new();
-
-#[derive(Serialize)]
-struct WsEvent<'a> {
-    event: &'a str,
-    data: &'a dyn EmittableValue,
-}
+use super::ws_event::WsEvent;
 
 #[derive(Default)]
 pub struct TelemetryEmitter {
@@ -30,22 +23,14 @@ pub struct TelemetryEmitter {
 }
 
 impl TelemetryEmitter {
-    pub async fn init() {
-        let server = Arc::new(WebSocketServer::new());
-        let server_clone = server.clone();
-
-        tokio::spawn(async move {
-            server_clone.run("127.0.0.1:8384").await;
-        });
-
-        if let Err(e) = WS_SERVER.set(server) {
-            error!("Failed to initialize WebSocket server: {:?}", e);
-        } else {
-            info!("WebSocket server initialized");
-        }
-    }
-
     pub fn emit_all(&mut self, session: &SessionData) -> Result<()> {
+        let ws_server = match WS_SERVER.get() {
+            Some(ws_server) => ws_server,
+            None => {
+                error!("WebSocket server not initialized");
+                return Ok(());
+            }
+        };
         for event in &self.registered_events {
             let telemetry_event = TelemetryEvent::from_str(event).ok();
             if telemetry_event.is_none() {
@@ -65,13 +50,11 @@ impl TelemetryEmitter {
 
             if should_emit {
                 // Emit via WebSocket if available
-                if let Some(ws_server) = WS_SERVER.get() {
-                    let ws_event = WsEvent {
-                        event: event.as_str(),
-                        data: event_data.as_ref(),
-                    };
-                    ws_server.broadcast(&ws_event);
-                }
+                let ws_event = WsEvent {
+                    event: event.as_str(),
+                    data: event_data.as_ref(),
+                };
+                ws_server.broadcast(&ws_event);
 
                 self.latest_events.insert(event.to_string(), event_data);
                 self.forced_events.remove(event);

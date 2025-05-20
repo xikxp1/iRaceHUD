@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
-#[derive(Type, Serialize, Deserialize, Clone)]
+#[derive(Default, Type, Serialize, Deserialize, Clone)]
 pub struct RelativeWidgetSettings {
     pub enabled: bool,
     pub x: i32,

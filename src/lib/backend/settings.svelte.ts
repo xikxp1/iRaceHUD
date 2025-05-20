@@ -1,7 +1,7 @@
 import type { LapTimesWidgetSettings, MainWidgetSettings, ProximityWidgetSettings, RelativeWidgetSettings, StandingsWidgetSettings, SubTimerWidgetSettings, TelemetryWidgetSettings, TimerWidgetSettings, TrackMapWidgetSettings } from "$lib/types/telemetry";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import { readable } from "svelte/store";
+import { wsClient } from './ws_client';
 
 function createSettingsStore<T>(widget: string) {
     return readable<T>(undefined, (set) => {
@@ -9,18 +9,17 @@ function createSettingsStore<T>(widget: string) {
             set(settings as T);
         });
 
-        let unlisten: () => void;
-
-        listen<T>(`${widget}_widget_settings_changed`, (event) => {
-            set(event.payload);
-        }).then((fn) => {
-            unlisten = fn;
+        // Subscribe to WebSocket updates for this widget's settings
+        wsClient.subscribe(`${widget}_widget_settings_changed`, (_data: T) => {
+            invoke(`get_${widget}_widget_settings`).then((settings) => {
+                console.log(`${widget}_widget_settings_changed`, settings);
+                set(settings as T);
+            });
         });
 
         return () => {
-            if (unlisten) {
-                unlisten();
-            }
+            // Cleanup subscription when store is unsubscribed
+            wsClient.unsubscribe(`${widget}_widget_settings_changed`);
         };
     });
 }

@@ -11,11 +11,12 @@
         positionsTotal,
         rpm,
         speed,
-    } from "$lib/telemetry/telemetry.svelte";
-    import type { Rpm } from "$lib/types/telemetry";
+    } from "$lib/backend/telemetry.svelte";
+    import type { MainWidgetSettings, Rpm } from "$lib/types/telemetry";
     import NumberFlow, { continuous } from "@number-flow/svelte";
-    import { onMount } from "svelte";
-    import { mainWidgetSettings } from "$lib/settings/settings.svelte";
+    import { onDestroy, onMount } from "svelte";
+
+    let { settings }: { settings: MainWidgetSettings } = $props();
 
     let gear_indicator: HTMLDivElement | undefined = $state();
     let rpm_indicator: HTMLProgressElement | undefined = $state();
@@ -60,23 +61,26 @@
         }
     }
 
+    let unsubscribe_rpm: () => void = () => {};
+
     onMount(() => {
-        rpm.subscribe((value) => {
+        unsubscribe_rpm = rpm.subscribe((value) => {
             on_rpm(value);
         });
 
         on_rpm($rpm);
     });
+
+    onDestroy(() => {
+        unsubscribe_rpm();
+    });
 </script>
 
 <div
     class="flex flex-row items-center justify-center"
-    style="opacity: {$mainWidgetSettings?.opacity / 100}"
+    style="opacity: {settings.opacity / 100}"
 >
-    <div
-        class="join bg-primary-content"
-        style="width: {$mainWidgetSettings?.width}px"
-    >
+    <div class="join bg-primary-content" style="width: {settings.width}px">
         <div
             class="join-item flex flex-col items-center justify-center rounded-md w-1/4"
         >

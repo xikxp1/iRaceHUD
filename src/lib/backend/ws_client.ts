@@ -73,10 +73,11 @@ export class WebSocketClient {
       const data = new Uint8Array(event.data);
       const [eventName, eventData] = decode(data) as WsEvent;
       const handler = this.messageHandlers.get(eventName) as WsMessageHandler<T> | undefined;
-      
+
       if (handler) {
         try {
           const decodedData = eventData as T;
+          // console.log(`event: ${eventName}, data: ${JSON.stringify(decodedData)}`);
           handler(decodedData);
         } catch (error) {
           console.error(`Error decoding data for ${eventName}: ${error}\nRaw event data:`, eventData);

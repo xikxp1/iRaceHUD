@@ -1,8 +1,12 @@
 <script lang="ts">
-    import { proximity } from "$lib/telemetry/telemetry.svelte";
-    import type { Proximity } from "$lib/types/telemetry";
-    import { onMount } from "svelte";
-    import { proximityWidgetSettings } from "$lib/settings/settings.svelte";
+    import { proximity } from "$lib/backend/telemetry.svelte";
+    import type {
+        Proximity,
+        ProximityWidgetSettings,
+    } from "$lib/types/telemetry";
+    import { onDestroy, onMount } from "svelte";
+
+    let { settings }: { settings: ProximityWidgetSettings } = $props();
 
     let left_icon: HTMLImageElement | undefined = $state();
     let right_icon: HTMLImageElement | undefined = $state();
@@ -16,10 +20,18 @@
         }
     }
 
+    let unsubscribe_proximity: () => void = () => {};
+
     onMount(() => {
-        proximity.subscribe((value) => on_proximity(value));
+        unsubscribe_proximity = proximity.subscribe((value) =>
+            on_proximity(value),
+        );
 
         on_proximity($proximity);
+    });
+
+    onDestroy(() => {
+        unsubscribe_proximity();
     });
 </script>
 
@@ -31,10 +43,7 @@
             alt=""
             style="opacity: 0;"
         />
-        <div
-            class="flex"
-            style="width: {$proximityWidgetSettings?.gap_width}px"
-        ></div>
+        <div class="flex" style="width: {settings.gap_width}px"></div>
         <img
             bind:this={right_icon}
             src="/icons/alert.svg"
