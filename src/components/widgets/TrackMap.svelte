@@ -17,6 +17,8 @@
 
     let trackPathElement: SVGPathElement | undefined = $state();
     let trackPathLength: number = 0;
+    let trackBounds: { x: number; y: number; width: number; height: number } =
+        $state({ x: 0, y: 0, width: 0, height: 0 });
 
     let trackInfo: { [k: number]: any } = {};
     let trackSettings: { [k: number]: any } = {};
@@ -71,6 +73,19 @@
         startFinishPerp = { x: perpX, y: perpY };
     }
 
+    function calculateTrackBounds() {
+        if (!trackPathElement) return;
+
+        const bbox = trackPathElement.getBBox();
+        const padding = 200; // Add some padding around the track
+        trackBounds = {
+            x: bbox.x - padding,
+            y: bbox.y - padding,
+            width: bbox.width + padding * 2,
+            height: bbox.height + padding * 2,
+        };
+    }
+
     function onTrackId(trackId: TrackId) {
         track_id = trackId;
         let path = trackInfo[track_id]?.activePath;
@@ -88,6 +103,7 @@
         trackPathElement.setAttribute("d", trackPath);
         trackPathLength = trackPathElement.getTotalLength();
         calculateStartFinishLine();
+        calculateTrackBounds();
     }
 
     function onTrackMap(value: TrackMap) {
@@ -160,10 +176,10 @@
     >
         <svg
             fill="none"
-            viewBox="0 0 1920 1080"
-            width="100%"
-            height="100%"
-            overflow="visible"
+            viewBox="{trackBounds.x} {trackBounds.y} {trackBounds.width} {trackBounds.height}"
+            width="70%"
+            height="70%"
+            preserveAspectRatio="xMidYMid meet"
             xmlns="http://www.w3.org/2000/svg"
         >
             <path d={trackPath} stroke={trackBorderColor} stroke-width="30" />
