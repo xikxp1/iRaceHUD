@@ -76,6 +76,15 @@ async fn main() {
                 .filter(|metadata| !metadata.target().contains("tungstenite"))
                 .build(),
         )
+        .plugin(
+            tauri_plugin_prevent_default::Builder::new()
+                .with_flags(tauri_plugin_prevent_default::Flags::debug())
+                .platform(tauri_plugin_prevent_default::PlatformOptions {
+                    general_autofill: false,
+                    password_autosave: false,
+                })
+                .build(),
+        )
         .setup(|app| {
             #[cfg(not(debug_assertions))]
             {
