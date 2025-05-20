@@ -21,6 +21,7 @@
     "@number-flow/svelte": "0.3.7",
     "@tauri-apps/api": "2.5.0",
     "@tauri-apps/plugin-autostart": "2.3.0",
+    "@tauri-apps/plugin-global-shortcut": "2.2.1",
     "@tauri-apps/plugin-log": "2.4.0",
     "@tauri-apps/plugin-store": "2.2.0",
     "@tauri-apps/plugin-updater": "2.7.1",

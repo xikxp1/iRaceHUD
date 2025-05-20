@@ -4,8 +4,6 @@ export type PlayerLapTimes = PlayerLapTimesData[]
 
 export type DeltaLastTime = string
 
-export type TimerWidgetSettings = { enabled: boolean; x: number; y: number; lap_time_width: number; delta_enabled: boolean; delta_width: number; opacity: number }
-
 export type PlayerLapTimesData = { lap: number; lap_time: string }
 
 export type RelativeDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: string; license: string; player_relative_gap: string; is_player: boolean; is_in_pits: boolean; is_off_track: boolean; is_off_world: boolean }
@@ -43,6 +41,8 @@ export type LapsTotal = number
 export type Active = boolean
 
 export type TrackId = number
+
+export type TimerWidgetSettings = { enabled: boolean; x: number; y: number; lap_time_width: number; delta_enabled: boolean; delta_width: number; opacity: number }
 
 export type PositionsTotal = number
 

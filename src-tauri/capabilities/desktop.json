@@ -12,6 +12,7 @@
     "core:default",
     "updater:default",
     "autostart:default",
-    "store:default"
+    "store:default",
+    "global-shortcut:default"
   ]
 }

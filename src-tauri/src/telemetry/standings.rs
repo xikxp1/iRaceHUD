@@ -87,7 +87,8 @@ impl EmittableEvent for Standings {
                 is_player: driver.is_player,
                 is_leader: driver.is_leader,
                 is_in_pits: driver.is_in_pits,
-            }).collect::<Vec<StandingsDriver>>();
+            })
+            .collect::<Vec<StandingsDriver>>();
         Box::new(drivers)
     }
 

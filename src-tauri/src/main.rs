@@ -20,6 +20,7 @@ use tauri::{
 };
 use tauri::{WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 use tauri_plugin_log::{Target, TargetKind};
 use tokio::sync::Mutex;
 use websocket::WebSocketServer;
@@ -46,6 +47,34 @@ const RETRY_TIMEOUT_SECS: u64 = 5;
 const SESSION_UPDATE_PERIOD_MILLIS: u64 = 25;
 const SLOW_VAR_RESET_TICKS: u32 = 50;
 
+fn open_settings_window(app_handle: tauri::AppHandle) {
+    match app_handle.get_webview_window("settings") {
+        Some(window) => {
+            info!("Settings window already open");
+            if let Err(err) = window.unminimize() {
+                warn!("Failed to unminimize settings window: {:?}", err);
+            };
+            if let Err(err) = window.set_focus() {
+                warn!("Failed to focus settings window: {:?}", err);
+            };
+        }
+        None => {
+            if let Err(err) = WebviewWindowBuilder::new(
+                &app_handle,
+                "settings",
+                WebviewUrl::App("/settings".into()),
+            )
+            .title("iRaceHUD Settings")
+            .resizable(false)
+            .center()
+            .build()
+            {
+                error!("Failed to build settings window: {:?}", err);
+            }
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     let _ = color_eyre::install();
@@ -55,7 +84,19 @@ async fn main() {
 
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
+    let ctrl_f11_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::F11);
+
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(move |app, shortcut, event| {
+                    if shortcut == &ctrl_f11_shortcut && event.state() == ShortcutState::Pressed {
+                        info!("Ctrl+F11 shortcut pressed, opening settings");
+                        open_settings_window(app.clone());
+                    }
+                })
+                .build(),
+        )
         .plugin(tauri_plugin_single_instance::init(|_, args, cwd| {
             info!(
                 "Single instance started with args: {:?}, cwd: {:?}",
@@ -85,7 +126,7 @@ async fn main() {
                 })
                 .build(),
         )
-        .setup(|app| {
+        .setup(move |app| {
             #[cfg(not(debug_assertions))]
             {
                 let handle = app.handle().clone();
@@ -103,7 +144,8 @@ async fn main() {
             .enabled(false)
             .build(app)?;
             let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
-            let settings = MenuItemBuilder::with_id("settings", "Settings").build(app)?;
+            let settings =
+                MenuItemBuilder::with_id("settings", "Settings (Ctrl+F11)").build(app)?;
             let tray_menu = MenuBuilder::new(app)
                 .item(&version)
                 .item(&settings)
@@ -121,31 +163,7 @@ async fn main() {
                             app_handle.exit(0);
                         } else if event.id().as_ref() == "settings" {
                             info!("Settings menu item clicked, opening settings");
-                            match app_handle.get_webview_window("settings") {
-                                Some(window) => {
-                                    info!("Settings window already open");
-                                    if let Err(err) = window.unminimize() {
-                                        warn!("Failed to unminimize settings window: {:?}", err);
-                                    };
-                                    if let Err(err) = window.set_focus() {
-                                        warn!("Failed to focus settings window: {:?}", err);
-                                    };
-                                }
-                                None => {
-                                    if let Err(err) = WebviewWindowBuilder::new(
-                                        &app_handle,
-                                        "settings",
-                                        WebviewUrl::App("/settings".into()),
-                                    )
-                                    .title("iRaceHUD Settings")
-                                    .resizable(false)
-                                    .center()
-                                    .build()
-                                    {
-                                        error!("Failed to build settings window: {:?}", err);
-                                    }
-                                }
-                            }
+                            open_settings_window(app_handle.clone());
                         }
                     }
                 })
@@ -187,6 +205,8 @@ async fn main() {
                     error!("Failed to connect: {:?}", err);
                 }
             });
+
+            app.global_shortcut().register(ctrl_f11_shortcut)?;
 
             Ok(())
         })
