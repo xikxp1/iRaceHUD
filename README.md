@@ -2,7 +2,33 @@
 
 [iRacing](https://www.iracing.com/) HUD overlay built in [Tauri](https://tauri.app/)
 
+## Installation
+
+You can download latest installer executable from the [releases page](https://github.com/xikxp1/iRaceHUD/releases/latest).
+
+You may be prompted to accept running the application by Microsoft Defender SmartScreen as iRaceHUD installer executables are not signed.
+
+iRaceHUD will update itself automatically on startup if new release is available.
+
 ## Development
+
+### Run in development mode
+
+Run iRaceHUD in development mode:
+
+```
+pnpm tauri dev
+```
+
+### Build application
+
+You can run
+
+```
+pnpm tauri build
+```
+
+to build production release locally. You'll need to set up signing keys to distribute installer, but generally this is not needed as application is built upon every commit to main branch by corresponding Github action.
 
 ### Recommended IDE Setup
 
