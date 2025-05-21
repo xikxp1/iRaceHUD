@@ -182,14 +182,48 @@
             preserveAspectRatio="xMidYMid meet"
             xmlns="http://www.w3.org/2000/svg"
         >
-            <path d={trackPath} stroke={trackBorderColor} stroke-width="30" />
+            <!-- Add a subtle shadow for depth -->
+            <filter id="shadow">
+                <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+            </filter>
+            
+            <!-- Track border with shadow -->
+            <path 
+                d={trackPath} 
+                stroke={trackBorderColor} 
+                stroke-width="30"
+                filter="url(#shadow)"
+            />
+            
+            <!-- Track with gradient -->
+            <defs>
+                <linearGradient id="trackGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color: {trackColor}; stop-opacity: 0.8"/>
+                    <stop offset="100%" style="stop-color: {trackColor}; stop-opacity: 1"/>
+                </linearGradient>
+            </defs>
+            
             <path
                 bind:this={trackPathElement}
                 d={trackPath}
-                stroke={trackColor}
+                stroke="url(#trackGradient)"
                 stroke-width="20"
             />
             {#if startFinishPoint && startFinishPerp}
+                <!-- Outline line -->
+                <line
+                    x1={startFinishPoint.x -
+                        startFinishPerp.x * START_LINE_LENGTH}
+                    y1={startFinishPoint.y -
+                        startFinishPerp.y * START_LINE_LENGTH}
+                    x2={startFinishPoint.x +
+                        startFinishPerp.x * START_LINE_LENGTH}
+                    y2={startFinishPoint.y +
+                        startFinishPerp.y * START_LINE_LENGTH}
+                    stroke={trackColor}
+                    stroke-width="16"
+                />
+                <!-- Main line -->
                 <line
                     x1={startFinishPoint.x -
                         startFinishPerp.x * START_LINE_LENGTH}
