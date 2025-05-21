@@ -3,6 +3,8 @@
     import { getTrackInfoState } from "$lib/stores/TrackInfoState.svelte";
     import { getTrackSettingsState } from "$lib/stores/TrackSettingsState.svelte";
 
+    let trackId: number = $derived(Number(page.params.track_id));
+
     const trackInfoState = getTrackInfoState();
     const trackSettingsState = getTrackSettingsState();
 
@@ -38,14 +40,14 @@
 {:else if page.params.track_id}
     <div class="flex flex-col items-center">
         <h3 class="text-lg font-bold">
-            {page.params.track_id}
-            {trackInfoState.data[Number(page.params.track_id)].trackName} ({trackInfoState
-                .data[Number(page.params.track_id)].configName})
+            {trackId}
+            {trackInfoState.data[trackId].trackName} ({trackInfoState.data[
+                trackId
+            ].configName})
         </h3>
         <span class="text-lg">
-            Offset: {trackSettingsState.data[Number(page.params.track_id)]
-                ?.offset} / Direction:
-            {trackSettingsState.data[Number(page.params.track_id)]?.direction}
+            Offset: {trackSettingsState.data[trackId]?.offset} / Direction:
+            {trackSettingsState.data[trackId]?.direction}
         </span>
         <svg
             fill="none"
@@ -55,12 +57,27 @@
         >
             <path
                 bind:this={path}
-                d={trackInfoState.data[Number(page.params.track_id)].activePath}
+                d={trackInfoState.data[trackId].activePath}
                 stroke="black"
                 stroke-width="30"
             />
+            {#each trackInfoState.data[trackId].turns as turn}
+                <text
+                    fill="black"
+                    transform={turn.transform}
+                    font-size={parseInt(turn.textContent) ? "36" : "0"}
+                    font-weight="bold"
+                    stroke="white"
+                    stroke-width="2"
+                    paint-order="stroke"
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                >
+                    {turn.textContent}
+                </text>
+            {/each}
             <image
-                href="/track_info_data/start_finish/{page.params.track_id}.svg"
+                href="/track_info_data/start_finish/{trackId}.svg"
                 x="0"
                 y="0"
                 width="1920"
