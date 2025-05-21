@@ -8,4 +8,6 @@ pub struct StandingsWidgetSettings {
     pub y: i32,
     pub width: u32,
     pub opacity: u32,
+    pub max_drivers: u32,
+    pub top_drivers: u32,
 }

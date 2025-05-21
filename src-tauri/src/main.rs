@@ -36,7 +36,7 @@ use crate::settings::widgets::subtimer::SubTimerWidgetSettings;
 use crate::settings::widgets::telemetry::TelemetryWidgetSettings;
 use crate::settings::widgets::timer::TimerWidgetSettings;
 use crate::settings::widgets::track_map::TrackMapWidgetSettings;
-use crate::util::settings_commands_helper::{get_settings, set_settings};
+use crate::util::settings_helper::{get_settings, set_settings};
 
 #[cfg(not(debug_assertions))]
 use tauri_plugin_updater::UpdaterExt;

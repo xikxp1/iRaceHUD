@@ -12,7 +12,6 @@ function createSettingsStore<T>(widget: string) {
         // Subscribe to WebSocket updates for this widget's settings
         wsClient.subscribe(`${widget}_widget_settings_changed`, (_data: T) => {
             invoke(`get_${widget}_widget_settings`).then((settings) => {
-                console.log(`${widget}_widget_settings_changed`, settings);
                 set(settings as T);
             });
         });

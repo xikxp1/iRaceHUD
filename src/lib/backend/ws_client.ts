@@ -77,7 +77,6 @@ export class WebSocketClient {
       if (handler) {
         try {
           const decodedData = eventData as T;
-          // console.log(`event: ${eventName}, data: ${JSON.stringify(decodedData)}`);
           handler(decodedData);
         } catch (error) {
           console.error(`Error decoding data for ${eventName}: ${error}\nRaw event data:`, eventData);

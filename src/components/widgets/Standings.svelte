@@ -27,6 +27,9 @@
     let show_best_lap = $state(false);
     let interval: NodeJS.Timeout;
 
+    const css = window.getComputedStyle(document.documentElement);
+    const splitBorderColor: string = `oklch(${css.getPropertyValue("--a")})`;
+
     function on_standings(value: StandingsDriver[]) {
         let new_standings: LocalStandings[] = [];
         value.forEach((st) => {
@@ -92,6 +95,9 @@
                         class="{st?.is_player
                             ? 'bg-secondary text-primary-content'
                             : 'odd:bg-secondary-content even:bg-primary-content text-primary'} h-[22px]"
+                        style={st?.split_after
+                            ? `border-bottom: solid 2px ${splitBorderColor};`
+                            : ""}
                         animate:flip
                     >
                         <td
@@ -171,6 +177,9 @@
                         class="{st?.is_player
                             ? 'bg-secondary text-primary-content'
                             : 'odd:bg-secondary-content even:bg-primary-content text-primary'} h-[22px]"
+                        style={st?.split_after
+                            ? `border-bottom: solid 2px ${splitBorderColor};`
+                            : ""}
                         animate:flip
                     >
                         <td class="text text-sm text-right pr-1">

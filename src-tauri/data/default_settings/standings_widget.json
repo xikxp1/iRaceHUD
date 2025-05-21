@@ -1,7 +1,9 @@
 {
   "settings": {
     "enabled": true,
+    "max_drivers": 10,
     "opacity": 75,
+    "top_drivers": 3,
     "width": 360,
     "x": -675,
     "y": -350

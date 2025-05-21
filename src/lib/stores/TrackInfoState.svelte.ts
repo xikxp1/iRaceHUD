@@ -18,7 +18,6 @@ class TrackInfoStateImpl implements TrackInfoState {
         try {
             const response = await fetch("/track_info_data/track_info.json");
             const data = await response.json() as TrackInfos;
-            console.log(data);
             this.data = data;
         } catch (error) {
             console.error("Error loading track info:", error);
