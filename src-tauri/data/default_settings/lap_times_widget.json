@@ -1,7 +1,9 @@
 {
+  "settings": {
     "enabled": true,
-    "x": 1800,
-    "y": 0,
+    "opacity": 75,
     "width": 110,
-    "opacity": 75
+    "x": 900,
+    "y": 0
+  }
 }

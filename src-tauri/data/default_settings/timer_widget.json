@@ -1,9 +1,11 @@
 {
-    "enabled": true,
-    "x": 0,
-    "y": -335,
-    "lap_time_width": 160,
+  "settings": {
     "delta_enabled": true,
     "delta_width": 75,
-    "opacity": 75
+    "enabled": true,
+    "lap_time_width": 160,
+    "opacity": 75,
+    "x": 0,
+    "y": -320
+  }
 }

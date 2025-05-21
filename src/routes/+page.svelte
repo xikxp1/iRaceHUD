@@ -137,7 +137,7 @@
                 <div class="middle">
                     <div
                         class="widget"
-                        style="margin-left: {mainSettings.x}px; margin-top: {mainSettings.y}px;"
+                        style="transform: translate({mainSettings.x}px, {mainSettings.y}px);"
                     >
                         <Main settings={mainSettings} />
                     </div>
@@ -150,7 +150,7 @@
             <div class="middle">
                 <div
                     class="widget"
-                    style="margin-left: {telemetrySettings.x}px; margin-top: {telemetrySettings.y}px;"
+                    style="transform: translate({telemetrySettings.x}px, {telemetrySettings.y}px);"
                 >
                     <Telemetry settings={telemetrySettings} />
                 </div>
@@ -162,7 +162,7 @@
             <div class="middle">
                 <div
                     class="widget"
-                    style="margin-left: {timerSettings.x}px; margin-top: {timerSettings.y}px;"
+                    style="transform: translate({timerSettings.x}px, {timerSettings.y}px);"
                 >
                     <Timer settings={timerSettings} />
                 </div>
@@ -174,7 +174,7 @@
             <div class="middle">
                 <div
                     class="widget"
-                    style="margin-left: {subtimerSettings.x}px; margin-top: {subtimerSettings.y}px;"
+                    style="transform: translate({subtimerSettings.x}px, {subtimerSettings.y}px);"
                 >
                     <Subtimer settings={subtimerSettings} />
                 </div>
@@ -186,7 +186,7 @@
             <div class="middle">
                 <div
                     class="widget"
-                    style="margin-left: {proximitySettings.x}px; margin-top: {proximitySettings.y}px;"
+                    style="transform: translate({proximitySettings.x}px, {proximitySettings.y}px);"
                 >
                     <Proximity settings={proximitySettings} />
                 </div>
@@ -198,7 +198,7 @@
             <div class="middle">
                 <div
                     class="widget"
-                    style="margin-left: {standingsSettings.x}px; margin-top: {standingsSettings.y}px;"
+                    style="transform: translate({standingsSettings.x}px, {standingsSettings.y}px);"
                 >
                     <Standings settings={standingsSettings} />
                 </div>
@@ -210,7 +210,7 @@
             <div class="middle">
                 <div
                     class="widget"
-                    style="margin-left: {trackMapSettings.x}px; margin-top: {trackMapSettings.y}px;"
+                    style="transform: translate({trackMapSettings.x}px, {trackMapSettings.y}px);"
                 >
                     <TrackMap settings={trackMapSettings} />
                 </div>
@@ -222,7 +222,7 @@
             <div class="middle">
                 <div
                     class="widget"
-                    style="margin-left: {lapTimesSettings.x}px; margin-top: {lapTimesSettings.y}px;"
+                    style="transform: translate({lapTimesSettings.x}px, {lapTimesSettings.y}px);"
                 >
                     <LapTimes settings={lapTimesSettings} />
                 </div>
@@ -234,7 +234,7 @@
             <div class="middle">
                 <div
                     class="widget"
-                    style="margin-left: {relativeSettings.x}px; margin-top: {relativeSettings.y}px;"
+                    style="transform: translate({relativeSettings.x}px, {relativeSettings.y}px);"
                 >
                     <Relative settings={relativeSettings} />
                 </div>
@@ -251,6 +251,7 @@
         left: 0;
         height: 100%;
         width: 100%;
+        overflow: hidden;
     }
 
     .middle {

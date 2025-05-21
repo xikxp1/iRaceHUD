@@ -1,6 +1,8 @@
 {
+  "settings": {
     "enabled": true,
+    "gap_width": 650,
     "x": 0,
-    "y": -135,
-    "gap_width": 650
+    "y": -70
+  }
 }
