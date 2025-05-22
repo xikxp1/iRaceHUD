@@ -93,8 +93,8 @@
                 {#each current_standings as st, index (st.car_id)}
                     <tr
                         class="{st?.is_player
-                            ? 'bg-secondary text-primary-content'
-                            : 'odd:bg-secondary-content even:bg-primary-content text-primary'} h-[22px]"
+                            ? 'text-secondary'
+                            : 'text-primary'} odd:bg-secondary-content even:bg-primary-content h-[22px]"
                         style={st?.split_after
                             ? `border-bottom: solid 2px ${splitBorderColor};`
                             : ""}
@@ -113,10 +113,10 @@
                         <td class="text text-sm pr-2 w-[48px]">
                             <Badge
                                 outlineClasses="text-center ring ring-2 ring-inset {st?.is_player
-                                    ? 'ring-primary-content'
+                                    ? 'ring-secondary'
                                     : 'ring-primary'}"
                                 textClasses="text-sm {st?.is_player
-                                    ? 'text-primary-content'
+                                    ? 'text-secondary'
                                     : 'text-primary'}"
                                 text={st?.car_number
                                     ? "#" + st?.car_number
@@ -148,9 +148,8 @@
                         </td>
                         <td
                             class="text text-sm text-right {st?.is_leader &&
-                            $raceLaps > 0 &&
-                            !st?.is_player
-                                ? 'text-secondary'
+                            $raceLaps > 0
+                                ? 'text-accent'
                                 : ''} pr-1 w-[35px]"
                         >
                             {#if st?.is_leader && $raceLaps > 0}
@@ -175,8 +174,8 @@
                 {#each current_standings as st, index (st.car_id)}
                     <tr
                         class="{st?.is_player
-                            ? 'bg-secondary text-primary-content'
-                            : 'odd:bg-secondary-content even:bg-primary-content text-primary'} h-[22px]"
+                            ? 'text-secondary'
+                            : 'text-primary'} odd:bg-secondary-content even:bg-primary-content h-[22px]"
                         style={st?.split_after
                             ? `border-bottom: solid 2px ${splitBorderColor};`
                             : ""}

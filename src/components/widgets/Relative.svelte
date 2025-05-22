@@ -19,8 +19,8 @@
             {#each $relative as rel}
                 <tr
                     class="{rel?.is_player
-                        ? 'bg-secondary text-primary-content'
-                        : 'odd:bg-secondary-content even:bg-primary-content text-primary'} h-[22px]"
+                        ? 'text-secondary'
+                        : 'text-primary'} odd:bg-secondary-content even:bg-primary-content h-[22px]"
                 >
                     <td class="text text-sm text-right pr-2 w-[30px]">
                         {#if rel?.position == 0}
@@ -32,10 +32,10 @@
                     <td class="text text-sm text-right pr-2 w-[48px]">
                         <Badge
                             outlineClasses="text-center ring ring-2 ring-inset {rel?.is_player
-                                ? 'ring-primary-content'
+                                ? 'ring-secondary'
                                 : 'ring-primary'}"
                             textClasses="text-sm text-right {rel?.is_player
-                                ? 'text-primary-content'
+                                ? 'text-secondary'
                                 : 'text-primary'}"
                             text={rel?.car_number ? "#" + rel?.car_number : ""}
                         />
