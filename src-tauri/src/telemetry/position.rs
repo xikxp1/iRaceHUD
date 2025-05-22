@@ -9,6 +9,6 @@ pub struct Position(u32);
 
 impl EmittableEvent for Position {
     fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
-        Box::new(session.position)
+        Box::new(session.class_position)
     }
 }

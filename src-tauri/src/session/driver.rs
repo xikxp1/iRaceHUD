@@ -4,6 +4,7 @@ use crate::util::signed_duration::SignedDuration;
 pub struct Driver {
     pub car_id: u32,
     pub position: u32,
+    pub class_position: u32,
     pub laps_completed: u32,
     pub lap_dist_pct: f32,
     pub total_completed: f32,

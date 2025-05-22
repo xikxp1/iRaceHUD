@@ -39,6 +39,7 @@ pub struct SessionData {
     pub player_car_id: u32,
     pub player_lap_times: Vec<LapTime>,
     pub position: u32,
+    pub class_position: u32,
     pub positions_total: u32,
     pub race_laps: u32,
     pub rpm: u32,
@@ -294,20 +295,35 @@ impl SessionData {
             .map(|(car_id, _)| *car_id)
             .collect();
 
+        let mut car_class_positions_count: HashMap<u32, u32> = HashMap::new();
+        let mut position_total: u32 = 0;
+
         for (position, car_id) in self.driver_positions.iter().enumerate() {
             let driver = self.drivers.get_mut(car_id);
             if driver.is_none() {
                 error!("Driver not found while updating position");
             }
             let driver = driver.unwrap();
+            let class_position = car_class_positions_count
+                .entry(driver.car_class_id)
+                .or_insert(0);
+            *class_position += 1;
+            driver.class_position = *class_position;
             driver.position = position as u32 + 1;
             if *car_id == self.player_car_id {
                 self.position = driver.position;
+                self.class_position = driver.class_position;
             }
-            if position == 0 {
+            if driver.car_class_id == self.player_car_class && driver.class_position == 1 {
                 self.leader_car_id = *car_id;
             }
+            if driver.car_class_id == self.player_car_class {
+                position_total += 1;
+            }
         }
+
+        // positions_total
+        self.positions_total = position_total;
 
         // gaps
         if !self.driver_positions.is_empty() {
@@ -479,10 +495,6 @@ impl SessionData {
                             continue;
                         }
 
-                        if car_class_id != self.player_car_class {
-                            continue;
-                        }
-
                         if car_id == self.player_car_id {
                             let car_class_est_lap_time = driver["CarClassEstLapTime"].as_f64();
                             if car_class_est_lap_time.is_none() {
@@ -512,11 +524,7 @@ impl SessionData {
                 }
             }
 
-            // positions_total
             if !self.drivers.is_empty() {
-                let positions_total = self.drivers.len() as u32;
-                self.positions_total = positions_total;
-
                 // strength_of_field
                 let strength_of_field = get_strength_of_field(self);
                 self.strength_of_field = strength_of_field;

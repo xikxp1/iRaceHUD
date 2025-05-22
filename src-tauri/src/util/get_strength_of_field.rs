@@ -8,6 +8,7 @@ pub fn get_strength_of_field(session: &SessionData) -> u32 {
     let sum_of_exp = session
         .drivers
         .values()
+        .filter(|driver| driver.car_class_id == session.player_car_class)
         .map(|driver| (-(driver.irating as f32) / BR1).exp())
         .sum::<f32>();
     (BR1 * (session.positions_total as f32 / sum_of_exp).ln()) as u32

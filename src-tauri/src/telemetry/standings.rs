@@ -80,9 +80,14 @@ impl EmittableEvent for Standings {
         let max_drivers_count = settings.max_drivers as usize;
         let top_drivers_count = settings.top_drivers as usize;
 
-        let mut drivers = session.drivers.values().cloned().collect::<Vec<Driver>>();
+        let mut drivers = session
+            .drivers
+            .values()
+            .filter(|driver| driver.car_class_id == session.player_car_class)
+            .cloned()
+            .collect::<Vec<Driver>>();
         drivers.sort_by(|a, b| a.position.cmp(&b.position));
-        let player_position = session.position as usize;
+        let player_position = session.class_position as usize;
         let mut split_after = false;
 
         let selected_drivers = if drivers.len() <= max_drivers_count {
@@ -144,8 +149,8 @@ impl EmittableEvent for Standings {
                 selected_drivers.push(drivers[player_position - 1].clone());
             }
             selected_drivers.extend(drivers_after);
-            split_after =
-                selected_drivers[top_drivers_count].position as usize != top_drivers_count + 1;
+            split_after = selected_drivers[top_drivers_count].class_position as usize
+                != top_drivers_count + 1;
             selected_drivers
         };
 
@@ -153,7 +158,7 @@ impl EmittableEvent for Standings {
             .iter()
             .map(|driver| StandingsDriver {
                 car_id: driver.car_id,
-                position: driver.position,
+                position: driver.class_position,
                 user_name: driver.user_name.clone(),
                 car_number: driver.car_number.clone(),
                 irating: format_irating(driver.irating),
@@ -164,7 +169,7 @@ impl EmittableEvent for Standings {
                 is_player: driver.is_player,
                 is_leader: driver.is_leader,
                 is_in_pits: driver.is_in_pits,
-                split_after: (driver.position as usize == top_drivers_count) && split_after,
+                split_after: (driver.class_position as usize == top_drivers_count) && split_after,
             })
             .collect::<Vec<StandingsDriver>>();
         Box::new(drivers)
