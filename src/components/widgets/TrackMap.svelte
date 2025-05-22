@@ -29,6 +29,7 @@
     let track_id: TrackId;
     let trackPath: string | undefined = $state();
     let trackMapCars: TrackMapLocal[] = $state([]);
+    let trackMapCarsById: Map<number, TrackMapLocal> = $state(new Map());
     let animationFrameId: number | null = null;
     let pendingTrackMapUpdate: TrackMap | null = null;
 
@@ -142,21 +143,35 @@
             return;
         }
 
+        // Only update cars that have changed
         const track_map: TrackMapLocal[] = [];
+        const newTrackMapCarsById = new Map<number, TrackMapLocal>();
+
         for (let car of pendingTrackMapUpdate) {
-            const offsetedLapDistPct =
-                (1 + offset + direction * car.lap_dist_pct) % 1;
-            const point = getPointAtLength(
-                offsetedLapDistPct * trackPathLength,
-            );
+            const offsetedLapDistPct = (1 + offset + direction * car.lap_dist_pct) % 1;
+            const point = getPointAtLength(offsetedLapDistPct * trackPathLength);
+
+            // Only update if position changed significantly
+            const existingCar = trackMapCarsById.get(car.car_id);
+            if (existingCar) {
+                const dx = point.x - parseFloat(existingCar.transform.split('(')[1].split(',')[0]);
+                const dy = point.y - parseFloat(existingCar.transform.split(')')[0].split(',')[1]);
+                if (Math.sqrt(dx * dx + dy * dy) < 1) { // Skip if movement is less than 1 pixel
+                    track_map.push(existingCar);
+                    newTrackMapCarsById.set(car.car_id, existingCar);
+                    continue;
+                }
+            }
 
             let new_car: TrackMapLocal = {
                 ...car,
                 transform: `translate(${point.x}, ${point.y})`,
             };
             track_map.push(new_car);
+            newTrackMapCarsById.set(car.car_id, new_car);
         }
         trackMapCars = track_map;
+        trackMapCarsById = newTrackMapCarsById;
         pendingTrackMapUpdate = null;
         animationFrameId = null;
     }
@@ -226,6 +241,7 @@
                 />
             </filter>
 
+            <!-- Track background with shadow -->
             <path
                 d={trackPath}
                 stroke={trackBorderColor}
@@ -252,12 +268,15 @@
                 </linearGradient>
             </defs>
 
+            <!-- Track surface -->
             <path
                 bind:this={trackPathElement}
                 d={trackPath}
                 stroke="url(#trackGradient)"
                 stroke-width="20"
             />
+
+            <!-- Start/Finish line -->
             {#if startFinishPoint && startFinishPerp}
                 <line
                     x1={startFinishPoint.x -
