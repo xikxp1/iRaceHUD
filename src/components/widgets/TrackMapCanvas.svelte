@@ -263,8 +263,6 @@
         function drawCarCircle(car: TrackMapLocal) {
             ctx.save();
             ctx.translate(car.x, car.y);
-
-            // Draw car circle
             ctx.beginPath();
             ctx.arc(0, 0, 32, 0, Math.PI * 2);
             ctx.fillStyle = car.is_player
@@ -273,8 +271,12 @@
                   ? leaderCircleColor
                   : carCircleColor;
             ctx.fill();
+            ctx.restore();
+        }
 
-            // Draw status circle if needed
+        function drawCarOutline(car: TrackMapLocal) {
+            ctx.save();
+            ctx.translate(car.x, car.y);
             if (car.is_off_track || car.is_in_pits) {
                 ctx.beginPath();
                 ctx.arc(0, 0, 36, 0, Math.PI * 2);
@@ -284,7 +286,6 @@
                 ctx.lineWidth = 6;
                 ctx.stroke();
             }
-
             ctx.restore();
         }
 
@@ -339,6 +340,13 @@
             }
         }
 
+        // Then draw all car outlines
+        for (const cluster of clusters) {
+            for (const car of cluster) {
+                drawCarOutline(car);
+            }
+        }
+
         // Then draw all position numbers in reverse order
         for (let i = clusters.length - 1; i >= 0; i--) {
             const cluster = clusters[i];
@@ -350,25 +358,21 @@
             }
         }
 
-        // Draw leader car circle
+        // Draw leader car
         const leaderCar = visibleCars.find(
             (car) => car.is_leader && !car.is_player,
         );
         if (leaderCar) {
             drawCarCircle(leaderCar);
+            drawCarOutline(leaderCar);
+            drawPositionNumber(leaderCar);
         }
 
-        // Draw player car circle
+        // Draw player car
         const playerCar = visibleCars.find((car) => car.is_player);
         if (playerCar) {
             drawCarCircle(playerCar);
-        }
-
-        // Draw leader and player positions
-        if (leaderCar) {
-            drawPositionNumber(leaderCar);
-        }
-        if (playerCar) {
+            drawCarOutline(playerCar);
             drawPositionNumber(playerCar);
         }
 
