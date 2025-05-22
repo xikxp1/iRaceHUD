@@ -1,6 +1,6 @@
+import { invoke } from '@tauri-apps/api/core';
 import { decode } from '@msgpack/msgpack';
-
-type WsEvent = [string, any];
+import type { WsEvent } from '$lib/types/telemetry';
 
 export interface WsMessageHandler<T> {
   (data: T): void;
@@ -11,14 +11,35 @@ export class WebSocketClient {
   private messageHandlers: Map<string, WsMessageHandler<any>> = new Map();
   private isConnected = false;
   private reconnectTimer: number | null = null;
+  private port: number | null = null;
 
-  constructor(private url: string = 'ws://127.0.0.1:8384') {
-    this.connect();
+  constructor() {
+    this.initialize();
+  }
+
+  private async initialize() {
+    try {
+      this.port = await invoke<number>('get_ws_port');
+      if (this.port) {
+        this.connect();
+      } else {
+        console.error('Failed to get WebSocket port');
+        this.scheduleReconnect();
+      }
+    } catch (error) {
+      console.error('Error initializing WebSocket:', error);
+      this.scheduleReconnect();
+    }
   }
 
   private connect() {
+    if (!this.port) {
+      console.error('No WebSocket port available');
+      return;
+    }
+
     try {
-      this.ws = new WebSocket(this.url);
+      this.ws = new WebSocket(`ws://127.0.0.1:${this.port}`);
       this.ws.binaryType = 'arraybuffer';
 
       this.ws.onopen = () => {
@@ -52,9 +73,9 @@ export class WebSocketClient {
 
   private scheduleReconnect() {
     if (!this.reconnectTimer) {
-      this.reconnectTimer = window.setInterval(() => {
+      this.reconnectTimer = window.setInterval(async () => {
         if (!this.isConnected) {
-          this.connect();
+          await this.initialize();
         }
       }, 5000);
     }

@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
     net::SocketAddr,
-    sync::{Arc, Mutex as StdMutex},
+    sync::{Arc, Mutex as StdMutex, OnceLock},
 };
 
 use futures_util::{SinkExt, StreamExt};
@@ -15,6 +15,8 @@ use tokio::{
 use tokio_tungstenite::{accept_async, tungstenite::Message};
 
 type WsClients = Arc<StdMutex<HashMap<SocketAddr, mpsc::UnboundedSender<Vec<u8>>>>>;
+
+static WS_PORT: OnceLock<u16> = OnceLock::new();
 
 #[derive(Debug, Clone)]
 pub struct WebSocketServer {
@@ -34,9 +36,15 @@ impl WebSocketServer {
         Self::default()
     }
 
+    pub fn get_port() -> Option<u16> {
+        WS_PORT.get().copied()
+    }
+
     pub async fn run(&self, addr: &str) {
         let listener = TcpListener::bind(addr).await.expect("Failed to bind");
-        info!("WebSocket server listening on: {}", addr);
+        let port = listener.local_addr().unwrap().port();
+        WS_PORT.set(port).expect("Failed to set WebSocket port");
+        info!("WebSocket server listening on: {}", listener.local_addr().unwrap());
 
         while let Ok((stream, addr)) = listener.accept().await {
             let clients = self.clients.clone();

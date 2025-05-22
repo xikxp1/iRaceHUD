@@ -193,7 +193,7 @@ async fn main() {
 
             // Run WebSocket server in a separate task
             tokio::spawn(async move {
-                server_clone.run("127.0.0.1:8384").await;
+                server_clone.run("127.0.0.1:0").await;
             });
 
             let window = app
@@ -226,6 +226,7 @@ async fn main() {
             unregister_event_emitter,
             set_autostart,
             get_autostart,
+            get_ws_port,
             get_lap_times_widget_settings,
             set_lap_times_widget_settings,
             get_main_widget_settings,
@@ -354,6 +355,11 @@ async fn set_autostart(app: tauri::AppHandle, enabled: bool) {
 async fn get_autostart(app: tauri::AppHandle) -> bool {
     info!("Getting autostart status");
     app.autolaunch().is_enabled().unwrap_or(false)
+}
+
+#[tauri::command]
+async fn get_ws_port() -> Option<u16> {
+    websocket::WebSocketServer::get_port()
 }
 
 #[tauri::command]
