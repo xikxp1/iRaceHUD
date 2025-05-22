@@ -1,13 +1,13 @@
 <script lang="ts">
-    import LapTimes from "../components/widgets/LapTimes.svelte";
-    import Main from "../components/widgets/Main.svelte";
-    import Proximity from "../components/widgets/Proximity.svelte";
-    import Relative from "../components/widgets/Relative.svelte";
-    import Standings from "../components/widgets/Standings.svelte";
-    import Subtimer from "../components/widgets/SubTimer.svelte";
-    import Telemetry from "../components/widgets/Telemetry.svelte";
-    import Timer from "../components/widgets/Timer.svelte";
-    import TrackMap from "../components/widgets/TrackMap.svelte";
+    import LapTimes from "../lib/components/widgets/LapTimes.svelte";
+    import Main from "../lib/components/widgets/Main.svelte";
+    import Proximity from "../lib/components/widgets/Proximity.svelte";
+    import Relative from "../lib/components/widgets/Relative.svelte";
+    import Standings from "../lib/components/widgets/Standings.svelte";
+    import Subtimer from "../lib/components/widgets/SubTimer.svelte";
+    import Telemetry from "../lib/components/widgets/Telemetry.svelte";
+    import Timer from "../lib/components/widgets/Timer.svelte";
+    import TrackMap from "../lib/components/widgets/TrackMap.svelte";
     import { active } from "$lib/backend/telemetry.svelte";
     import { lapTimesWidgetSettings } from "$lib/backend/settings.svelte";
     import { mainWidgetSettings } from "$lib/backend/settings.svelte";

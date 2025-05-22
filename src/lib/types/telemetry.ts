@@ -34,7 +34,7 @@ export type RelativeWidgetSettings = { enabled: boolean; x: number; y: number; w
 
 export type TrackMapWidgetSettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
 
-export type MainWidgetSettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
+export type MainWidgetSettings = { enabled: boolean; x: number; y: number; width: number; opacity: number; scale: number }
 
 export type Lap = number
 

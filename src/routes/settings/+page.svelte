@@ -1,14 +1,14 @@
 <script lang="ts">
-    import Application from "../../components/settings/Application.svelte";
-    import LapTimes from "../../components/settings/widgets/LapTimes.svelte";
-    import Main from "../../components/settings/widgets/Main.svelte";
-    import Proximity from "../../components/settings/widgets/Proximity.svelte";
-    import Relative from "../../components/settings/widgets/Relative.svelte";
-    import Standings from "../../components/settings/widgets/Standings.svelte";
-    import SubTimer from "../../components/settings/widgets/SubTimer.svelte";
-    import Telemetry from "../../components/settings/widgets/Telemetry.svelte";
-    import Timer from "../../components/settings/widgets/Timer.svelte";
-    import TrackMap from "../../components/settings/widgets/TrackMap.svelte";
+    import Application from "../../lib/components/settings/Application.svelte";
+    import LapTimes from "../../lib/components/settings/widgets/LapTimes.svelte";
+    import Main from "../../lib/components/settings/widgets/Main.svelte";
+    import Proximity from "../../lib/components/settings/widgets/Proximity.svelte";
+    import Relative from "../../lib/components/settings/widgets/Relative.svelte";
+    import Standings from "../../lib/components/settings/widgets/Standings.svelte";
+    import SubTimer from "../../lib/components/settings/widgets/SubTimer.svelte";
+    import Telemetry from "../../lib/components/settings/widgets/Telemetry.svelte";
+    import Timer from "../../lib/components/settings/widgets/Timer.svelte";
+    import TrackMap from "../../lib/components/settings/widgets/TrackMap.svelte";
 
     let chosenPage = $state("application");
 

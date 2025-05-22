@@ -76,59 +76,54 @@
     });
 </script>
 
-<div
-    class="flex flex-row items-center justify-center"
-    style="opacity: {settings.opacity / 100}"
->
-    <div class="join bg-primary-content" style="width: {settings.width}px">
+<div class="w-full h-full join bg-primary-content">
+    <div
+        class="join-item flex flex-col items-center justify-center w-1/4"
+    >
         <div
-            class="join-item flex flex-col items-center justify-center rounded-md w-1/4"
+            bind:this={gear_indicator}
+            class="text-secondary text-5xl font-square"
         >
-            <div
-                bind:this={gear_indicator}
-                class="text-secondary text-5xl font-square"
-            >
-                {$gear}
-            </div>
-            <div class="text-primary text-2xl">{$speed}</div>
+            {$gear}
         </div>
-        <div
-            class="join-item flex flex-col items-center justify-evenly rounded-md w-3/4"
-        >
-            <progress
-                bind:this={rpm_indicator}
-                class="progress progress-secondary w-5/6 outline outline-2 outline-offset-2 outline-primary"
-                value={$rpm}
-                max={$gearBlinkRPM}
-            ></progress>
-            <div class="flex flex-row items-center justify-evenly">
-                <div class="flex flex-col items-center justify-evenly">
-                    <div class="text-primary">
-                        <NumberFlow value={$lap} plugins={[continuous]}
-                        ></NumberFlow>{#if $lapsTotal > 0}/{$lapsTotal}{/if}
-                    </div>
-                    <div class="text-secondary text-xs">lap</div>
+        <div class="text-primary text-2xl">{$speed}</div>
+    </div>
+    <div
+        class="join-item flex flex-col items-center justify-evenly w-3/4"
+    >
+        <progress
+            bind:this={rpm_indicator}
+            class="progress progress-secondary w-5/6 outline outline-2 outline-offset-2 outline-primary"
+            value={$rpm}
+            max={$gearBlinkRPM}
+        ></progress>
+        <div class="flex flex-row items-center justify-items-stretch">
+            <div class="flex flex-col items-center justify-evenly">
+                <div class="text-primary">
+                    <NumberFlow value={$lap} plugins={[continuous]}
+                    ></NumberFlow>{#if $lapsTotal > 0}/{$lapsTotal}{/if}
                 </div>
-                <div class="divider divider-horizontal divider-primary"></div>
-                <div class="flex flex-col items-center justify-evenly">
-                    <div class="text-primary">
-                        {#if $position > 0}
-                            <NumberFlow value={$position} plugins={[continuous]}
-                            ></NumberFlow>{#if $positionsTotal > 0}/{$positionsTotal}{/if}
-                        {:else}
-                            -
-                        {/if}
-                    </div>
-                    <div class="text-secondary text-xs">pos</div>
+                <div class="text-secondary text-xs">lap</div>
+            </div>
+            <div class="divider divider-horizontal divider-primary"></div>
+            <div class="flex flex-col items-center justify-evenly">
+                <div class="text-primary">
+                    {#if $position > 0}
+                        <NumberFlow value={$position} plugins={[continuous]}
+                        ></NumberFlow>{#if $positionsTotal > 0}/{$positionsTotal}{/if}
+                    {:else}
+                        -
+                    {/if}
                 </div>
-                <div class="divider divider-horizontal divider-primary"></div>
-                <div class="flex flex-col items-center justify-evenly">
-                    <div class="text-primary">
-                        <NumberFlow value={$incidents} plugins={[continuous]}
-                        ></NumberFlow>{#if $incidentLimit > 0}/{$incidentLimit}{/if}x
-                    </div>
-                    <div class="text-secondary text-xs">inc</div>
+                <div class="text-secondary text-xs">pos</div>
+            </div>
+            <div class="divider divider-horizontal divider-primary"></div>
+            <div class="flex flex-col items-center justify-evenly">
+                <div class="text-primary">
+                    <NumberFlow value={$incidents} plugins={[continuous]}
+                    ></NumberFlow>{#if $incidentLimit > 0}/{$incidentLimit}{/if}x
                 </div>
+                <div class="text-secondary text-xs">inc</div>
             </div>
         </div>
     </div>

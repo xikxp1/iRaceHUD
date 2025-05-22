@@ -47,6 +47,37 @@ const RETRY_TIMEOUT_SECS: u64 = 5;
 const SESSION_UPDATE_PERIOD_MILLIS: u64 = 25;
 const SLOW_VAR_RESET_TICKS: u32 = 50;
 
+fn create_widget_window(
+    app_handle: &tauri::AppHandle,
+    label: &str,
+    title: &str,
+) -> Result<tauri::WebviewWindow> {
+    let window = WebviewWindowBuilder::new(
+        app_handle,
+        label,
+        WebviewUrl::App(format!("/widget/{}", label).into()),
+    )
+    .title(title)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .resizable(false)
+    .maximizable(false)
+    .minimizable(false)
+    .closable(false)
+    .transparent(true)
+    .decorations(false)
+    .drag_and_drop(false)
+    .focused(false)
+    .position(100.0, 100.0)
+    .inner_size(300.0, 80.0)
+    .accept_first_mouse(true)
+    .shadow(false)
+    .build()?;
+
+    window.set_ignore_cursor_events(false)?;
+    Ok(window)
+}
+
 fn open_settings_window(app_handle: tauri::AppHandle) {
     match app_handle.get_webview_window("settings") {
         Some(window) => {
@@ -182,21 +213,30 @@ async fn main() {
             tokio::spawn(async move {
                 server_clone.run("127.0.0.1:8384").await;
             });
-
-            let window = app
-                .get_webview_window("main")
-                .ok_or_eyre("Failed to get window")?;
-
-            #[cfg(debug_assertions)]
-            window.open_devtools();
-
-            window
-                .set_ignore_cursor_events(true)
-                .map_err(|err| eyre!("Failed to set ignore cursor events: {:?}", err))?;
-
+            // Create main window
+            let main_window = create_widget_window(app.handle(), "main", "iRaceHUD Main")?;
             WINDOW
-                .set(window)
+                .set(main_window)
                 .map_err(|err| eyre!("Failed to set window: {:?}", err))?;
+
+            // Create widget windows
+            let widget_windows = [
+                // ("main", "iRaceHUD Main"),
+                // ("telemetry", "iRaceHUD Telemetry"),
+                // ("timer", "iRaceHUD Timer"),
+                // ("subtimer", "iRaceHUD Subtimer"),
+                // ("proximity", "iRaceHUD Proximity"),
+                // ("standings", "iRaceHUD Standings"),
+                // ("track_map", "iRaceHUD Track Map"),
+                // ("lap_times", "iRaceHUD Lap Times"),
+                // ("relative", "iRaceHUD Relative"),
+            ];
+
+            for (label, title) in widget_windows {
+                if let Err(err) = create_widget_window(app.handle(), label, title) {
+                    error!("Failed to create {} window: {:?}", label, err);
+                }
+            }
 
             async_runtime::spawn(async move {
                 if let Err(err) = connect().await {

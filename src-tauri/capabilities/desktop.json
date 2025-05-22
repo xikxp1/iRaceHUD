@@ -6,6 +6,14 @@
   ],
   "windows": [
     "main",
+    "telemetry",
+    "timer",
+    "subtimer",
+    "proximity",
+    "standings",
+    "track_map",
+    "lap_times",
+    "relative",
     "settings"
   ],
   "permissions": [
@@ -13,6 +21,7 @@
     "updater:default",
     "autostart:default",
     "store:default",
-    "global-shortcut:default"
+    "global-shortcut:default",
+    "core:window:allow-start-dragging"
   ]
 }

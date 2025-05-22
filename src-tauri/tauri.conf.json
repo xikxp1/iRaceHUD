@@ -33,19 +33,6 @@
     }
   },
   "app": {
-    "windows": [
-      {
-        "label": "main",
-        "alwaysOnTop": true,
-        "skipTaskbar": true,
-        "resizable": false,
-        "maximizable": false,
-        "minimizable": false,
-        "closable": false,
-        "fullscreen": true,
-        "transparent": true
-      }
-    ],
     "security": {
       "csp": null
     }
