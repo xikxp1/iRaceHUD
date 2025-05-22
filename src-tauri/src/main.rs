@@ -11,7 +11,7 @@ pub mod websocket;
 use eyre::{eyre, OptionExt, Result};
 use log::{debug, error, info, warn};
 use simetry::iracing::Client;
-use std::{sync::OnceLock, time::Duration};
+use std::{backtrace::Backtrace, sync::OnceLock, time::Duration};
 use tauri::{
     async_runtime,
     menu::{MenuBuilder, MenuItemBuilder},
@@ -131,6 +131,13 @@ async fn main() {
                 .build(),
         )
         .setup(move |app| {
+            let default_panic = std::panic::take_hook();
+            std::panic::set_hook(Box::new(move |info| {
+                let backtrace = Backtrace::force_capture();
+                log::error!("Panic: {info}\n{backtrace}");
+                default_panic(info);
+            }));
+
             #[cfg(not(debug_assertions))]
             {
                 let handle = app.handle().clone();
