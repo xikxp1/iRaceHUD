@@ -131,14 +131,18 @@
     function onTrackMap(value: TrackMap) {
         if (trackPathElement == null || trackPathLength === 0) return;
         pendingTrackMapUpdate = value;
-        
+
         if (animationFrameId === null) {
             animationFrameId = requestAnimationFrame(updateTrackMap);
         }
     }
 
     function updateTrackMap() {
-        if (!pendingTrackMapUpdate || trackPathElement == null || trackPathLength === 0) {
+        if (
+            !pendingTrackMapUpdate ||
+            trackPathElement == null ||
+            trackPathLength === 0
+        ) {
             animationFrameId = null;
             return;
         }
@@ -148,15 +152,27 @@
         const newTrackMapCarsById = new Map<number, TrackMapLocal>();
 
         for (let car of pendingTrackMapUpdate) {
-            const offsetedLapDistPct = (1 + offset + direction * car.lap_dist_pct) % 1;
-            const point = getPointAtLength(offsetedLapDistPct * trackPathLength);
+            const offsetedLapDistPct =
+                (1 + offset + direction * car.lap_dist_pct) % 1;
+            const point = getPointAtLength(
+                offsetedLapDistPct * trackPathLength,
+            );
 
             // Only update if position changed significantly
             const existingCar = trackMapCarsById.get(car.car_id);
             if (existingCar) {
-                const dx = point.x - parseFloat(existingCar.transform.split('(')[1].split(',')[0]);
-                const dy = point.y - parseFloat(existingCar.transform.split(')')[0].split(',')[1]);
-                if (Math.sqrt(dx * dx + dy * dy) < 1) { // Skip if movement is less than 1 pixel
+                const dx =
+                    point.x -
+                    parseFloat(
+                        existingCar.transform.split("(")[1].split(",")[0],
+                    );
+                const dy =
+                    point.y -
+                    parseFloat(
+                        existingCar.transform.split(")")[0].split(",")[1],
+                    );
+                if (Math.sqrt(dx * dx + dy * dy) < 1) {
+                    // Skip if movement is less than 1 pixel
                     track_map.push(existingCar);
                     newTrackMapCarsById.set(car.car_id, existingCar);
                     continue;
