@@ -11,9 +11,12 @@
     let { settings }: { settings: TrackMapWidgetSettings } = $props();
 
     type TrackMapLocal = TrackMapDriver & {
-        x: number;
-        y: number;
+        transform: string;
     };
+
+    // Cache for point calculations
+    const pointCache = new Map<number, { x: number; y: number }>();
+    const CACHE_SIZE = 10000;
 
     let trackPathElement: SVGPathElement | undefined = $state();
     let trackPathLength: number = 0;
@@ -26,13 +29,16 @@
     let track_id: TrackId;
     let trackPath: string | undefined = $state();
     let trackMapCars: TrackMapLocal[] = $state([]);
+    let trackMapCarsById: Map<number, TrackMapLocal> = $state(new Map());
+    let animationFrameId: number | null = null;
+    let pendingTrackMapUpdate: TrackMap | null = null;
 
     let offset: number = 0;
     let direction: number = 1;
 
     let startFinishPoint: { x: number; y: number } | null = $state(null);
     let startFinishPerp: { x: number; y: number } | null = $state(null);
-    const START_LINE_LENGTH = 50; // Length of the start/finish line in pixels
+    const START_LINE_LENGTH = 50;
 
     const css = window.getComputedStyle(document.documentElement);
 
@@ -46,26 +52,42 @@
     const offtrackCircleColor: string = `oklch(${css.getPropertyValue("--er")})`;
     const inPitsCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
 
+    function getPointAtLength(length: number): { x: number; y: number } {
+        if (!trackPathElement || !trackPathLength) return { x: 0, y: 0 };
+
+        // Check cache first
+        const cacheKey = Math.round(length * CACHE_SIZE) / CACHE_SIZE; // Round to 4 decimal places
+        if (pointCache.has(cacheKey)) {
+            return pointCache.get(cacheKey)!;
+        }
+
+        // Calculate new point
+        const point = trackPathElement.getPointAtLength(length);
+
+        // Update cache
+        if (pointCache.size >= CACHE_SIZE) {
+            // Remove oldest entry if cache is full
+            const firstKey = pointCache.keys().next().value;
+            if (firstKey != null) {
+                pointCache.delete(firstKey);
+            }
+        }
+        pointCache.set(cacheKey, point);
+
+        return point;
+    }
+
     function calculateStartFinishLine() {
         if (!trackPathElement) return;
 
-        // Get point at the offset position
-        const point = trackPathElement.getPointAtLength(
-            offset * trackPathLength,
-        );
-
-        // Get point slightly ahead to calculate direction
+        const point = getPointAtLength(offset * trackPathLength);
         const delta = 0.001;
-        const nextPoint = trackPathElement.getPointAtLength(
-            (offset + delta) * trackPathLength,
-        );
+        const nextPoint = getPointAtLength((offset + delta) * trackPathLength);
 
-        // Calculate tangent vector
         const dx = nextPoint.x - point.x;
         const dy = nextPoint.y - point.y;
         const length = Math.sqrt(dx * dx + dy * dy);
 
-        // Calculate perpendicular vector
         const perpX = -dy / length;
         const perpY = dx / length;
 
@@ -77,7 +99,7 @@
         if (!trackPathElement) return;
 
         const bbox = trackPathElement.getBBox();
-        const padding = 200; // Add some padding around the track
+        const padding = 200;
         trackBounds = {
             x: bbox.x - padding,
             y: bbox.y - padding,
@@ -107,27 +129,67 @@
     }
 
     function onTrackMap(value: TrackMap) {
-        if (trackPathElement == null) {
+        if (trackPathElement == null || trackPathLength === 0) return;
+        pendingTrackMapUpdate = value;
+
+        if (animationFrameId === null) {
+            animationFrameId = requestAnimationFrame(updateTrackMap);
+        }
+    }
+
+    function updateTrackMap() {
+        if (
+            !pendingTrackMapUpdate ||
+            trackPathElement == null ||
+            trackPathLength === 0
+        ) {
+            animationFrameId = null;
             return;
         }
-        if (trackPathLength === 0) {
-            return;
-        }
+
+        // Only update cars that have changed
         const track_map: TrackMapLocal[] = [];
-        for (let car of value) {
+        const newTrackMapCarsById = new Map<number, TrackMapLocal>();
+
+        for (let car of pendingTrackMapUpdate) {
             const offsetedLapDistPct =
                 (1 + offset + direction * car.lap_dist_pct) % 1;
-            const point = trackPathElement.getPointAtLength(
+            const point = getPointAtLength(
                 offsetedLapDistPct * trackPathLength,
             );
+
+            // Only update if position changed significantly
+            const existingCar = trackMapCarsById.get(car.car_id);
+            if (existingCar) {
+                const dx =
+                    point.x -
+                    parseFloat(
+                        existingCar.transform.split("(")[1].split(",")[0],
+                    );
+                const dy =
+                    point.y -
+                    parseFloat(
+                        existingCar.transform.split(")")[0].split(",")[1],
+                    );
+                if (Math.sqrt(dx * dx + dy * dy) < 1) {
+                    // Skip if movement is less than 1 pixel
+                    track_map.push(existingCar);
+                    newTrackMapCarsById.set(car.car_id, existingCar);
+                    continue;
+                }
+            }
+
             let new_car: TrackMapLocal = {
                 ...car,
-                x: point.x,
-                y: point.y,
+                transform: `translate(${point.x}, ${point.y})`,
             };
             track_map.push(new_car);
+            newTrackMapCarsById.set(car.car_id, new_car);
         }
         trackMapCars = track_map;
+        trackMapCarsById = newTrackMapCarsById;
+        pendingTrackMapUpdate = null;
+        animationFrameId = null;
     }
 
     let unsubscribe_track_id: () => void = () => {};
@@ -163,6 +225,10 @@
     onDestroy(() => {
         unsubscribe_track_id();
         unsubscribe_track_map();
+        pointCache.clear();
+        if (animationFrameId !== null) {
+            cancelAnimationFrame(animationFrameId);
+        }
     });
 </script>
 
@@ -182,35 +248,52 @@
             preserveAspectRatio="xMidYMid meet"
             xmlns="http://www.w3.org/2000/svg"
         >
-            <!-- Add a subtle shadow for depth -->
             <filter id="shadow">
-                <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+                <feDropShadow
+                    dx="2"
+                    dy="2"
+                    stdDeviation="2"
+                    flood-opacity="0.3"
+                />
             </filter>
-            
-            <!-- Track border with shadow -->
-            <path 
-                d={trackPath} 
-                stroke={trackBorderColor} 
+
+            <!-- Track background with shadow -->
+            <path
+                d={trackPath}
+                stroke={trackBorderColor}
                 stroke-width="30"
                 filter="url(#shadow)"
             />
-            
-            <!-- Track with gradient -->
+
             <defs>
-                <linearGradient id="trackGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style="stop-color: {trackColor}; stop-opacity: 0.8"/>
-                    <stop offset="100%" style="stop-color: {trackColor}; stop-opacity: 1"/>
+                <linearGradient
+                    id="trackGradient"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="0%"
+                >
+                    <stop
+                        offset="0%"
+                        style="stop-color: {trackColor}; stop-opacity: 0.8"
+                    />
+                    <stop
+                        offset="100%"
+                        style="stop-color: {trackColor}; stop-opacity: 1"
+                    />
                 </linearGradient>
             </defs>
-            
+
+            <!-- Track surface -->
             <path
                 bind:this={trackPathElement}
                 d={trackPath}
                 stroke="url(#trackGradient)"
                 stroke-width="20"
             />
+
+            <!-- Start/Finish line -->
             {#if startFinishPoint && startFinishPerp}
-                <!-- Outline line -->
                 <line
                     x1={startFinishPoint.x -
                         startFinishPerp.x * START_LINE_LENGTH}
@@ -223,7 +306,6 @@
                     stroke={trackColor}
                     stroke-width="16"
                 />
-                <!-- Main line -->
                 <line
                     x1={startFinishPoint.x -
                         startFinishPerp.x * START_LINE_LENGTH}
@@ -239,17 +321,13 @@
             {/if}
             {#each trackMapCars as car}
                 {#if !car.is_off_world && !car.is_leader && !car.is_player}
-                    <g>
-                        <circle
-                            cx={car.x}
-                            cy={car.y}
-                            r="32"
-                            fill={carCircleColor}
-                        />
+                    <g
+                        transform={car.transform}
+                        style="will-change: transform;"
+                    >
+                        <circle r="32" fill={carCircleColor} />
                         {#if car.is_off_track || car.is_in_pits}
                             <circle
-                                cx={car.x}
-                                cy={car.y}
                                 r="36"
                                 stroke={car.is_off_track
                                     ? offtrackCircleColor
@@ -258,8 +336,7 @@
                             />
                         {/if}
                         <text
-                            x={car.x}
-                            y={car.y + 5}
+                            y="5"
                             fill={textColor}
                             font-size="60"
                             text-anchor="middle"
@@ -272,17 +349,13 @@
             {/each}
             {#each trackMapCars as car}
                 {#if !car.is_off_world && car.is_leader && !car.is_player}
-                    <g>
-                        <circle
-                            cx={car.x}
-                            cy={car.y}
-                            r="32"
-                            fill={leaderCircleColor}
-                        />
+                    <g
+                        transform={car.transform}
+                        style="will-change: transform;"
+                    >
+                        <circle r="32" fill={leaderCircleColor} />
                         {#if car.is_off_track || car.is_in_pits}
                             <circle
-                                cx={car.x}
-                                cy={car.y}
                                 r="36"
                                 stroke={car.is_off_track
                                     ? offtrackCircleColor
@@ -291,8 +364,7 @@
                             />
                         {/if}
                         <text
-                            x={car.x}
-                            y={car.y + 5}
+                            y="5"
                             fill={textColor}
                             font-size="60"
                             text-anchor="middle"
@@ -305,17 +377,13 @@
             {/each}
             {#each trackMapCars as car}
                 {#if !car.is_off_world && car.is_player}
-                    <g>
-                        <circle
-                            cx={car.x}
-                            cy={car.y}
-                            r="32"
-                            fill={playerCircleColor}
-                        />
+                    <g
+                        transform={car.transform}
+                        style="will-change: transform;"
+                    >
+                        <circle r="32" fill={playerCircleColor} />
                         {#if car.is_off_track || car.is_in_pits}
                             <circle
-                                cx={car.x}
-                                cy={car.y}
                                 r="36"
                                 stroke={car.is_off_track
                                     ? offtrackCircleColor
@@ -324,8 +392,7 @@
                             />
                         {/if}
                         <text
-                            x={car.x}
-                            y={car.y + 5}
+                            y="5"
                             fill={textColor}
                             font-size="60"
                             text-anchor="middle"

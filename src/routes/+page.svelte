@@ -7,7 +7,7 @@
     import Subtimer from "../components/widgets/SubTimer.svelte";
     import Telemetry from "../components/widgets/Telemetry.svelte";
     import Timer from "../components/widgets/Timer.svelte";
-    import TrackMap from "../components/widgets/TrackMap.svelte";
+    import TrackMapCanvas from "../components/widgets/TrackMapCanvas.svelte";
     import { active } from "$lib/backend/telemetry.svelte";
     import { lapTimesWidgetSettings } from "$lib/backend/settings.svelte";
     import { mainWidgetSettings } from "$lib/backend/settings.svelte";
@@ -30,6 +30,7 @@
     } from "$lib/types/telemetry";
     import type { LapTimesWidgetSettings } from "$lib/types/telemetry";
     import { onDestroy } from "svelte";
+   
 
     let lapTimesSettings: LapTimesWidgetSettings | undefined =
         $state(undefined);
@@ -212,7 +213,7 @@
                     class="widget"
                     style="transform: translate({trackMapSettings.x}px, {trackMapSettings.y}px);"
                 >
-                    <TrackMap settings={trackMapSettings} />
+                    <TrackMapCanvas settings={trackMapSettings} />
                 </div>
             </div>
         </div>
