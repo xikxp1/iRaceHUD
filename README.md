@@ -12,6 +12,16 @@ iRaceHUD will update itself automatically on startup if new release is available
 
 ## Development
 
+### Install dependencies
+
+After intial checkout you can run
+
+```
+pnpm install
+```
+
+to fetch project dependencies. All backend dependecies will be fetched automatically upon running the application.
+
 ### Run in development mode
 
 Run iRaceHUD in development mode:

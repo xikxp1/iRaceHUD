@@ -59,15 +59,21 @@ fn open_settings_window(app_handle: tauri::AppHandle) {
             };
         }
         None => {
-            if let Err(err) = WebviewWindowBuilder::new(
+            match WebviewWindowBuilder::new(
                 &app_handle,
                 "settings",
                 WebviewUrl::App("/settings".into()),
             )
             .title("iRaceHUD Settings")
+            .focused(true)
             .build()
             {
-                error!("Failed to build settings window: {:?}", err);
+                Ok(_window) => {
+                    info!("Settings window opened");
+                }
+                Err(err) => {
+                    error!("Failed to build settings window: {:?}", err);
+                }
             }
         }
     }

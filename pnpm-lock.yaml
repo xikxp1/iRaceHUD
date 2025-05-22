@@ -94,8 +94,8 @@ importers:
         specifier: 6.3.5
         version: 6.3.5(@types/node@22.8.6)(jiti@2.4.2)(lightningcss@1.29.1)(tsx@4.19.4)(yaml@2.6.0)
       zod:
-        specifier: 3.25.12
-        version: 3.25.12
+        specifier: 3.25.20
+        version: 3.25.20
 
 packages:
 
@@ -1504,8 +1504,8 @@ packages:
   zimmerframe@1.1.2:
     resolution: {integrity: sha512-rAbqEGa8ovJy4pyBxZM70hg4pE6gDgaQ0Sl9M3enG3I0d6H4XSAM3GeNGLKnsBpuijUow064sf7ww1nutC5/3w==}
 
-  zod@3.25.12:
-    resolution: {integrity: sha512-A8e9eiwm2L5YEupdjn1YcxL1ZDWuL3Bc4JKvLwUrpKZZtRUDOijR7XXsV5WMuUCZPc1tFYO5yfH14STI08MquA==}
+  zod@3.25.20:
+    resolution: {integrity: sha512-z03fqpTMDF1G02VLKUMt6vyACE7rNWkh3gpXVHgPTw28NPtDFRGvcpTtPwn2kMKtQ0idtYJUTxchytmnqYswcw==}
 
 snapshots:
 
@@ -2187,7 +2187,7 @@ snapshots:
       crypto-js: 4.2.0
       fetch-cookie: 2.2.0
       humps: 2.0.1
-      zod: 3.25.12
+      zod: 3.25.20
 
   is-binary-path@2.1.0:
     dependencies:
@@ -2741,4 +2741,4 @@ snapshots:
 
   zimmerframe@1.1.2: {}
 
-  zod@3.25.12: {}
+  zod@3.25.20: {}
