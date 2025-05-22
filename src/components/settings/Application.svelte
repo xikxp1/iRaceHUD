@@ -20,7 +20,7 @@
         <tbody>
             <tr>
                 <td class="text-sm font-bold text-right"
-                    >Start on system startup</td
+                    >Launch on system startup</td
                 >
                 <td>
                     <input

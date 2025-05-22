@@ -65,8 +65,6 @@ fn open_settings_window(app_handle: tauri::AppHandle) {
                 WebviewUrl::App("/settings".into()),
             )
             .title("iRaceHUD Settings")
-            .resizable(false)
-            .center()
             .build()
             {
                 error!("Failed to build settings window: {:?}", err);
