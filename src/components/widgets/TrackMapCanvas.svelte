@@ -32,7 +32,6 @@
     let track_id: TrackId;
     let trackPath: string | undefined = $state();
     let trackMapCars: TrackMapLocal[] = $state([]);
-    let trackMapCarsById: Map<number, TrackMapLocal> = $state(new Map());
     let animationFrameId: number | null = null;
     let pendingTrackMapUpdate: TrackMap | null = null;
 
@@ -49,7 +48,8 @@
     const trackColor: string = `oklch(${css.getPropertyValue("--sc")})`;
     const startFinishColor: string = `oklch(${css.getPropertyValue("--s")})`;
     const trackBorderColor: string = `oklch(${css.getPropertyValue("--p")})`;
-    const carCircleColor: string = `oklch(${css.getPropertyValue("--p")})`;
+    const otherCarCircleColor: string = `oklch(${css.getPropertyValue("--p")})`;
+    const playerCarClassCircleColor: string = "#FFE4C4";
     const leaderCircleColor: string = `oklch(${css.getPropertyValue("--in")})`;
     const playerCircleColor: string = `oklch(${css.getPropertyValue("--s")})`;
     const offtrackCircleColor: string = `oklch(${css.getPropertyValue("--er")})`;
@@ -240,7 +240,7 @@
         ): boolean {
             const dx = car1.x - car2.x;
             const dy = car1.y - car2.y;
-            return Math.sqrt(dx * dx + dy * dy) < 52;
+            return Math.sqrt(dx * dx + dy * dy) < 48;
         }
 
         // Helper function to draw a car circle without text
@@ -249,14 +249,20 @@
             ctx.translate(car.x, car.y);
             ctx.beginPath();
             ctx.arc(0, 0, 32, 0, Math.PI * 2);
-            if (car.class_position === null || !car.is_player_class || car.is_in_pits) {
-                ctx.globalAlpha = 0.7;
+            if (
+                car.class_position === null ||
+                !car.is_player_class ||
+                car.is_in_pits
+            ) {
+                ctx.globalAlpha = 0.5;
             }
             ctx.fillStyle = car.is_player
                 ? playerCircleColor
                 : car.is_leader
                   ? leaderCircleColor
-                  : carCircleColor;
+                  : car.is_player_class
+                    ? playerCarClassCircleColor
+                    : otherCarCircleColor;
             ctx.fill();
             ctx.restore();
         }

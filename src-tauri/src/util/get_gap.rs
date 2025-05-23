@@ -3,10 +3,14 @@ use std::cmp::min;
 use crate::session::session_data::SessionData;
 
 pub fn get_gap(position: u32, session: &SessionData, is_leader: bool) -> String {
-    if position < 1 || position as usize > session.driver_positions.len() {
+    let postions = match is_leader {
+        true => session.driver_positions.clone(),
+        false => session.player_class_driver_positions.clone(),
+    };
+    if position < 1 || position as usize > postions.len() {
         return "-".to_string();
     }
-    let car_id = session.driver_positions[position as usize - 1];
+    let car_id = postions[position as usize - 1];
     let driver = session.drivers.get(&car_id);
     match driver {
         None => "-".to_string(),

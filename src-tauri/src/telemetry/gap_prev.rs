@@ -10,11 +10,15 @@ pub struct GapPrev(String);
 
 impl EmittableEvent for GapPrev {
     fn is_ready(&self, session: &SessionData) -> bool {
-        session.active && !session.drivers.is_empty()
+        session.active
+            && !session.drivers.is_empty()
+            && !session.driver_positions.is_empty()
+            && !session.player_class_driver_positions.is_empty()
+            && session.class_position > 0
     }
 
     fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
-        let gap = get_gap(session.position + 1, session, false);
+        let gap = get_gap(session.class_position + 1, session, false);
         Box::new(gap)
     }
 }
