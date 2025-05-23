@@ -1,6 +1,6 @@
 [package]
 name = "iracehud"
-version = "0.4.40"
+version = "0.4.41"
 description = "iRacing HUD overlay built in Tauri"
 authors = ["Ivan Kachalkin<xikxp1@gmail.com>"]
 edition = "2021"

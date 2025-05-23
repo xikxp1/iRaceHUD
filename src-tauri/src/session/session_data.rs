@@ -534,6 +534,7 @@ impl SessionData {
                             irating,
                             lic_string.to_string(),
                             car_class_est_lap_time,
+                            self.player_car_class == car_class_id,
                         );
 
                         self.drivers.insert(car_id, driver);

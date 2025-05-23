@@ -256,7 +256,7 @@
         ): boolean {
             const dx = car1.x - car2.x;
             const dy = car1.y - car2.y;
-            return Math.sqrt(dx * dx + dy * dy) < 50;
+            return Math.sqrt(dx * dx + dy * dy) < 52;
         }
 
         // Helper function to draw a car circle without text
@@ -265,6 +265,9 @@
             ctx.translate(car.x, car.y);
             ctx.beginPath();
             ctx.arc(0, 0, 32, 0, Math.PI * 2);
+            if (car.class_position === null || !car.is_player_class || car.is_in_pits) {
+                ctx.globalAlpha = 0.7;
+            }
             ctx.fillStyle = car.is_player
                 ? playerCircleColor
                 : car.is_leader
@@ -291,13 +294,20 @@
 
         // Helper function to draw position number
         function drawPositionNumber(car: TrackMapLocal) {
+            if (car.class_position === null) {
+                return;
+            }
+
             ctx.save();
             ctx.translate(car.x, car.y);
+            if (!car.is_player_class) {
+                ctx.globalAlpha = 0.7;
+            }
             ctx.fillStyle = textColor;
             ctx.font = "52px iracing";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText(car.position.toString(), 0, 5);
+            ctx.fillText(car.class_position.toString(), 0, 5);
             ctx.restore();
         }
 

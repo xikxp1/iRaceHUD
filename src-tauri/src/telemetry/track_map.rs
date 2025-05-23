@@ -9,8 +9,10 @@ use crate::session::session_data::SessionData;
 pub struct TrackMapDriver {
     car_id: u32,
     position: u32,
+    class_position: Option<u32>,
     is_leader: bool,
     is_player: bool,
+    is_player_class: bool,
     lap_dist_pct: f32,
     is_in_pits: bool,
     is_off_track: bool,
@@ -24,11 +26,13 @@ impl Serialize for TrackMapDriver {
         S: SerdeSerializer,
     {
         use serde::ser::SerializeMap;
-        let mut map = serializer.serialize_map(Some(8))?;
+        let mut map = serializer.serialize_map(Some(10))?;
         map.serialize_entry("car_id", &self.car_id)?;
         map.serialize_entry("position", &self.position)?;
+        map.serialize_entry("class_position", &self.class_position)?;
         map.serialize_entry("is_leader", &self.is_leader)?;
         map.serialize_entry("is_player", &self.is_player)?;
+        map.serialize_entry("is_player_class", &self.is_player_class)?;
         map.serialize_entry("lap_dist_pct", &self.lap_dist_pct)?;
         map.serialize_entry("is_in_pits", &self.is_in_pits)?;
         map.serialize_entry("is_off_track", &self.is_off_track)?;
@@ -39,11 +43,18 @@ impl Serialize for TrackMapDriver {
 
 impl TrackMapDriver {
     pub fn new(driver: &Driver) -> Self {
+        let class_position = if driver.class_position == 0 {
+            None
+        } else {
+            Some(driver.class_position)
+        };
         TrackMapDriver {
             car_id: driver.car_id,
             position: driver.position,
+            class_position,
             is_leader: driver.is_leader,
             is_player: driver.is_player,
+            is_player_class: driver.is_player_class,
             lap_dist_pct: driver.lap_dist_pct,
             is_in_pits: driver.is_in_pits,
             is_off_track: driver.is_off_track,

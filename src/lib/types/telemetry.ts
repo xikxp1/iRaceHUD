@@ -62,11 +62,13 @@ export type RaceLaps = number
 
 export type Gear = string
 
-export type TrackMapDriver = { car_id: number; position: number; is_leader: boolean; is_player: boolean; lap_dist_pct: number; is_in_pits: boolean; is_off_track: boolean; is_off_world: boolean }
+export type TrackMapDriver = { car_id: number; position: number; class_position: number | null; is_leader: boolean; is_player: boolean; is_player_class: boolean; lap_dist_pct: number; is_in_pits: boolean; is_off_track: boolean; is_off_world: boolean }
 
 export type SessionTime = string
 
 export type GapNext = string
+
+export type TrackMap = TrackMapDriver[]
 
 export type IncidentLimit = number
 
@@ -83,6 +85,4 @@ export type Proximity = { is_left: boolean; is_right: boolean }
 export type GapPrev = string
 
 export type SessionTimeTotal = string
-
-export type TrackMap = TrackMapDriver[]
 
