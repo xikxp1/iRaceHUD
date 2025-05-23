@@ -1,6 +1,6 @@
 import type {
     Position, CurrentTime, PlayerLapTimes, Standings, StrengthOfField, Lap, Proximity, Relative,
-    LapTime, DeltaLastTime, DeltaOptimalTime, TelemetryGraph, SessionState, GapNext, GapPrev,
+    LapTime, DeltaBestTime, DeltaLastTime, TelemetryGraph, SessionState, GapNext, GapPrev,
     TrackId, TrackMap, Gear, Speed, Rpm, Active, GearShiftRpm, GearBlinkRpm, Incidents, RaceLaps,
     LapsTotal
 } from "$lib/types/telemetry";
@@ -35,7 +35,7 @@ export const raceLaps = createTelemetryStore<RaceLaps>("race_laps", 0);
 export const proximity = createTelemetryStore<Proximity>("proximity", { is_left: false, is_right: false });
 export const relative = createTelemetryStore<Relative>("relative", []);
 export const lapTime = createTelemetryStore<LapTime>("lap_time", 0);
-export const deltaOptimalTime = createTelemetryStore<DeltaOptimalTime>("delta_optimal_time", "–");
+export const deltaBestTime = createTelemetryStore<DeltaBestTime>("delta_best_time", "–");
 export const deltaLastTime = createTelemetryStore<DeltaLastTime>("delta_last_time", "–");
 export const telemetry = createTelemetryStore<TelemetryGraph>("telemetry_graph", { ts: 0, throttle: 0, brake: 0, abs_active: false });
 export const sessionState = createTelemetryStore<SessionState>("session_state", "");

@@ -1,10 +1,11 @@
 import { invoke } from '@tauri-apps/api/core';
 import { decode } from '@msgpack/msgpack';
-import type { WsEvent } from '$lib/types/telemetry';
 
 export interface WsMessageHandler<T> {
   (data: T): void;
 }
+
+type WsEvent = [string, any];
 
 export class WebSocketClient {
   private ws: WebSocket | null = null;
@@ -43,11 +44,9 @@ export class WebSocketClient {
       this.ws.binaryType = 'arraybuffer';
 
       this.ws.onopen = () => {
-        console.log('WebSocket connected');
+        console.log(`WebSocket connected to port ${this.port}`);
         this.isConnected = true;
         if (this.reconnectTimer) {
-          clearInterval(this.reconnectTimer);
-          this.reconnectTimer = null;
         }
       };
 
@@ -58,7 +57,7 @@ export class WebSocketClient {
       };
 
       this.ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error(`WebSocket error on port ${this.port}:`, error);
         this.isConnected = false;
       };
 
@@ -66,7 +65,7 @@ export class WebSocketClient {
         this.handleMessage(event);
       };
     } catch (error) {
-      console.error('Error connecting to WebSocket:', error);
+      console.error(`Error connecting to WebSocket on port ${this.port}:`, error);
       this.scheduleReconnect();
     }
   }
@@ -104,7 +103,7 @@ export class WebSocketClient {
         }
       }
     } catch (error) {
-      console.error('Error processing message:', error);
+      console.error(`Error processing message on port ${this.port}:`, error);
     }
   }
 

@@ -6,8 +6,8 @@ use strum_macros::{Display, EnumIter, EnumString};
 use crate::session::session_data::SessionData;
 use crate::telemetry::active::Active;
 use crate::telemetry::current_time::CurrentTime;
+use crate::telemetry::delta_best_time::DeltaBestTime;
 use crate::telemetry::delta_last_time::DeltaLastTime;
-use crate::telemetry::delta_optimal_time::DeltaOptimalTime;
 use crate::telemetry::gap_next::GapNext;
 use crate::telemetry::gap_prev::GapPrev;
 use crate::telemetry::gear::Gear;
@@ -76,7 +76,7 @@ pub enum TelemetryEvent {
     Active(Active),
     CurrentTime(CurrentTime),
     DeltaLastTime(DeltaLastTime),
-    DeltaOptimalTime(DeltaOptimalTime),
+    DeltaBestTime(DeltaBestTime),
     GapNext(GapNext),
     GapPrev(GapPrev),
     Gear(Gear),

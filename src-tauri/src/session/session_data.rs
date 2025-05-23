@@ -20,6 +20,7 @@ pub struct SessionData {
     pub car_class_est_lap_time: SignedDuration,
     pub current_time: DateTime<Local>,
     pub delta_last_time: SignedDuration,
+    pub delta_best_time: SignedDuration,
     pub delta_optimal_time: SignedDuration,
     pub driver_positions: Vec<u32>,
     pub drivers: HashMap<u32, Driver>,
@@ -178,6 +179,13 @@ impl SessionData {
         let delta_last_time_value =
             SignedDuration::from_secs_f32(raw_lap_delta_to_session_last_lap_value);
         self.delta_last_time = delta_last_time_value;
+
+        // delta_best_time
+        let raw_lap_delta_to_best_lap_value =
+            sim_state.read_name("LapDeltaToBestLap").unwrap_or(0.0);
+        let delta_best_time_value =
+            SignedDuration::from_secs_f32(raw_lap_delta_to_best_lap_value);
+        self.delta_best_time = delta_best_time_value;
 
         // delta_optimal_time
         let raw_lap_delta_to_optimal_lap_value =

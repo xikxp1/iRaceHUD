@@ -16,11 +16,11 @@ export type SubTimerWidgetSettings = { enabled: boolean; x: number; y: number; s
 
 export type StandingsDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: string; license: string; leader_gap: string; best_lap: string; last_lap: string; is_player: boolean; is_leader: boolean; is_in_pits: boolean; split_after: boolean }
 
-export type DeltaOptimalTime = string
-
 export type GearBlinkRpm = number
 
 export type ProximityWidgetSettings = { enabled: boolean; x: number; y: number; gap_width: number }
+
+export type DeltaBestTime = string
 
 export type TelemetryGraph = { ts: number; throttle: number; brake: number; abs_active: boolean }
 

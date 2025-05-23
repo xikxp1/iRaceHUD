@@ -1,7 +1,7 @@
 <script lang="ts">
     import {
+        deltaBestTime,
         deltaLastTime,
-        deltaOptimalTime,
         lapTime,
     } from "$lib/backend/telemetry.svelte";
     import { Duration } from "luxon";
@@ -25,7 +25,7 @@
                 style="width: {settings.delta_width}px"
             >
                 <div class="text-primary text-xl font-square">
-                    {$deltaOptimalTime}
+                    {$deltaBestTime}
                 </div>
             </div>
             <div
