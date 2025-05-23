@@ -22,7 +22,6 @@ pub struct SessionData {
     pub delta_best_time: SignedDuration,
     pub delta_optimal_time: SignedDuration,
     pub driver_positions: Vec<u32>,
-    pub player_class_driver_positions: Vec<u32>,
     pub drivers: HashMap<u32, Driver>,
     pub gear_blink_rpm: u32,
     pub gear_shift_rpm: u32,
@@ -304,7 +303,7 @@ impl SessionData {
 
         let mut car_class_positions_count: HashMap<u32, u32> = HashMap::new();
         let mut position_total: u32 = 0;
-        let mut player_class_driver_positions: Vec<u32> = Vec::new();
+
         for (position, car_id) in self.driver_positions.iter().enumerate() {
             let driver = self.drivers.get_mut(car_id);
             if driver.is_none() {
@@ -325,16 +324,12 @@ impl SessionData {
                 self.leader_car_id = *car_id;
             }
             if driver.car_class_id == self.player_car_class {
-                player_class_driver_positions.push(driver.position);
                 position_total += 1;
             }
         }
 
         // positions_total
         self.positions_total = position_total;
-
-        // player_class_driver_position
-        self.player_class_driver_positions = player_class_driver_positions;
 
         // gaps
         if !self.driver_positions.is_empty() {

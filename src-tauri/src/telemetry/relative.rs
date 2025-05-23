@@ -23,6 +23,7 @@ pub struct RelativeDriver {
     is_in_pits: bool,
     is_off_track: bool,
     is_off_world: bool,
+    is_player_car_class: bool,
 }
 
 impl Serialize for RelativeDriver {
@@ -31,7 +32,7 @@ impl Serialize for RelativeDriver {
         S: Serializer,
     {
         use serde::ser::SerializeMap;
-        let mut map = serializer.serialize_map(Some(11))?;
+        let mut map = serializer.serialize_map(Some(12))?;
         map.serialize_entry("car_id", &self.car_id)?;
         map.serialize_entry("position", &self.position)?;
         map.serialize_entry("user_name", &self.user_name)?;
@@ -43,6 +44,7 @@ impl Serialize for RelativeDriver {
         map.serialize_entry("is_in_pits", &self.is_in_pits)?;
         map.serialize_entry("is_off_track", &self.is_off_track)?;
         map.serialize_entry("is_off_world", &self.is_off_world)?;
+        map.serialize_entry("is_player_car_class", &self.is_player_car_class)?;
         map.end()
     }
 }
@@ -61,6 +63,7 @@ impl RelativeDriver {
             is_in_pits: driver.is_in_pits,
             is_off_track: driver.is_off_track,
             is_off_world: driver.is_off_world,
+            is_player_car_class: driver.is_player_class,
         }
     }
 }

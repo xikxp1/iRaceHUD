@@ -141,7 +141,6 @@
         }
 
         const track_map: TrackMapLocal[] = [];
-        const newTrackMapCarsById = new Map<number, TrackMapLocal>();
 
         for (let car of pendingTrackMapUpdate) {
             const offsetedLapDistPct =
@@ -150,29 +149,14 @@
                 offsetedLapDistPct * trackPathLength,
             );
 
-            // Only update if position changed significantly
-            const existingCar = trackMapCarsById.get(car.car_id);
-            if (existingCar) {
-                const dx = point.x - existingCar.x;
-                const dy = point.y - existingCar.y;
-                if (Math.sqrt(dx * dx + dy * dy) < 1) {
-                    // Skip if movement is less than 1 pixel
-                    track_map.push(existingCar);
-                    newTrackMapCarsById.set(car.car_id, existingCar);
-                    continue;
-                }
-            }
-
             let new_car: TrackMapLocal = {
                 ...car,
                 x: point.x,
                 y: point.y,
             };
             track_map.push(new_car);
-            newTrackMapCarsById.set(car.car_id, new_car);
         }
         trackMapCars = track_map;
-        trackMapCarsById = newTrackMapCarsById;
         pendingTrackMapUpdate = null;
         animationFrameId = null;
 

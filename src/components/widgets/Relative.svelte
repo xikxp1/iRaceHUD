@@ -39,10 +39,15 @@
                                 : 'text-primary'}"
                             text={rel?.car_number ? "#" + rel?.car_number : ""}
                         />
-                    </td><td class="text text-sm">
-                        <span class="text text-sm tracking-tight"
-                            >{rel?.user_name ?? ""}</span
-                        >
+                    </td>
+                    <td class="text text-sm">
+                        <span
+                            class="text text-sm tracking-tight"
+                            style="opacity: {rel?.is_player_car_class
+                                ? 1
+                                : 0.7}"
+                            >{rel?.user_name ?? ""}
+                        </span>
                         {#if rel?.is_off_track}
                             <span class="text text-sm text-error text-right"
                                 >&nbspOFF</span
