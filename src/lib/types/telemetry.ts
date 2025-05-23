@@ -56,7 +56,7 @@ export type SessionState = string
 
 export type Relative = RelativeDriver[]
 
-export type TelemetryWidgetSettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
+export type TelemetryWidgetSettings = { enabled: boolean; x: number; y: number; width: number; opacity: number; show_reference_telemetry: boolean | null }
 
 export type RaceLaps = number
 

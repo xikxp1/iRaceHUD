@@ -10,28 +10,12 @@
     let telemetryCanvas: HTMLCanvasElement | undefined = $state();
     let chart: Chart | undefined = $state();
 
-    $effect(() => {
-        if (telemetryCanvas != undefined) {
-            let ctx = telemetryCanvas.getContext("2d")!;
-            chart = new Chart(ctx, {
-                type: "line",
-                data: telemetryData,
-                options: telemetryOptions,
-            });
-        }
-    });
-
-    let throttle = $state(0);
-    let brake = $state(0);
-    let abs = $state(false);
-
-    const maxPoints = 300;
-
-    let throttleData = new Array(maxPoints).fill(0);
-    let brakeData = new Array(maxPoints).fill(0);
+    // Fixed-size arrays for data
+    const MAX_POINTS = 300;
+    const throttleData = new Array(MAX_POINTS).fill(0);
+    const brakeData = new Array(MAX_POINTS).fill(0);
 
     const css = window.getComputedStyle(document.documentElement);
-
     const throttleColor: string = `oklch(${css.getPropertyValue("--su")})`;
     const brakeColor: string = `oklch(${css.getPropertyValue("--er")})`;
     const gridColor: string = `oklch(${css.getPropertyValue("--p")} / 0.8)`;
@@ -73,10 +57,18 @@
             },
         },
         maintainAspectRatio: false,
+        animation: {
+            duration: 0,
+        },
+        responsive: true,
+        interaction: {
+            intersect: false,
+            mode: "index" as const,
+        },
     };
 
     const telemetryData = {
-        labels: throttleData,
+        labels: Array.from({ length: MAX_POINTS }, (_, i) => i),
         datasets: [
             {
                 borderColor: throttleColor,
@@ -91,6 +83,23 @@
         ],
     };
 
+    // Initialize chart only once
+    $effect(() => {
+        if (telemetryCanvas && !chart) {
+            const ctx = telemetryCanvas.getContext("2d")!;
+            chart = new Chart(ctx, {
+                type: "line",
+                data: telemetryData,
+                options: telemetryOptions,
+            });
+        }
+    });
+
+    // Use regular variables for values that don't need reactivity
+    let throttle = $state(0);
+    let brake = $state(0);
+    let abs = $state(false);
+
     let unsubscribe_telemetry: () => void = () => {};
 
     onMount(async () => {
@@ -102,11 +111,11 @@
             brakeData.push(brake);
             let currentThrottlePoints = throttleData.length;
             let currentBrakePoints = brakeData.length;
-            if (currentThrottlePoints > maxPoints) {
-                throttleData.splice(0, currentThrottlePoints - maxPoints);
+            if (currentThrottlePoints > MAX_POINTS) {
+                throttleData.splice(0, currentThrottlePoints - MAX_POINTS);
             }
-            if (currentBrakePoints > maxPoints) {
-                brakeData.splice(0, currentBrakePoints - maxPoints);
+            if (currentBrakePoints > MAX_POINTS) {
+                brakeData.splice(0, currentBrakePoints - MAX_POINTS);
             }
             if (chart != undefined) {
                 chart.update("none");
@@ -116,6 +125,9 @@
 
     onDestroy(() => {
         unsubscribe_telemetry();
+        if (chart) {
+            chart.destroy();
+        }
     });
 </script>
 

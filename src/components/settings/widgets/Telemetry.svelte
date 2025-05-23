@@ -9,6 +9,9 @@
     let width = $derived(settings?.width ?? 0);
     let x = $derived(settings?.x ?? 0);
     let y = $derived(settings?.y ?? 0);
+    let showReferenceTelemetry = $derived(
+        settings?.show_reference_telemetry ?? false,
+    );
 
     onMount(() => {
         invoke<TelemetryWidgetSettings>("get_telemetry_widget_settings").then(
@@ -45,6 +48,14 @@
     async function handleOpacityChange(event: Event) {
         if (!settings) return;
         settings.opacity = parseInt((event.target as HTMLInputElement).value);
+        invoke("set_telemetry_widget_settings", { settings: settings });
+    }
+
+    async function handleShowReferenceTelemetryChange(event: Event) {
+        if (!settings) return;
+        settings.show_reference_telemetry = (
+            event.target as HTMLInputElement
+        ).checked;
         invoke("set_telemetry_widget_settings", { settings: settings });
     }
 </script>
@@ -106,6 +117,19 @@
                         class="input input-sm w-24"
                         bind:value={y}
                         onchange={handleVerticalOffsetChange}
+                    />
+                </td>
+            </tr>
+            <tr>
+                <td class="text-sm font-bold text-right"
+                    >Show reference telemetry</td
+                >
+                <td>
+                    <input
+                        type="checkbox"
+                        class="toggle toggle-sm w-24"
+                        bind:checked={showReferenceTelemetry}
+                        onchange={handleShowReferenceTelemetryChange}
                     />
                 </td>
             </tr>

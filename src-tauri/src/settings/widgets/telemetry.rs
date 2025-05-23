@@ -8,4 +8,5 @@ pub struct TelemetryWidgetSettings {
     pub y: i32,
     pub width: u32,
     pub opacity: u32,
+    pub show_reference_telemetry: Option<bool>,
 }
