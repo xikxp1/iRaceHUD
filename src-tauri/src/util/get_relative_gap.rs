@@ -14,6 +14,7 @@ pub fn get_relative_gap(position: u32, session: &SessionData) -> String {
             let raw_gap = driver.player_relative_gap;
             match raw_gap.as_abs_secs_f32() {
                 0.0 => "-".to_string(),
+                value if value >= 100.0 => format!("{}", value as i32),
                 value => format!(
                     "{}.{}",
                     value as i32,
