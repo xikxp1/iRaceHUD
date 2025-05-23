@@ -17,7 +17,6 @@ pub struct SessionData {
     pub activated: bool,
     pub active: bool,
     pub brake: u32,
-    pub car_class_est_lap_time: SignedDuration,
     pub current_time: DateTime<Local>,
     pub delta_last_time: SignedDuration,
     pub delta_best_time: SignedDuration,
@@ -183,8 +182,7 @@ impl SessionData {
         // delta_best_time
         let raw_lap_delta_to_best_lap_value =
             sim_state.read_name("LapDeltaToBestLap").unwrap_or(0.0);
-        let delta_best_time_value =
-            SignedDuration::from_secs_f32(raw_lap_delta_to_best_lap_value);
+        let delta_best_time_value = SignedDuration::from_secs_f32(raw_lap_delta_to_best_lap_value);
         self.delta_best_time = delta_best_time_value;
 
         // delta_optimal_time
@@ -342,6 +340,8 @@ impl SessionData {
             let player = player.unwrap();
             let player_total_completed = player.total_completed;
             let player_estimated = player.estimated;
+            let player_dist_pct = player.lap_dist_pct;
+            let player_car_class_est_lap_time = player.car_class_est_lap_time;
 
             let leader = self.drivers.get(&self.leader_car_id);
             if leader.is_none() {
@@ -364,7 +364,7 @@ impl SessionData {
                         value if value >= SignedDuration::ZERO => {
                             leader_estimated - driver.estimated
                         }
-                        _ => leader_estimated + self.car_class_est_lap_time - driver.estimated,
+                        _ => leader_estimated + driver.car_class_est_lap_time - driver.estimated,
                     };
                 }
                 let player_gap_laps = player_total_completed - driver.total_completed;
@@ -378,25 +378,24 @@ impl SessionData {
                             value if value >= SignedDuration::ZERO => {
                                 player_estimated - driver.estimated
                             }
-                            _ => player_estimated + self.car_class_est_lap_time - driver.estimated,
+                            _ => {
+                                player_estimated + driver.car_class_est_lap_time - driver.estimated
+                            }
                         },
                         _ => match player_estimated - driver.estimated {
                             value if value >= SignedDuration::ZERO => {
-                                driver.estimated + self.car_class_est_lap_time - player_estimated
+                                driver.estimated + driver.car_class_est_lap_time - player_estimated
                             }
                             _ => player_estimated - driver.estimated,
                         },
                     };
                 };
-                driver.player_relative_gap = match player_estimated - driver.estimated {
-                    value if value >= self.car_class_est_lap_time * 0.5 => {
-                        value - self.car_class_est_lap_time
-                    }
-                    value if value <= -self.car_class_est_lap_time * 0.5 => {
-                        value + self.car_class_est_lap_time
-                    }
+                let delta_dist_pct = match player_dist_pct - driver.lap_dist_pct {
+                    value if value > 0.5 => value - 1.0,
+                    value if value < -0.5 => value + 1.0,
                     value => value,
                 };
+                driver.player_relative_gap = player_car_class_est_lap_time * delta_dist_pct;
             }
         }
 
@@ -468,30 +467,35 @@ impl SessionData {
                             continue;
                         }
                         let car_id = car_id.unwrap() as u32;
+
                         let user_name = driver["UserName"].as_str();
                         if user_name.is_none() {
                             error!("UserName not found");
                             continue;
                         }
                         let user_name = user_name.unwrap().to_string();
+
                         let car_number = driver["CarNumber"].as_str();
                         if car_number.is_none() {
                             error!("CarNumber not found");
                             continue;
                         }
                         let car_number = car_number.unwrap().to_string();
+
                         let car_class_id = driver["CarClassID"].as_i64();
                         if car_class_id.is_none() {
                             error!("CarClassID not found");
                             continue;
                         }
                         let car_class_id = car_class_id.unwrap() as u32;
+
                         let irating = driver["IRating"].as_i64();
                         if irating.is_none() {
                             error!("IRating not found");
                             continue;
                         }
                         let irating = irating.unwrap() as u32;
+
                         let lic_string = driver["LicString"].as_str();
                         if lic_string.is_none() {
                             error!("LicString not found");
@@ -499,19 +503,17 @@ impl SessionData {
                         }
                         let lic_string = lic_string.unwrap();
 
-                        if self.drivers.contains_key(&car_id) {
+                        let car_class_est_lap_time = driver["CarClassEstLapTime"].as_f64();
+                        if car_class_est_lap_time.is_none() {
+                            error!("CarClassEstLapTime not found");
                             continue;
                         }
+                        let car_class_est_lap_time = car_class_est_lap_time.unwrap();
+                        let car_class_est_lap_time =
+                            SignedDuration::from_secs_f64(car_class_est_lap_time);
 
-                        if car_id == self.player_car_id {
-                            let car_class_est_lap_time = driver["CarClassEstLapTime"].as_f64();
-                            if car_class_est_lap_time.is_none() {
-                                error!("CarClassEstLapTime not found");
-                                continue;
-                            }
-                            let car_class_est_lap_time = car_class_est_lap_time.unwrap();
-                            self.car_class_est_lap_time =
-                                SignedDuration::from_secs_f64(car_class_est_lap_time);
+                        if self.drivers.contains_key(&car_id) {
+                            continue;
                         }
 
                         let driver = Driver::new(
@@ -521,6 +523,7 @@ impl SessionData {
                             car_class_id,
                             irating,
                             lic_string.to_string(),
+                            car_class_est_lap_time,
                         );
 
                         self.drivers.insert(car_id, driver);

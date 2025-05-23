@@ -26,6 +26,7 @@ pub struct Driver {
     pub is_in_pits: bool,
     pub is_off_track: bool,
     pub is_off_world: bool,
+    pub car_class_est_lap_time: SignedDuration,
 }
 
 impl Driver {
@@ -36,6 +37,7 @@ impl Driver {
         car_class_id: u32,
         irating: u32,
         lic_string: String,
+        car_class_est_lap_time: SignedDuration,
     ) -> Self {
         Self {
             car_id,
@@ -44,6 +46,7 @@ impl Driver {
             car_class_id,
             irating,
             lic_string,
+            car_class_est_lap_time,
             ..Default::default()
         }
     }

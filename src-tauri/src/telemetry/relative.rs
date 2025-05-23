@@ -51,7 +51,7 @@ impl RelativeDriver {
     pub fn new(driver: &Driver, session: &SessionData) -> Self {
         Self {
             car_id: driver.car_id,
-            position: driver.position,
+            position: driver.class_position,
             user_name: driver.user_name.clone(),
             car_number: driver.car_number.clone(),
             irating: format_irating(driver.irating),
