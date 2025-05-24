@@ -21,8 +21,8 @@
       "data/"
     ]
   },
-  "productName": "iracehud",
-  "mainBinaryName": "iracehud",
+  "productName": "iRaceHUD",
+  "mainBinaryName": "iRaceHUD",
   "identifier": "dev.xikxp1.iracehud",
   "plugins": {
     "updater": {
