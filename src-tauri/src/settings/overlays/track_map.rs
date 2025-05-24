@@ -2,11 +2,10 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 
 #[derive(Default, Type, Serialize, Deserialize, Clone)]
-pub struct TelemetryWidgetSettings {
+pub struct TrackMapOverlaySettings {
     pub enabled: bool,
     pub x: i32,
     pub y: i32,
     pub width: u32,
     pub opacity: u32,
-    pub show_reference_telemetry: Option<bool>,
 }

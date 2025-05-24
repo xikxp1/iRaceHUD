@@ -1,9 +1,9 @@
 <script lang="ts">
-    import type { LapTimesWidgetSettings } from "$lib/types/telemetry";
+    import type { TrackMapOverlaySettings } from "$lib/types/telemetry";
     import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
 
-    let settings = $state<LapTimesWidgetSettings | undefined>(undefined);
+    let settings = $state<TrackMapOverlaySettings | undefined>(undefined);
     let enabled = $derived(settings?.enabled ?? false);
     let opacity = $derived(settings?.opacity ?? 0);
     let width = $derived(settings?.width ?? 0);
@@ -11,41 +11,41 @@
     let y = $derived(settings?.y ?? 0);
 
     onMount(() => {
-        invoke<LapTimesWidgetSettings>("get_lap_times_widget_settings").then(
+        invoke<TrackMapOverlaySettings>("get_track_map_overlay_settings").then(
             (x) => {
                 settings = x;
             },
         );
     });
 
-    function handleEnabledChange(event: Event) {
+    async function handleEnabledChange(event: Event) {
         if (!settings) return;
         settings.enabled = (event.target as HTMLInputElement).checked;
-        invoke("set_lap_times_widget_settings", { settings: settings });
+        invoke("set_track_map_overlay_settings", { settings: settings });
     }
 
-    function handleWidthChange(event: Event) {
+    async function handleWidthChange(event: Event) {
         if (!settings) return;
         settings.width = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_lap_times_widget_settings", { settings: settings });
+        invoke("set_track_map_overlay_settings", { settings: settings });
     }
 
-    function handleHorizontalOffsetChange(event: Event) {
+    async function handleHorizontalOffsetChange(event: Event) {
         if (!settings) return;
         settings.x = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_lap_times_widget_settings", { settings: settings });
+        invoke("set_track_map_overlay_settings", { settings: settings });
     }
 
-    function handleVerticalOffsetChange(event: Event) {
+    async function handleVerticalOffsetChange(event: Event) {
         if (!settings) return;
         settings.y = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_lap_times_widget_settings", { settings: settings });
+        invoke("set_track_map_overlay_settings", { settings: settings });
     }
 
-    function handleOpacityChange(event: Event) {
+    async function handleOpacityChange(event: Event) {
         if (!settings) return;
         settings.opacity = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_lap_times_widget_settings", { settings: settings });
+        invoke("set_track_map_overlay_settings", { settings: settings });
     }
 </script>
 

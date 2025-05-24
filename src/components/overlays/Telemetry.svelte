@@ -3,9 +3,9 @@
     import { onDestroy, onMount } from "svelte";
     import ProgressBar from "../utils/ProgressBar.svelte";
     import { telemetry } from "$lib/backend/telemetry.svelte";
-    import type { TelemetryWidgetSettings } from "$lib/types/telemetry";
+    import type { TelemetryOverlaySettings } from "$lib/types/telemetry";
 
-    let { settings }: { settings: TelemetryWidgetSettings } = $props();
+    let { settings }: { settings: TelemetryOverlaySettings } = $props();
 
     let telemetryCanvas: HTMLCanvasElement | undefined = $state();
     let chart: Chart | undefined = $state();

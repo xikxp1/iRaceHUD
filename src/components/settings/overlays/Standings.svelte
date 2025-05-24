@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { StandingsWidgetSettings } from "$lib/types/telemetry";
+    import type { StandingsOverlaySettings } from "$lib/types/telemetry";
     import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
     import { z } from "zod/v4";
@@ -19,7 +19,7 @@
             path: ["top_drivers"],
         });
 
-    let settings = $state<StandingsWidgetSettings | undefined>(undefined);
+    let settings = $state<StandingsOverlaySettings | undefined>(undefined);
     let enabled = $derived(settings?.enabled ?? false);
     let opacity = $derived(settings?.opacity ?? 0);
     let width = $derived(settings?.width ?? 0);
@@ -30,14 +30,14 @@
     let error = $state<string | null>(null);
 
     onMount(() => {
-        invoke<StandingsWidgetSettings>("get_standings_widget_settings").then(
+        invoke<StandingsOverlaySettings>("get_standings_overlay_settings").then(
             (x) => {
                 settings = x;
             },
         );
     });
 
-    function validateSettings(newSettings: StandingsWidgetSettings) {
+    function validateSettings(newSettings: StandingsOverlaySettings) {
         try {
             standingsSchema.parse(newSettings);
             error = null;
@@ -54,7 +54,7 @@
         if (!settings) return;
         settings.enabled = (event.target as HTMLInputElement).checked;
         if (validateSettings(settings)) {
-            invoke("set_standings_widget_settings", { settings: settings });
+            invoke("set_standings_overlay_settings", { settings: settings });
         }
     }
 
@@ -62,7 +62,7 @@
         if (!settings) return;
         settings.width = parseInt((event.target as HTMLInputElement).value);
         if (validateSettings(settings)) {
-            invoke("set_standings_widget_settings", { settings: settings });
+            invoke("set_standings_overlay_settings", { settings: settings });
         }
     }
 
@@ -70,7 +70,7 @@
         if (!settings) return;
         settings.x = parseInt((event.target as HTMLInputElement).value);
         if (validateSettings(settings)) {
-            invoke("set_standings_widget_settings", { settings: settings });
+            invoke("set_standings_overlay_settings", { settings: settings });
         }
     }
 
@@ -78,7 +78,7 @@
         if (!settings) return;
         settings.y = parseInt((event.target as HTMLInputElement).value);
         if (validateSettings(settings)) {
-            invoke("set_standings_widget_settings", { settings: settings });
+            invoke("set_standings_overlay_settings", { settings: settings });
         }
     }
 
@@ -86,7 +86,7 @@
         if (!settings) return;
         settings.opacity = parseInt((event.target as HTMLInputElement).value);
         if (validateSettings(settings)) {
-            invoke("set_standings_widget_settings", { settings: settings });
+            invoke("set_standings_overlay_settings", { settings: settings });
         }
     }
 
@@ -96,7 +96,7 @@
             (event.target as HTMLInputElement).value,
         );
         if (validateSettings(settings)) {
-            invoke("set_standings_widget_settings", { settings: settings });
+            invoke("set_standings_overlay_settings", { settings: settings });
         }
     }
 
@@ -106,7 +106,7 @@
             (event.target as HTMLInputElement).value,
         );
         if (validateSettings(settings)) {
-            invoke("set_standings_widget_settings", { settings: settings });
+            invoke("set_standings_overlay_settings", { settings: settings });
         }
     }
 </script>

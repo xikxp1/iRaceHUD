@@ -1,14 +1,14 @@
 <script lang="ts">
     import Application from "../../components/settings/Application.svelte";
-    import LapTimes from "../../components/settings/widgets/LapTimes.svelte";
-    import Main from "../../components/settings/widgets/Main.svelte";
-    import Proximity from "../../components/settings/widgets/Proximity.svelte";
-    import Relative from "../../components/settings/widgets/Relative.svelte";
-    import Standings from "../../components/settings/widgets/Standings.svelte";
-    import SubTimer from "../../components/settings/widgets/SubTimer.svelte";
-    import Telemetry from "../../components/settings/widgets/Telemetry.svelte";
-    import Timer from "../../components/settings/widgets/Timer.svelte";
-    import TrackMap from "../../components/settings/widgets/TrackMap.svelte";
+    import LapTimes from "../../components/settings/overlays/LapTimes.svelte";
+    import Main from "../../components/settings/overlays/Main.svelte";
+    import Proximity from "../../components/settings/overlays/Proximity.svelte";
+    import Relative from "../../components/settings/overlays/Relative.svelte";
+    import Standings from "../../components/settings/overlays/Standings.svelte";
+    import SubTimer from "../../components/settings/overlays/SubTimer.svelte";
+    import Telemetry from "../../components/settings/overlays/Telemetry.svelte";
+    import Timer from "../../components/settings/overlays/Timer.svelte";
+    import TrackMap from "../../components/settings/overlays/TrackMap.svelte";
 
     let chosenPage = $state("application");
 
@@ -20,107 +20,118 @@
 <div class="drawer drawer-open">
     <input id="my-drawer" type="checkbox" class="drawer-toggle" />
     <div class="drawer-side">
-        <ul class="menu bg-accent text-base-content min-h-full w-64 p-4">
-            <li class="mb-2">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline {chosenPage === 'application'
-                        ? 'btn-active'
-                        : ''}"
-                    onclick={() => setChosenPage("application")}
-                    >Application</button
-                >
-            </li>
-            <li class="mb-2">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline {chosenPage === 'main'
-                        ? 'btn-active'
-                        : ''}"
-                    onclick={() => setChosenPage("main")}
-                    >Main Widget</button
-                >
-            </li>
-            <li class="mb-2">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline {chosenPage === 'telemetry'
-                        ? 'btn-active'
-                        : ''}"
-                    onclick={() => setChosenPage("telemetry")}
-                    >Telemetry Widget</button
-                >
-            </li>
-            <li class="mb-2">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline {chosenPage === 'standings'
-                        ? 'btn-active'
-                        : ''}"
-                    onclick={() => setChosenPage("standings")}
-                    >Standings Widget</button
-                >
-            </li>
-            <li class="mb-2">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline {chosenPage === 'relative'
-                        ? 'btn-active'
-                        : ''}"
-                    onclick={() => setChosenPage("relative")}
-                    >Relative Widget</button
-                >
-            </li>
-            <li class="mb-2">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline {chosenPage === 'track_map'
-                        ? 'btn-active'
-                        : ''}"
-                    onclick={() => setChosenPage("track_map")}
-                    >Track Map Widget</button
-                >
-            </li>
-            <li class="mb-2">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline {chosenPage === 'proximity'
-                        ? 'btn-active'
-                        : ''}"
-                    onclick={() => setChosenPage("proximity")}
-                    >Proximity Widget</button
-                >
-            </li>
-            <li class="mb-2">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline {chosenPage === 'timer'
-                        ? 'btn-active'
-                        : ''}"
-                    onclick={() => setChosenPage("timer")}>Timer Widget</button
-                >
-            </li>
-            <li class="mb-2">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline {chosenPage === 'subtimer'
-                        ? 'btn-active'
-                        : ''}"
-                    onclick={() => setChosenPage("subtimer")}
-                    >Subtimer Widget</button
-                >
-            </li>
-            <li class="mb-2">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline {chosenPage === 'lap_times'
-                        ? 'btn-active'
-                        : ''}"
-                    onclick={() => setChosenPage("lap_times")}
-                    >Lap Times Widget</button
-                >
-            </li>
-        </ul>
+        <div class="bg-secondary min-h-full w-64">
+            <img src="/icons/logo.svg" alt="" />
+            <ul class="menu text-primary-content">
+                <li>
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline {chosenPage ===
+                        'application'
+                            ? 'btn-active'
+                            : ''}"
+                        onclick={() => setChosenPage("application")}
+                        >Application</button
+                    >
+                </li>
+                <div class="divider h-1"></div>
+                <li class="mb-2">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline {chosenPage === 'main'
+                            ? 'btn-active'
+                            : ''}"
+                        onclick={() => setChosenPage("main")}
+                        >Main Overlay</button
+                    >
+                </li>
+                <li class="mb-2">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline {chosenPage ===
+                        'telemetry'
+                            ? 'btn-active'
+                            : ''}"
+                        onclick={() => setChosenPage("telemetry")}
+                        >Telemetry Overlay</button
+                    >
+                </li>
+                <li class="mb-2">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline {chosenPage ===
+                        'standings'
+                            ? 'btn-active'
+                            : ''}"
+                        onclick={() => setChosenPage("standings")}
+                        >Standings Overlay</button
+                    >
+                </li>
+                <li class="mb-2">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline {chosenPage === 'relative'
+                            ? 'btn-active'
+                            : ''}"
+                        onclick={() => setChosenPage("relative")}
+                        >Relative Overlay</button
+                    >
+                </li>
+                <li class="mb-2">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline {chosenPage ===
+                        'track_map'
+                            ? 'btn-active'
+                            : ''}"
+                        onclick={() => setChosenPage("track_map")}
+                        >Track Map Overlay</button
+                    >
+                </li>
+                <li class="mb-2">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline {chosenPage ===
+                        'proximity'
+                            ? 'btn-active'
+                            : ''}"
+                        onclick={() => setChosenPage("proximity")}
+                        >Proximity Overlay</button
+                    >
+                </li>
+                <li class="mb-2">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline {chosenPage === 'timer'
+                            ? 'btn-active'
+                            : ''}"
+                        onclick={() => setChosenPage("timer")}
+                        >Timer Overlay</button
+                    >
+                </li>
+                <li class="mb-2">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline {chosenPage === 'subtimer'
+                            ? 'btn-active'
+                            : ''}"
+                        onclick={() => setChosenPage("subtimer")}
+                        >Subtimer Overlay</button
+                    >
+                </li>
+                <li class="mb-2">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline {chosenPage ===
+                        'lap_times'
+                            ? 'btn-active'
+                            : ''}"
+                        onclick={() => setChosenPage("lap_times")}
+                        >Lap Times Overlay</button
+                    >
+                </li>
+            </ul>
+        </div>
     </div>
     <div class="drawer-content">
         {#if chosenPage === "application"}

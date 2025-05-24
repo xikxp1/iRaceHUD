@@ -2,9 +2,9 @@
     import Badge from "../utils/Badge.svelte";
     import { getBadgeColor, getCarClassColors } from "$lib/utils";
     import { relative } from "$lib/backend/telemetry.svelte";
-    import type { RelativeWidgetSettings } from "$lib/types/telemetry";
+    import type { RelativeOverlaySettings } from "$lib/types/telemetry";
 
-    let { settings }: { settings: RelativeWidgetSettings } = $props();
+    let { settings }: { settings: RelativeOverlaySettings } = $props();
 
     const css = window.getComputedStyle(document.documentElement);
     const carClassColors = getCarClassColors(css);

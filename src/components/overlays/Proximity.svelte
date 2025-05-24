@@ -2,11 +2,11 @@
     import { proximity } from "$lib/backend/telemetry.svelte";
     import type {
         Proximity,
-        ProximityWidgetSettings,
+        ProximityOverlaySettings,
     } from "$lib/types/telemetry";
     import { onDestroy, onMount } from "svelte";
 
-    let { settings }: { settings: ProximityWidgetSettings } = $props();
+    let { settings }: { settings: ProximityOverlaySettings } = $props();
 
     let left_icon: HTMLImageElement | undefined = $state();
     let right_icon: HTMLImageElement | undefined = $state();

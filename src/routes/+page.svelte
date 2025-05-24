@@ -1,117 +1,118 @@
 <script lang="ts">
-    import LapTimes from "../components/widgets/LapTimes.svelte";
-    import Main from "../components/widgets/Main.svelte";
-    import Proximity from "../components/widgets/Proximity.svelte";
-    import Relative from "../components/widgets/Relative.svelte";
-    import Standings from "../components/widgets/Standings.svelte";
-    import Subtimer from "../components/widgets/SubTimer.svelte";
-    import Telemetry from "../components/widgets/Telemetry.svelte";
-    import Timer from "../components/widgets/Timer.svelte";
-    import TrackMapCanvas from "../components/widgets/TrackMapCanvas.svelte";
+    import LapTimes from "../components/overlays/LapTimes.svelte";
+    import Main from "../components/overlays/Main.svelte";
+    import Proximity from "../components/overlays/Proximity.svelte";
+    import Relative from "../components/overlays/Relative.svelte";
+    import Standings from "../components/overlays/Standings.svelte";
+    import Subtimer from "../components/overlays/SubTimer.svelte";
+    import Telemetry from "../components/overlays/Telemetry.svelte";
+    import Timer from "../components/overlays/Timer.svelte";
+    import TrackMapCanvas from "../components/overlays/TrackMapCanvas.svelte";
     import { active } from "$lib/backend/telemetry.svelte";
-    import { lapTimesWidgetSettings } from "$lib/backend/settings.svelte";
-    import { mainWidgetSettings } from "$lib/backend/settings.svelte";
-    import { proximityWidgetSettings } from "$lib/backend/settings.svelte";
-    import { relativeWidgetSettings } from "$lib/backend/settings.svelte";
-    import { standingsWidgetSettings } from "$lib/backend/settings.svelte";
-    import { subtimerWidgetSettings } from "$lib/backend/settings.svelte";
-    import { telemetryWidgetSettings } from "$lib/backend/settings.svelte";
-    import { timerWidgetSettings } from "$lib/backend/settings.svelte";
-    import { trackMapWidgetSettings } from "$lib/backend/settings.svelte";
+    import { lapTimesOverlaySettings } from "$lib/backend/settings.svelte";
+    import { mainOverlaySettings } from "$lib/backend/settings.svelte";
+    import { proximityOverlaySettings } from "$lib/backend/settings.svelte";
+    import { relativeOverlaySettings } from "$lib/backend/settings.svelte";
+    import { standingsOverlaySettings } from "$lib/backend/settings.svelte";
+    import { subtimerOverlaySettings } from "$lib/backend/settings.svelte";
+    import { telemetryOverlaySettings } from "$lib/backend/settings.svelte";
+    import { timerOverlaySettings } from "$lib/backend/settings.svelte";
+    import { trackMapOverlaySettings } from "$lib/backend/settings.svelte";
     import type {
-        MainWidgetSettings,
-        ProximityWidgetSettings,
-        RelativeWidgetSettings,
-        StandingsWidgetSettings,
-        SubTimerWidgetSettings,
-        TelemetryWidgetSettings,
-        TimerWidgetSettings,
-        TrackMapWidgetSettings,
+        MainOverlaySettings,
+        ProximityOverlaySettings,
+        RelativeOverlaySettings,
+        StandingsOverlaySettings,
+        SubTimerOverlaySettings,
+        TelemetryOverlaySettings,
+        TimerOverlaySettings,
+        TrackMapOverlaySettings,
     } from "$lib/types/telemetry";
-    import type { LapTimesWidgetSettings } from "$lib/types/telemetry";
+    import type { LapTimesOverlaySettings } from "$lib/types/telemetry";
     import { onDestroy } from "svelte";
-   
 
-    let lapTimesSettings: LapTimesWidgetSettings | undefined =
+    let lapTimesSettings: LapTimesOverlaySettings | undefined =
         $state(undefined);
     let lapTimesSettingsUpdate = $state(0);
-    let unsubscribe_lap_times_settings = lapTimesWidgetSettings.subscribe(
+    let unsubscribe_lap_times_settings = lapTimesOverlaySettings.subscribe(
         (settings) => {
             lapTimesSettings = settings;
             lapTimesSettingsUpdate++;
         },
     );
 
-    let mainSettings: MainWidgetSettings | undefined = $state(undefined);
+    let mainSettings: MainOverlaySettings | undefined = $state(undefined);
     let mainSettingsUpdate = $state(0);
-    let unsubscribe_main_settings = mainWidgetSettings.subscribe((settings) => {
-        mainSettings = settings;
-        mainSettingsUpdate++;
-    });
+    let unsubscribe_main_settings = mainOverlaySettings.subscribe(
+        (settings) => {
+            mainSettings = settings;
+            mainSettingsUpdate++;
+        },
+    );
 
-    let proximitySettings: ProximityWidgetSettings | undefined =
+    let proximitySettings: ProximityOverlaySettings | undefined =
         $state(undefined);
     let proximitySettingsUpdate = $state(0);
-    let unsubscribe_proximity_settings = proximityWidgetSettings.subscribe(
+    let unsubscribe_proximity_settings = proximityOverlaySettings.subscribe(
         (settings) => {
             proximitySettings = settings;
             proximitySettingsUpdate++;
         },
     );
 
-    let standingsSettings: StandingsWidgetSettings | undefined =
+    let standingsSettings: StandingsOverlaySettings | undefined =
         $state(undefined);
     let standingsSettingsUpdate = $state(0);
-    let unsubscribe_standings_settings = standingsWidgetSettings.subscribe(
+    let unsubscribe_standings_settings = standingsOverlaySettings.subscribe(
         (settings) => {
             standingsSettings = settings;
             standingsSettingsUpdate++;
         },
     );
 
-    let trackMapSettings: TrackMapWidgetSettings | undefined =
+    let trackMapSettings: TrackMapOverlaySettings | undefined =
         $state(undefined);
     let trackMapSettingsUpdate = $state(0);
-    let unsubscribe_track_map_settings = trackMapWidgetSettings.subscribe(
+    let unsubscribe_track_map_settings = trackMapOverlaySettings.subscribe(
         (settings) => {
             trackMapSettings = settings;
             trackMapSettingsUpdate++;
         },
     );
 
-    let relativeSettings: RelativeWidgetSettings | undefined =
+    let relativeSettings: RelativeOverlaySettings | undefined =
         $state(undefined);
     let relativeSettingsUpdate = $state(0);
-    let unsubscribe_relative_settings = relativeWidgetSettings.subscribe(
+    let unsubscribe_relative_settings = relativeOverlaySettings.subscribe(
         (settings) => {
             relativeSettings = settings;
             relativeSettingsUpdate++;
         },
     );
 
-    let subtimerSettings: SubTimerWidgetSettings | undefined =
+    let subtimerSettings: SubTimerOverlaySettings | undefined =
         $state(undefined);
     let subtimerSettingsUpdate = $state(0);
-    let unsubscribe_subtimer_settings = subtimerWidgetSettings.subscribe(
+    let unsubscribe_subtimer_settings = subtimerOverlaySettings.subscribe(
         (settings) => {
             subtimerSettings = settings;
             subtimerSettingsUpdate++;
         },
     );
 
-    let telemetrySettings: TelemetryWidgetSettings | undefined =
+    let telemetrySettings: TelemetryOverlaySettings | undefined =
         $state(undefined);
     let telemetrySettingsUpdate = $state(0);
-    let unsubscribe_telemetry_settings = telemetryWidgetSettings.subscribe(
+    let unsubscribe_telemetry_settings = telemetryOverlaySettings.subscribe(
         (settings) => {
             telemetrySettings = settings;
             telemetrySettingsUpdate++;
         },
     );
 
-    let timerSettings: TimerWidgetSettings | undefined = $state(undefined);
+    let timerSettings: TimerOverlaySettings | undefined = $state(undefined);
     let timerSettingsUpdate = $state(0);
-    let unsubscribe_timer_settings = timerWidgetSettings.subscribe(
+    let unsubscribe_timer_settings = timerOverlaySettings.subscribe(
         (settings) => {
             timerSettings = settings;
             timerSettingsUpdate++;
@@ -137,7 +138,7 @@
             <div class="outer">
                 <div class="middle">
                     <div
-                        class="widget"
+                        class="overlay"
                         style="transform: translate({mainSettings.x}px, {mainSettings.y}px);"
                     >
                         <Main settings={mainSettings} />
@@ -150,7 +151,7 @@
         <div class="outer">
             <div class="middle">
                 <div
-                    class="widget"
+                    class="overlay"
                     style="transform: translate({telemetrySettings.x}px, {telemetrySettings.y}px);"
                 >
                     <Telemetry settings={telemetrySettings} />
@@ -162,7 +163,7 @@
         <div class="outer">
             <div class="middle">
                 <div
-                    class="widget"
+                    class="overlay"
                     style="transform: translate({timerSettings.x}px, {timerSettings.y}px);"
                 >
                     <Timer settings={timerSettings} />
@@ -174,7 +175,7 @@
         <div class="outer">
             <div class="middle">
                 <div
-                    class="widget"
+                    class="overlay"
                     style="transform: translate({subtimerSettings.x}px, {subtimerSettings.y}px);"
                 >
                     <Subtimer settings={subtimerSettings} />
@@ -186,7 +187,7 @@
         <div class="outer">
             <div class="middle">
                 <div
-                    class="widget"
+                    class="overlay"
                     style="transform: translate({proximitySettings.x}px, {proximitySettings.y}px);"
                 >
                     <Proximity settings={proximitySettings} />
@@ -198,7 +199,7 @@
         <div class="outer">
             <div class="middle">
                 <div
-                    class="widget"
+                    class="overlay"
                     style="transform: translate({standingsSettings.x}px, {standingsSettings.y}px);"
                 >
                     <Standings settings={standingsSettings} />
@@ -210,7 +211,7 @@
         <div class="outer">
             <div class="middle">
                 <div
-                    class="widget"
+                    class="overlay"
                     style="transform: translate({trackMapSettings.x}px, {trackMapSettings.y}px);"
                 >
                     <TrackMapCanvas settings={trackMapSettings} />
@@ -222,7 +223,7 @@
         <div class="outer">
             <div class="middle">
                 <div
-                    class="widget"
+                    class="overlay"
                     style="transform: translate({lapTimesSettings.x}px, {lapTimesSettings.y}px);"
                 >
                     <LapTimes settings={lapTimesSettings} />
@@ -234,7 +235,7 @@
         <div class="outer">
             <div class="middle">
                 <div
-                    class="widget"
+                    class="overlay"
                     style="transform: translate({relativeSettings.x}px, {relativeSettings.y}px);"
                 >
                     <Relative settings={relativeSettings} />
@@ -260,7 +261,7 @@
         vertical-align: middle;
     }
 
-    .widget {
+    .overlay {
         margin-right: auto;
         margin-bottom: auto;
         align-items: center;

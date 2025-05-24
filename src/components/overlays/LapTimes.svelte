@@ -1,8 +1,8 @@
 <script lang="ts">
     import { lapTimes } from "$lib/backend/telemetry.svelte";
-    import type { LapTimesWidgetSettings } from "$lib/types/telemetry";
+    import type { LapTimesOverlaySettings } from "$lib/types/telemetry";
 
-    let { settings }: { settings: LapTimesWidgetSettings } = $props();
+    let { settings }: { settings: LapTimesOverlaySettings } = $props();
 </script>
 
 <div

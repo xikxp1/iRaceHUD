@@ -1,44 +1,49 @@
 <script lang="ts">
-    import type { ProximityWidgetSettings } from "$lib/types/telemetry";
+    import type { MainOverlaySettings } from "$lib/types/telemetry";
     import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
 
-    let settings = $state<ProximityWidgetSettings | undefined>(undefined);
+    let settings = $state<MainOverlaySettings | undefined>(undefined);
     let enabled = $derived(settings?.enabled ?? false);
-    let gap_width = $derived(settings?.gap_width ?? 0);
+    let opacity = $derived(settings?.opacity ?? 0);
+    let width = $derived(settings?.width ?? 0);
     let x = $derived(settings?.x ?? 0);
     let y = $derived(settings?.y ?? 0);
 
     onMount(() => {
-        invoke<ProximityWidgetSettings>("get_proximity_widget_settings").then(
-            (x) => {
-                settings = x;
-            },
-        );
+        invoke<MainOverlaySettings>("get_main_overlay_settings").then((x) => {
+            settings = x;
+        });
     });
 
-    function handleEnabledChange(event: Event) {
+    async function handleEnabledChange(event: Event) {
         if (!settings) return;
         settings.enabled = (event.target as HTMLInputElement).checked;
-        invoke("set_proximity_widget_settings", { settings: settings });
+        invoke("set_main_overlay_settings", { settings: settings });
     }
 
-    function handleWidthChange(event: Event) {
+    async function handleWidthChange(event: Event) {
         if (!settings) return;
-        settings.gap_width = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_proximity_widget_settings", { settings: settings });
+        settings.width = parseInt((event.target as HTMLInputElement).value);
+        invoke("set_main_overlay_settings", { settings: settings });
     }
 
-    function handleHorizontalOffsetChange(event: Event) {
+    async function handleHorizontalOffsetChange(event: Event) {
         if (!settings) return;
         settings.x = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_proximity_widget_settings", { settings: settings });
+        invoke("set_main_overlay_settings", { settings: settings });
     }
 
-    function handleVerticalOffsetChange(event: Event) {
+    async function handleVerticalOffsetChange(event: Event) {
         if (!settings) return;
         settings.y = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_proximity_widget_settings", { settings: settings });
+        invoke("set_main_overlay_settings", { settings: settings });
+    }
+
+    async function handleOpacityChange(event: Event) {
+        if (!settings) return;
+        settings.opacity = parseInt((event.target as HTMLInputElement).value);
+        invoke("set_main_overlay_settings", { settings: settings });
     }
 </script>
 
@@ -57,12 +62,25 @@
                 </td>
             </tr>
             <tr>
-                <td class="text-sm font-bold text-right">Gap width</td>
+                <td class="text-sm font-bold text-right">Opacity</td>
                 <td>
                     <input
                         type="number"
                         class="input input-sm w-24"
-                        bind:value={gap_width}
+                        bind:value={opacity}
+                        onchange={handleOpacityChange}
+                        min="0"
+                        max="100"
+                    />
+                </td>
+            </tr>
+            <tr>
+                <td class="text-sm font-bold text-right">Width</td>
+                <td>
+                    <input
+                        type="number"
+                        class="input input-sm w-24"
+                        bind:value={width}
                         onchange={handleWidthChange}
                     />
                 </td>

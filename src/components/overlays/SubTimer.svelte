@@ -4,9 +4,9 @@
         gapPrev,
         sessionState,
     } from "$lib/backend/telemetry.svelte";
-    import type { SubTimerWidgetSettings } from "$lib/types/telemetry";
+    import type { SubTimerOverlaySettings } from "$lib/types/telemetry";
 
-    let { settings }: { settings: SubTimerWidgetSettings } = $props();
+    let { settings }: { settings: SubTimerOverlaySettings } = $props();
 </script>
 
 <div

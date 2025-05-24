@@ -27,15 +27,15 @@ use websocket::WebSocketServer;
 
 use crate::emitter::telemetry_emitter::TelemetryEmitter;
 use crate::session::session_data::SessionData;
-use crate::settings::widgets::lap_times::LapTimesWidgetSettings;
-use crate::settings::widgets::main::MainWidgetSettings;
-use crate::settings::widgets::proximity::ProximityWidgetSettings;
-use crate::settings::widgets::relative::RelativeWidgetSettings;
-use crate::settings::widgets::standings::StandingsWidgetSettings;
-use crate::settings::widgets::subtimer::SubTimerWidgetSettings;
-use crate::settings::widgets::telemetry::TelemetryWidgetSettings;
-use crate::settings::widgets::timer::TimerWidgetSettings;
-use crate::settings::widgets::track_map::TrackMapWidgetSettings;
+use crate::settings::overlays::lap_times::LapTimesOverlaySettings;
+use crate::settings::overlays::main::MainOverlaySettings;
+use crate::settings::overlays::proximity::ProximityOverlaySettings;
+use crate::settings::overlays::relative::RelativeOverlaySettings;
+use crate::settings::overlays::standings::StandingsOverlaySettings;
+use crate::settings::overlays::subtimer::SubTimerOverlaySettings;
+use crate::settings::overlays::telemetry::TelemetryOverlaySettings;
+use crate::settings::overlays::timer::TimerOverlaySettings;
+use crate::settings::overlays::track_map::TrackMapOverlaySettings;
 use crate::util::settings_helper::{get_settings, set_settings};
 
 #[cfg(not(debug_assertions))]
@@ -227,24 +227,24 @@ async fn main() {
             set_autostart,
             get_autostart,
             get_ws_port,
-            get_lap_times_widget_settings,
-            set_lap_times_widget_settings,
-            get_main_widget_settings,
-            set_main_widget_settings,
-            get_proximity_widget_settings,
-            set_proximity_widget_settings,
-            get_relative_widget_settings,
-            set_relative_widget_settings,
-            get_standings_widget_settings,
-            set_standings_widget_settings,
-            get_subtimer_widget_settings,
-            set_subtimer_widget_settings,
-            get_telemetry_widget_settings,
-            set_telemetry_widget_settings,
-            get_timer_widget_settings,
-            set_timer_widget_settings,
-            get_track_map_widget_settings,
-            set_track_map_widget_settings,
+            get_lap_times_overlay_settings,
+            set_lap_times_overlay_settings,
+            get_main_overlay_settings,
+            set_main_overlay_settings,
+            get_proximity_overlay_settings,
+            set_proximity_overlay_settings,
+            get_relative_overlay_settings,
+            set_relative_overlay_settings,
+            get_standings_overlay_settings,
+            set_standings_overlay_settings,
+            get_subtimer_overlay_settings,
+            set_subtimer_overlay_settings,
+            get_telemetry_overlay_settings,
+            set_telemetry_overlay_settings,
+            get_timer_overlay_settings,
+            set_timer_overlay_settings,
+            get_track_map_overlay_settings,
+            set_track_map_overlay_settings,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
@@ -363,91 +363,91 @@ async fn get_ws_port() -> Option<u16> {
 }
 
 #[tauri::command]
-async fn get_lap_times_widget_settings(app: tauri::AppHandle) -> LapTimesWidgetSettings {
+async fn get_lap_times_overlay_settings(app: tauri::AppHandle) -> LapTimesOverlaySettings {
     get_settings(app, "lap_times")
 }
 
 #[tauri::command]
-async fn set_lap_times_widget_settings(app: tauri::AppHandle, settings: LapTimesWidgetSettings) {
+async fn set_lap_times_overlay_settings(app: tauri::AppHandle, settings: LapTimesOverlaySettings) {
     set_settings(app, "lap_times", settings);
 }
 
 #[tauri::command]
-async fn get_main_widget_settings(app: tauri::AppHandle) -> MainWidgetSettings {
+async fn get_main_overlay_settings(app: tauri::AppHandle) -> MainOverlaySettings {
     get_settings(app, "main")
 }
 
 #[tauri::command]
-async fn set_main_widget_settings(app: tauri::AppHandle, settings: MainWidgetSettings) {
+async fn set_main_overlay_settings(app: tauri::AppHandle, settings: MainOverlaySettings) {
     set_settings(app, "main", settings);
 }
 
 #[tauri::command]
-async fn get_proximity_widget_settings(app: tauri::AppHandle) -> ProximityWidgetSettings {
+async fn get_proximity_overlay_settings(app: tauri::AppHandle) -> ProximityOverlaySettings {
     get_settings(app, "proximity")
 }
 
 #[tauri::command]
-async fn set_proximity_widget_settings(app: tauri::AppHandle, settings: ProximityWidgetSettings) {
+async fn set_proximity_overlay_settings(app: tauri::AppHandle, settings: ProximityOverlaySettings) {
     set_settings(app, "proximity", settings);
 }
 
 #[tauri::command]
-async fn get_relative_widget_settings(app: tauri::AppHandle) -> RelativeWidgetSettings {
+async fn get_relative_overlay_settings(app: tauri::AppHandle) -> RelativeOverlaySettings {
     get_settings(app, "relative")
 }
 
 #[tauri::command]
-async fn set_relative_widget_settings(app: tauri::AppHandle, settings: RelativeWidgetSettings) {
+async fn set_relative_overlay_settings(app: tauri::AppHandle, settings: RelativeOverlaySettings) {
     set_settings(app, "relative", settings);
 }
 
 #[tauri::command]
-async fn get_standings_widget_settings(app: tauri::AppHandle) -> StandingsWidgetSettings {
+async fn get_standings_overlay_settings(app: tauri::AppHandle) -> StandingsOverlaySettings {
     get_settings(app, "standings")
 }
 
 #[tauri::command]
-async fn set_standings_widget_settings(app: tauri::AppHandle, settings: StandingsWidgetSettings) {
+async fn set_standings_overlay_settings(app: tauri::AppHandle, settings: StandingsOverlaySettings) {
     set_settings(app, "standings", settings);
 }
 
 #[tauri::command]
-async fn get_subtimer_widget_settings(app: tauri::AppHandle) -> SubTimerWidgetSettings {
+async fn get_subtimer_overlay_settings(app: tauri::AppHandle) -> SubTimerOverlaySettings {
     get_settings(app, "subtimer")
 }
 
 #[tauri::command]
-async fn set_subtimer_widget_settings(app: tauri::AppHandle, settings: SubTimerWidgetSettings) {
+async fn set_subtimer_overlay_settings(app: tauri::AppHandle, settings: SubTimerOverlaySettings) {
     set_settings(app, "subtimer", settings);
 }
 
 #[tauri::command]
-async fn get_telemetry_widget_settings(app: tauri::AppHandle) -> TelemetryWidgetSettings {
+async fn get_telemetry_overlay_settings(app: tauri::AppHandle) -> TelemetryOverlaySettings {
     get_settings(app, "telemetry")
 }
 
 #[tauri::command]
-async fn set_telemetry_widget_settings(app: tauri::AppHandle, settings: TelemetryWidgetSettings) {
+async fn set_telemetry_overlay_settings(app: tauri::AppHandle, settings: TelemetryOverlaySettings) {
     set_settings(app, "telemetry", settings);
 }
 
 #[tauri::command]
-async fn get_timer_widget_settings(app: tauri::AppHandle) -> TimerWidgetSettings {
+async fn get_timer_overlay_settings(app: tauri::AppHandle) -> TimerOverlaySettings {
     get_settings(app, "timer")
 }
 
 #[tauri::command]
-async fn set_timer_widget_settings(app: tauri::AppHandle, settings: TimerWidgetSettings) {
+async fn set_timer_overlay_settings(app: tauri::AppHandle, settings: TimerOverlaySettings) {
     set_settings(app, "timer", settings);
 }
 
 #[tauri::command]
-async fn get_track_map_widget_settings(app: tauri::AppHandle) -> TrackMapWidgetSettings {
+async fn get_track_map_overlay_settings(app: tauri::AppHandle) -> TrackMapOverlaySettings {
     get_settings(app, "track_map")
 }
 
 #[tauri::command]
-async fn set_track_map_widget_settings(app: tauri::AppHandle, settings: TrackMapWidgetSettings) {
+async fn set_track_map_overlay_settings(app: tauri::AppHandle, settings: TrackMapOverlaySettings) {
     set_settings(app, "track_map", settings);
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {
         StandingsDriver,
-        StandingsWidgetSettings,
+        StandingsOverlaySettings,
     } from "$lib/types/telemetry";
     import { onDestroy, onMount } from "svelte";
     import { flip } from "svelte/animate";
@@ -15,7 +15,7 @@
         strengthOfField,
     } from "$lib/backend/telemetry.svelte";
 
-    let { settings }: { settings: StandingsWidgetSettings } = $props();
+    let { settings }: { settings: StandingsOverlaySettings } = $props();
 
     type LocalStandings = StandingsDriver & {
         position_change: number;

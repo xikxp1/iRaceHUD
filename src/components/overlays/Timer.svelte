@@ -5,9 +5,9 @@
         lapTime,
     } from "$lib/backend/telemetry.svelte";
     import { Duration } from "luxon";
-    import type { TimerWidgetSettings } from "$lib/types/telemetry";
+    import type { TimerOverlaySettings } from "$lib/types/telemetry";
 
-    let { settings }: { settings: TimerWidgetSettings } = $props();
+    let { settings }: { settings: TimerOverlaySettings } = $props();
 
     let lapTimeFormatted = $derived(
         Duration.fromObject({ seconds: $lapTime }).toFormat("m:ss.SSS"),

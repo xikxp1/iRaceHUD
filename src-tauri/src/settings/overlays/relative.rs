@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 
 #[derive(Default, Type, Serialize, Deserialize, Clone)]
-pub struct RelativeWidgetSettings {
+pub struct RelativeOverlaySettings {
     pub enabled: bool,
     pub x: i32,
     pub y: i32,

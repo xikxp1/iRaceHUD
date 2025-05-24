@@ -3,13 +3,13 @@
         TrackId,
         TrackMap,
         TrackMapDriver,
-        TrackMapWidgetSettings,
+        TrackMapOverlaySettings,
     } from "$lib/types/telemetry";
     import { trackID, trackMap } from "$lib/backend/telemetry.svelte";
     import { onDestroy, onMount } from "svelte";
     import { getCarClassColors } from "$lib/utils";
 
-    let { settings }: { settings: TrackMapWidgetSettings } = $props();
+    let { settings }: { settings: TrackMapOverlaySettings } = $props();
 
     type TrackMapLocal = TrackMapDriver & {
         x: number;

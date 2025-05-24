@@ -12,11 +12,11 @@
         rpm,
         speed,
     } from "$lib/backend/telemetry.svelte";
-    import type { MainWidgetSettings, Rpm } from "$lib/types/telemetry";
+    import type { MainOverlaySettings, Rpm } from "$lib/types/telemetry";
     import NumberFlow, { continuous } from "@number-flow/svelte";
     import { onDestroy, onMount } from "svelte";
 
-    let { settings }: { settings: MainWidgetSettings } = $props();
+    let { settings }: { settings: MainOverlaySettings } = $props();
 
     let gear_indicator: HTMLDivElement | undefined = $state();
     let rpm_indicator: HTMLProgressElement | undefined = $state();

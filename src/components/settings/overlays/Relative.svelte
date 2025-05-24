@@ -1,9 +1,9 @@
 <script lang="ts">
-    import type { MainWidgetSettings } from "$lib/types/telemetry";
+    import type { RelativeOverlaySettings } from "$lib/types/telemetry";
     import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
 
-    let settings = $state<MainWidgetSettings | undefined>(undefined);
+    let settings = $state<RelativeOverlaySettings | undefined>(undefined);
     let enabled = $derived(settings?.enabled ?? false);
     let opacity = $derived(settings?.opacity ?? 0);
     let width = $derived(settings?.width ?? 0);
@@ -11,39 +11,41 @@
     let y = $derived(settings?.y ?? 0);
 
     onMount(() => {
-        invoke<MainWidgetSettings>("get_main_widget_settings").then((x) => {
-            settings = x;
-        });
+        invoke<RelativeOverlaySettings>("get_relative_overlay_settings").then(
+            (x) => {
+                settings = x;
+            },
+        );
     });
 
-    async function handleEnabledChange(event: Event) {
+    function handleEnabledChange(event: Event) {
         if (!settings) return;
         settings.enabled = (event.target as HTMLInputElement).checked;
-        invoke("set_main_widget_settings", { settings: settings });
+        invoke("set_relative_overlay_settings", { settings: settings });
     }
 
-    async function handleWidthChange(event: Event) {
+    function handleWidthChange(event: Event) {
         if (!settings) return;
         settings.width = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_main_widget_settings", { settings: settings });
+        invoke("set_relative_overlay_settings", { settings: settings });
     }
 
-    async function handleHorizontalOffsetChange(event: Event) {
+    function handleHorizontalOffsetChange(event: Event) {
         if (!settings) return;
         settings.x = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_main_widget_settings", { settings: settings });
+        invoke("set_relative_overlay_settings", { settings: settings });
     }
 
-    async function handleVerticalOffsetChange(event: Event) {
+    function handleVerticalOffsetChange(event: Event) {
         if (!settings) return;
         settings.y = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_main_widget_settings", { settings: settings });
+        invoke("set_relative_overlay_settings", { settings: settings });
     }
 
-    async function handleOpacityChange(event: Event) {
+    function handleOpacityChange(event: Event) {
         if (!settings) return;
         settings.opacity = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_main_widget_settings", { settings: settings });
+        invoke("set_relative_overlay_settings", { settings: settings });
     }
 </script>
 
