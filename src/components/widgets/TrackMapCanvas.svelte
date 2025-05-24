@@ -7,6 +7,7 @@
     } from "$lib/types/telemetry";
     import { trackID, trackMap } from "$lib/backend/telemetry.svelte";
     import { onDestroy, onMount } from "svelte";
+    import { getCarClassColors } from "$lib/utils";
 
     let { settings }: { settings: TrackMapWidgetSettings } = $props();
 
@@ -40,18 +41,15 @@
 
     let startFinishPoint: { x: number; y: number } | null = $state(null);
     let startFinishPerp: { x: number; y: number } | null = $state(null);
-    const START_LINE_LENGTH = 50;
+    const START_LINE_LENGTH = 52;
 
     const css = window.getComputedStyle(document.documentElement);
+    const carClassColors = getCarClassColors(css);
 
     const textColor: string = `oklch(${css.getPropertyValue("--pc")})`;
     const trackColor: string = `oklch(${css.getPropertyValue("--sc")})`;
     const startFinishColor: string = `oklch(${css.getPropertyValue("--s")})`;
     const trackBorderColor: string = `oklch(${css.getPropertyValue("--p")})`;
-    const otherCarCircleColor: string = `oklch(${css.getPropertyValue("--p")})`;
-    const playerCarClassCircleColor: string = "#FFE4C4";
-    const leaderCircleColor: string = `oklch(${css.getPropertyValue("--in")})`;
-    const playerCircleColor: string = `oklch(${css.getPropertyValue("--s")})`;
     const offtrackCircleColor: string = `oklch(${css.getPropertyValue("--er")})`;
     const inPitsCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
 
@@ -216,7 +214,7 @@
                 startFinishPoint.y + startFinishPerp.y * START_LINE_LENGTH,
             );
             ctx.strokeStyle = trackColor;
-            ctx.lineWidth = 16;
+            ctx.lineWidth = 20;
             ctx.stroke();
 
             ctx.beginPath();
@@ -229,151 +227,85 @@
                 startFinishPoint.y + startFinishPerp.y * START_LINE_LENGTH,
             );
             ctx.strokeStyle = startFinishColor;
-            ctx.lineWidth = 12;
+            ctx.lineWidth = 14;
             ctx.stroke();
         }
 
-        // Helper function to check if cars are close to each other
-        function areCarsClose(
-            car1: TrackMapLocal,
-            car2: TrackMapLocal,
-        ): boolean {
-            const dx = car1.x - car2.x;
-            const dy = car1.y - car2.y;
-            return Math.sqrt(dx * dx + dy * dy) < 48;
-        }
-
         // Helper function to draw a car circle without text
-        function drawCarCircle(car: TrackMapLocal) {
+        function drawCar(car: TrackMapLocal) {
             ctx.save();
             ctx.translate(car.x, car.y);
-            ctx.beginPath();
-            ctx.arc(0, 0, 32, 0, Math.PI * 2);
-            if (
-                car.class_position === null ||
-                !car.is_player_class ||
-                car.is_in_pits
-            ) {
-                ctx.globalAlpha = 0.5;
-            }
-            ctx.fillStyle = car.is_player
-                ? playerCircleColor
-                : car.is_leader
-                  ? leaderCircleColor
-                  : car.is_player_class
-                    ? playerCarClassCircleColor
-                    : otherCarCircleColor;
-            ctx.fill();
-            ctx.restore();
-        }
 
-        function drawCarOutline(car: TrackMapLocal) {
-            ctx.save();
-            ctx.translate(car.x, car.y);
-            if (car.is_off_track || car.is_in_pits) {
-                ctx.beginPath();
-                ctx.arc(0, 0, 36, 0, Math.PI * 2);
-                ctx.strokeStyle = car.is_off_track
-                    ? offtrackCircleColor
-                    : inPitsCircleColor;
-                ctx.lineWidth = 6;
-                ctx.stroke();
-            }
-            ctx.restore();
-        }
-
-        // Helper function to draw position number
-        function drawPositionNumber(car: TrackMapLocal) {
-            if (car.class_position === null) {
-                return;
-            }
-
-            ctx.save();
-            ctx.translate(car.x, car.y);
-            if (!car.is_player_class) {
+            if (!car.is_player_class || car.is_in_pits) {
                 ctx.globalAlpha = 0.7;
             }
-            ctx.fillStyle = textColor;
-            ctx.font = "52px iracing";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(car.class_position.toString(), 0, 5);
+
+            if (car.is_player) {
+                ctx.globalAlpha = 0.9;
+            }
+
+            // Draw car circle
+            const circleSize = car.is_player ? 40 : 30;
+            const colorString = `#${car.car_class_color.toString(16)}`;
+            let classColor = carClassColors[colorString];
+            if (classColor == null) {
+                classColor = trackBorderColor;
+            }
+
+            ctx.beginPath();
+            ctx.arc(0, 0, circleSize, 0, Math.PI * 2);
+            ctx.fillStyle = classColor;
+            ctx.fill();
+
+            // Draw car outline
+            const circleSizeOutline = circleSize + 4;
+            const outlineColor = car.is_off_track
+                ? offtrackCircleColor
+                : car.is_in_pits
+                  ? inPitsCircleColor
+                  : trackColor;
+
+            ctx.beginPath();
+            ctx.arc(0, 0, circleSizeOutline, 0, Math.PI * 2);
+            ctx.strokeStyle = outlineColor;
+            ctx.lineWidth = 8;
+            ctx.stroke();
+
+            if (car.class_position != null) {
+                // Draw car position
+                ctx.fillStyle = textColor;
+                ctx.font = `${car.is_player ? 65 : 50}px iracing`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(car.class_position.toString(), 0, 5);
+            }
+
+            ctx.globalAlpha = 1;
             ctx.restore();
         }
 
-        // Draw cars in order
-        const visibleCars = trackMapCars.filter((car) => !car.is_off_world);
+        // Sort cars by position in reverse order
+        trackMapCars.sort((a, b) => b.position - a.position);
 
-        // First draw regular cars
-        const regularCars = visibleCars.filter(
-            (car) => !car.is_leader && !car.is_player,
-        );
-        regularCars.sort((a, b) => a.position - b.position);
+        const playerClassCarIndexes: number[] = [];
+        let playerIndex: number | null = null;
 
-        // Identify clusters
-        const clusters: TrackMapLocal[][] = [];
-        let currentCluster: TrackMapLocal[] = [];
-
-        for (let i = 0; i < regularCars.length; i++) {
-            const car = regularCars[i];
-
-            if (currentCluster.length === 0) {
-                currentCluster.push(car);
+        for (let i = 0; i < trackMapCars.length; i++) {
+            if (trackMapCars[i].is_player) {
+                playerIndex = i;
+            } else if (trackMapCars[i].is_player_class) {
+                playerClassCarIndexes.push(i);
             } else {
-                const lastCar = currentCluster[currentCluster.length - 1];
-                if (areCarsClose(car, lastCar)) {
-                    currentCluster.push(car);
-                } else {
-                    clusters.push([...currentCluster]);
-                    currentCluster = [car];
-                }
-            }
-        }
-        if (currentCluster.length > 0) {
-            clusters.push(currentCluster);
-        }
-
-        // First draw all car circles
-        for (const cluster of clusters) {
-            for (const car of cluster) {
-                drawCarCircle(car);
+                drawCar(trackMapCars[i]);
             }
         }
 
-        // Then draw all car outlines
-        for (const cluster of clusters) {
-            for (const car of cluster) {
-                drawCarOutline(car);
-            }
+        for (let i of playerClassCarIndexes) {
+            drawCar(trackMapCars[i]);
         }
 
-        // Then draw all position numbers in reverse order
-        for (let i = clusters.length - 1; i >= 0; i--) {
-            const cluster = clusters[i];
-            if (areCarsClose(cluster[0], cluster[cluster.length - 1])) {
-                drawPositionNumber(cluster[0]);
-            } else {
-                drawPositionNumber(cluster[cluster.length - 1]);
-                drawPositionNumber(cluster[0]);
-            }
-        }
-
-        // Draw leader car
-        const leaderCar = visibleCars.find(
-            (car) => car.is_leader && !car.is_player,
-        );
-        if (leaderCar) {
-            drawCarCircle(leaderCar);
-            drawCarOutline(leaderCar);
-            drawPositionNumber(leaderCar);
-        }
-
-        // Draw player car
-        const playerCar = visibleCars.find((car) => car.is_player);
-        if (playerCar) {
-            drawCarCircle(playerCar);
-            drawCarOutline(playerCar);
-            drawPositionNumber(playerCar);
+        if (playerIndex != null) {
+            drawCar(trackMapCars[playerIndex]);
         }
 
         // Reset transform

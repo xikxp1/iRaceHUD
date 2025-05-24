@@ -523,6 +523,13 @@ impl SessionData {
                         let car_class_est_lap_time =
                             SignedDuration::from_secs_f64(car_class_est_lap_time);
 
+                        let car_class_color = driver["CarClassColor"].as_i64();
+                        if car_class_color.is_none() {
+                            error!("CarClassColor not found");
+                            continue;
+                        }
+                        let car_class_color = car_class_color.unwrap() as u32;
+
                         if self.drivers.contains_key(&car_id) {
                             continue;
                         }
@@ -536,6 +543,7 @@ impl SessionData {
                             lic_string.to_string(),
                             car_class_est_lap_time,
                             self.player_car_class == car_class_id,
+                            car_class_color,
                         );
 
                         self.drivers.insert(car_id, driver);

@@ -17,6 +17,7 @@ pub struct TrackMapDriver {
     is_in_pits: bool,
     is_off_track: bool,
     is_off_world: bool,
+    car_class_color: u32,
 }
 
 // Custom serialization to ensure we get a MessagePack map/object instead of an array
@@ -26,7 +27,7 @@ impl Serialize for TrackMapDriver {
         S: SerdeSerializer,
     {
         use serde::ser::SerializeMap;
-        let mut map = serializer.serialize_map(Some(10))?;
+        let mut map = serializer.serialize_map(Some(11))?;
         map.serialize_entry("car_id", &self.car_id)?;
         map.serialize_entry("position", &self.position)?;
         map.serialize_entry("class_position", &self.class_position)?;
@@ -37,6 +38,7 @@ impl Serialize for TrackMapDriver {
         map.serialize_entry("is_in_pits", &self.is_in_pits)?;
         map.serialize_entry("is_off_track", &self.is_off_track)?;
         map.serialize_entry("is_off_world", &self.is_off_world)?;
+        map.serialize_entry("car_class_color", &self.car_class_color)?;
         map.end()
     }
 }
@@ -59,6 +61,7 @@ impl TrackMapDriver {
             is_in_pits: driver.is_in_pits,
             is_off_track: driver.is_off_track,
             is_off_world: driver.is_off_world,
+            car_class_color: driver.car_class_color,
         }
     }
 }

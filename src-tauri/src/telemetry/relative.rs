@@ -7,6 +7,7 @@ use crate::session::session_data::SessionData;
 use crate::util::format_irating::format_irating;
 use crate::util::get_relative_gap::get_relative_gap;
 
+// TODO: Make this configurable
 const RELATIVE_DRIVERS_BEFORE: usize = 3;
 const RELATIVE_DRIVERS_AFTER: usize = 3;
 
@@ -24,6 +25,7 @@ pub struct RelativeDriver {
     is_off_track: bool,
     is_off_world: bool,
     is_player_car_class: bool,
+    car_class_color: u32,
 }
 
 impl Serialize for RelativeDriver {
@@ -32,7 +34,7 @@ impl Serialize for RelativeDriver {
         S: Serializer,
     {
         use serde::ser::SerializeMap;
-        let mut map = serializer.serialize_map(Some(12))?;
+        let mut map = serializer.serialize_map(Some(13))?;
         map.serialize_entry("car_id", &self.car_id)?;
         map.serialize_entry("position", &self.position)?;
         map.serialize_entry("user_name", &self.user_name)?;
@@ -45,6 +47,7 @@ impl Serialize for RelativeDriver {
         map.serialize_entry("is_off_track", &self.is_off_track)?;
         map.serialize_entry("is_off_world", &self.is_off_world)?;
         map.serialize_entry("is_player_car_class", &self.is_player_car_class)?;
+        map.serialize_entry("car_class_color", &self.car_class_color)?;
         map.end()
     }
 }
@@ -64,6 +67,7 @@ impl RelativeDriver {
             is_off_track: driver.is_off_track,
             is_off_world: driver.is_off_world,
             is_player_car_class: driver.is_player_class,
+            car_class_color: driver.car_class_color,
         }
     }
 }

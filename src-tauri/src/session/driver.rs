@@ -28,6 +28,7 @@ pub struct Driver {
     pub is_off_world: bool,
     pub car_class_est_lap_time: SignedDuration,
     pub is_player_class: bool,
+    pub car_class_color: u32,
 }
 
 impl Driver {
@@ -40,6 +41,7 @@ impl Driver {
         lic_string: String,
         car_class_est_lap_time: SignedDuration,
         is_player_class: bool,
+        car_class_color: u32,
     ) -> Self {
         Self {
             car_id,
@@ -50,6 +52,7 @@ impl Driver {
             lic_string,
             car_class_est_lap_time,
             is_player_class,
+            car_class_color,
             ..Default::default()
         }
     }

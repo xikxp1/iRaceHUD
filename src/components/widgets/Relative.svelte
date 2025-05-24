@@ -1,10 +1,22 @@
 <script lang="ts">
     import Badge from "../utils/Badge.svelte";
-    import { getBadgeColor } from "$lib/utils";
+    import { getBadgeColor, getCarClassColors } from "$lib/utils";
     import { relative } from "$lib/backend/telemetry.svelte";
     import type { RelativeWidgetSettings } from "$lib/types/telemetry";
 
     let { settings }: { settings: RelativeWidgetSettings } = $props();
+
+    const css = window.getComputedStyle(document.documentElement);
+    const carClassColors = getCarClassColors(css);
+
+    function getCarClassColor(carClassColor: number): string {
+        const color = `#${carClassColor.toString(16)}`;
+        const colorString = carClassColors[color];
+        if (colorString) {
+            return colorString;
+        }
+        return carClassColors["#ffffff"];
+    }
 </script>
 
 <div
@@ -31,12 +43,9 @@
                     </td>
                     <td class="text text-sm text-right pr-2 w-[48px]">
                         <Badge
-                            outlineClasses="text-center ring ring-2 ring-inset {rel?.is_player
-                                ? 'ring-secondary'
-                                : 'ring-primary'}"
-                            textClasses="text-sm text-right {rel?.is_player
-                                ? 'text-secondary'
-                                : 'text-primary'}"
+                            outlineClasses="text-center ring ring-2 ring-inset ring-current"
+                            textClasses="text-sm text-right"
+                            extraStyles={`color: ${getCarClassColor(rel?.car_class_color ?? 0)}`}
                             text={rel?.car_number ? "#" + rel?.car_number : ""}
                         />
                     </td>
