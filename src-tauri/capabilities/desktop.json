@@ -13,6 +13,14 @@
     "updater:default",
     "autostart:default",
     "store:default",
-    "global-shortcut:default"
+    "global-shortcut:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://github.com/xikxp1/iRaceHUD"
+        }
+      ]
+    }
   ]
 }

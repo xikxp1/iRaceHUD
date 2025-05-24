@@ -50,8 +50,27 @@
     const trackColor: string = `oklch(${css.getPropertyValue("--sc")})`;
     const startFinishColor: string = `oklch(${css.getPropertyValue("--s")})`;
     const trackBorderColor: string = `oklch(${css.getPropertyValue("--p")})`;
+    const playerCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
+    const leaderCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
+    const standardCircleColor: string = `oklch(${css.getPropertyValue("--pc")})`;
     const offtrackCircleColor: string = `oklch(${css.getPropertyValue("--er")})`;
-    const inPitsCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
+    const inPitsCircleColor: string = `oklch(${css.getPropertyValue("--p")})`;
+
+    function getCircleOutlineColor(car: TrackMapLocal): string {
+        if (car.is_player) {
+            return playerCircleColor;
+        }
+        if (car.is_leader) {
+            return leaderCircleColor;
+        }
+        if (car.is_off_track) {
+            return offtrackCircleColor;
+        }
+        if (car.is_in_pits) {
+            return inPitsCircleColor;
+        }
+        return standardCircleColor;
+    }
 
     function getPointAtLength(length: number): { x: number; y: number } {
         if (!trackPathElement || !trackPathLength) return { x: 0, y: 0 };
@@ -236,16 +255,16 @@
             ctx.save();
             ctx.translate(car.x, car.y);
 
-            if (!car.is_player_class || car.is_in_pits) {
+            if (!car.is_player_class) {
+                ctx.globalAlpha = 0.85;
+            }
+
+            if (car.is_in_pits) {
                 ctx.globalAlpha = 0.7;
             }
 
-            if (car.is_player) {
-                ctx.globalAlpha = 0.9;
-            }
-
             // Draw car circle
-            const circleSize = car.is_player ? 40 : 30;
+            const circleSize = 30;
             const colorString = `#${car.car_class_color.toString(16)}`;
             let classColor = carClassColors[colorString];
             if (classColor == null) {
@@ -259,11 +278,7 @@
 
             // Draw car outline
             const circleSizeOutline = circleSize + 4;
-            const outlineColor = car.is_off_track
-                ? offtrackCircleColor
-                : car.is_in_pits
-                  ? inPitsCircleColor
-                  : trackColor;
+            const outlineColor = getCircleOutlineColor(car);
 
             ctx.beginPath();
             ctx.arc(0, 0, circleSizeOutline, 0, Math.PI * 2);
@@ -274,13 +289,12 @@
             if (car.class_position != null) {
                 // Draw car position
                 ctx.fillStyle = textColor;
-                ctx.font = `${car.is_player ? 65 : 50}px iracing`;
+                ctx.font = "50px iracing";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText(car.class_position.toString(), 0, 5);
             }
 
-            ctx.globalAlpha = 1;
             ctx.restore();
         }
 

@@ -68,8 +68,9 @@ fn open_settings_window(app_handle: tauri::AppHandle) {
             .focused(true)
             .build()
             {
-                Ok(_window) => {
+                Ok(window) => {
                     info!("Settings window opened");
+                    window.set_focus().unwrap();
                 }
                 Err(err) => {
                     error!("Failed to build settings window: {:?}", err);
@@ -91,6 +92,7 @@ async fn main() {
     let ctrl_f11_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::F11);
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(move |app, shortcut, event| {
@@ -245,6 +247,7 @@ async fn main() {
             set_timer_overlay_settings,
             get_track_map_overlay_settings,
             set_track_map_overlay_settings,
+            get_app_version,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
@@ -450,4 +453,9 @@ async fn get_track_map_overlay_settings(app: tauri::AppHandle) -> TrackMapOverla
 #[tauri::command]
 async fn set_track_map_overlay_settings(app: tauri::AppHandle, settings: TrackMapOverlaySettings) {
     set_settings(app, "track_map", settings);
+}
+
+#[tauri::command]
+async fn get_app_version(app: tauri::AppHandle) -> String {
+    app.package_info().version.to_string()
 }

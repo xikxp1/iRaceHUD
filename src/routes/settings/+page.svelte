@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import Application from "../../components/settings/Application.svelte";
     import LapTimes from "../../components/settings/overlays/LapTimes.svelte";
     import Main from "../../components/settings/overlays/Main.svelte";
@@ -9,19 +10,39 @@
     import Telemetry from "../../components/settings/overlays/Telemetry.svelte";
     import Timer from "../../components/settings/overlays/Timer.svelte";
     import TrackMap from "../../components/settings/overlays/TrackMap.svelte";
+    import { invoke } from "@tauri-apps/api/core";
+    import { openUrl } from "@tauri-apps/plugin-opener";
 
     let chosenPage = $state("application");
+    let appVersion = $state("");
 
     function setChosenPage(page: string) {
         chosenPage = page;
     }
+
+    onMount(async () => {
+        appVersion = await invoke("get_app_version");
+    });
 </script>
 
 <div class="drawer drawer-open">
     <input id="my-drawer" type="checkbox" class="drawer-toggle" />
     <div class="drawer-side">
         <div class="bg-secondary min-h-full w-64">
-            <img src="/icons/logo.svg" alt="" />
+            <button
+                type="button"
+                class="btn btn-ghost p-0 w-full h-auto"
+                onclick={() => openUrl("https://github.com/xikxp1/iRaceHUD")}
+            >
+                <img 
+                    src="/icons/logo.svg" 
+                    alt="" 
+                    class="w-full"
+                />
+            </button>
+            <p class="text-sm text-primary-content text-right mr-2">
+                v{appVersion}
+            </p>
             <ul class="menu text-primary-content">
                 <li>
                     <button

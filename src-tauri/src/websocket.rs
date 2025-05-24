@@ -44,7 +44,10 @@ impl WebSocketServer {
         let listener = TcpListener::bind(addr).await.expect("Failed to bind");
         let port = listener.local_addr().unwrap().port();
         WS_PORT.set(port).expect("Failed to set WebSocket port");
-        info!("WebSocket server listening on: {}", listener.local_addr().unwrap());
+        info!(
+            "WebSocket server listening on: {}",
+            listener.local_addr().unwrap()
+        );
 
         while let Ok((stream, addr)) = listener.accept().await {
             let clients = self.clients.clone();

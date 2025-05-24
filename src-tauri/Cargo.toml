@@ -1,6 +1,6 @@
 [package]
 name = "iracehud"
-version = "0.4.47"
+version = "0.4.48"
 description = "iRacing HUD overlay built in Tauri"
 authors = ["Ivan Kachalkin<xikxp1@gmail.com>"]
 edition = "2021"
@@ -32,8 +32,9 @@ tauri = { version = "2.5.1", features = ["tray-icon"] }
 tauri-plugin-log = "2.4.0"
 tauri-plugin-store = "2.2.0"
 tauri-plugin-prevent-default = { version = "2.1.0", features = ["unstable-windows"] }
-tokio = { version = "1.45.0", features = ["full"] }
+tokio = { version = "1.45.1", features = ["full"] }
 tokio-tungstenite = "0.26.2"
+tauri-plugin-opener = "2.2.7"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

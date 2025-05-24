@@ -23,6 +23,7 @@
     "@tauri-apps/plugin-autostart": "2.3.0",
     "@tauri-apps/plugin-global-shortcut": "2.2.1",
     "@tauri-apps/plugin-log": "2.4.0",
+    "@tauri-apps/plugin-opener": "2.2.7",
     "@tauri-apps/plugin-store": "2.2.0",
     "@tauri-apps/plugin-updater": "2.7.1",
     "chart.js": "4.4.9",
@@ -47,7 +48,7 @@
     "tsx": "4.19.4",
     "typescript": "5.8.3",
     "vite": "6.3.5",
-    "vite-plugin-devtools-json": "^0.1.0",
+    "vite-plugin-devtools-json": "0.1.0",
     "zod": "3.25.20"
   },
   "pnpm": {
