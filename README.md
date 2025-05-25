@@ -1,6 +1,7 @@
 # iRaceHUD
 
-[iRacing](https://www.iracing.com/) HUD overlay built in [Tauri](https://tauri.app/)
+<p align="center"><img alt="iRaceHUD" src="docs/assets/MX5_BANNER_CLOSE.png" width="100%"/></p>
+<p align="center"><a href="https://www.iracing.com/">iRacing</a> HUD overlay built in <a href="https://tauri.app/">Tauri</a></p>
 
 ## Installation
 
@@ -42,7 +43,7 @@ to build production release locally. You'll need to set up signing keys to distr
 
 ### Recommended IDE Setup
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
+[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer) + [Tailwindcss](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss).
 
 ### Fetching new track SVG paths
 
