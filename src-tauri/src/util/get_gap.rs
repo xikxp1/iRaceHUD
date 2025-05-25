@@ -15,6 +15,9 @@ pub fn get_gap(position: u32, session: &SessionData, is_leader: bool) -> String 
     match driver {
         None => "-".to_string(),
         Some(driver) => {
+            if is_leader && driver.is_leader {
+                return "-".to_string();
+            }
             let gap = match is_leader {
                 true => driver.leader_gap,
                 false => driver.player_gap,

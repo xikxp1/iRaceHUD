@@ -37,7 +37,7 @@ pub struct SessionData {
     pub last_lap_time: SignedDuration,
     pub leader_car_id: u32,
     pub player_car_class: u32,
-    pub player_car_id: u32,
+    pub player_car_id: Option<u32>,
     pub player_lap_times: Vec<LapTime>,
     pub position: u32,
     pub class_position: u32,
@@ -55,6 +55,7 @@ pub struct SessionData {
     pub track_id: u32,
     pub processed_slow: bool,
     pub session_type: SessionType,
+    pub player_car_class_name: String,
 }
 
 #[derive(PartialEq)]
@@ -150,7 +151,7 @@ impl SessionData {
 
         // player_car_idx
         let player_car_idx_value = sim_state.read_name("PlayerCarIdx").unwrap_or(0);
-        self.player_car_id = player_car_idx_value as u32;
+        self.player_car_id = Some(player_car_idx_value as u32);
 
         // player_car_class
         let player_car_class_value = sim_state.read_name("PlayerCarClass").unwrap_or(0);
@@ -318,7 +319,7 @@ impl SessionData {
             *class_position += 1;
             driver.class_position = *class_position;
             driver.position = position as u32 + 1;
-            if *car_id == self.player_car_id {
+            if self.player_car_id.is_some() && *car_id == self.player_car_id.unwrap() {
                 self.position = driver.position;
                 self.class_position = driver.class_position;
             }
@@ -338,8 +339,8 @@ impl SessionData {
         self.positions_total = position_total;
 
         // gaps
-        if !self.driver_positions.is_empty() {
-            let player = self.drivers.get(&self.player_car_id);
+        if !self.driver_positions.is_empty() && self.player_car_id.is_some() {
+            let player = self.drivers.get(&self.player_car_id.unwrap());
             if player.is_none() {
                 error!("Player not found");
             }
@@ -359,7 +360,8 @@ impl SessionData {
 
             for driver in self.drivers.values_mut() {
                 driver.is_leader = driver.car_id == self.leader_car_id;
-                driver.is_player = driver.car_id == self.player_car_id;
+                driver.is_player =
+                    self.player_car_id.is_some() && driver.car_id == self.player_car_id.unwrap();
                 let leader_gap_laps = leader_total_completed - driver.total_completed;
                 if leader_gap_laps >= 1.0 {
                     driver.leader_gap_laps = leader_gap_laps as i32;
@@ -484,6 +486,18 @@ impl SessionData {
                         // Skip pace car
                         if user_name == "Pace Car" {
                             continue;
+                        }
+
+                        if self.player_car_id.is_some() && car_id == self.player_car_id.unwrap() {
+                            let car_class_short_name = driver["CarClassShortName"].as_str();
+                            if car_class_short_name.is_none() {
+                                // iRacing doesn't provide this value in AI races: https://github.com/SHWotever/SimHub/issues/1847
+                                error!("CarClassShortName not found");
+                            } else {
+                                let car_class_short_name =
+                                    car_class_short_name.unwrap().to_string();
+                                self.player_car_class_name = car_class_short_name;
+                            }
                         }
 
                         let car_number = driver["CarNumber"].as_str();

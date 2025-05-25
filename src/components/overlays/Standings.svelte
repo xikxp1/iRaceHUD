@@ -8,11 +8,11 @@
     import Badge from "../utils/Badge.svelte";
     import { getBadgeColor } from "$lib/utils";
     import {
-        currentTime,
         positionsTotal,
         raceLaps,
         standings,
         strengthOfField,
+        playerCarClass,
     } from "$lib/backend/telemetry.svelte";
 
     let { settings }: { settings: StandingsOverlaySettings } = $props();
@@ -23,6 +23,7 @@
 
     let current_standings: LocalStandings[] = $state([]);
 
+    // TODO: Make this configurable
     const SWITCH_INTERVAL = 10000;
     let show_best_lap = $state(false);
     let interval: NodeJS.Timeout;
@@ -76,12 +77,16 @@
         style="width: {settings.width}px"
     >
         <div class="flex flex-row items-center justify-center">
-            <div class="flex flex-row items-center justify-start w-1/6 pl-2">
-                <span class="text text-secondary">SoF&nbsp</span>
-                <span class="text text-primary">{$strengthOfField}</span>
+            <div class="flex flex-row items-center justify-start w-2/6 pl-2">
+                <span class="text text-primary">{$playerCarClass}</span>
             </div>
-            <div class="flex flex-row items-center justify-center w-4/6">
-                <span class="text text-primary">{$currentTime}</span>
+            <div class="flex flex-row items-center justify-center w-2/6">
+                <span class="text text-primary"
+                    >{$strengthOfField}&nbsp;SoF</span
+                >
+            </div>
+            <div class="flex flex-row items-center justify-center w-1/6">
+                <span class="text text-primary">Lap&nbsp;{$raceLaps}</span>
             </div>
             <div class="flex flex-row items-center justify-end w-1/6 pr-2">
                 <span class="text text-primary">{$positionsTotal}&nbsp;</span>
@@ -94,7 +99,9 @@
                     <tr
                         class="{st?.is_player
                             ? 'text-secondary'
-                            : 'text-primary'} odd:bg-secondary-content even:bg-primary-content h-[22px]"
+                            : 'text-primary'} odd:bg-secondary-content even:bg-primary-content h-[22px] {st?.is_off_world
+                            ? 'text-opacity-70'
+                            : ''}"
                         style={st?.split_after
                             ? `border-bottom: solid 2px ${splitBorderColor};`
                             : ""}
@@ -146,17 +153,8 @@
                                 />
                             {/if}
                         </td>
-                        <td
-                            class="text text-sm text-right {st?.is_leader &&
-                            $raceLaps > 0
-                                ? 'text-accent'
-                                : ''} pr-1 w-[35px]"
-                        >
-                            {#if st?.is_leader && $raceLaps > 0}
-                                L{$raceLaps}
-                            {:else}
-                                {st?.leader_gap ?? ""}
-                            {/if}
+                        <td class="text text-sm text-right pr-1 w-[35px]">
+                            {st?.leader_gap ?? ""}
                         </td>
                     </tr>
                 {/each}

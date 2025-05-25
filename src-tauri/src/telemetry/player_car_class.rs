@@ -5,15 +5,14 @@ use crate::emitter::emittable_event::{EmittableEvent, EmittableValue};
 use crate::session::session_data::SessionData;
 
 #[derive(Default, Type, Serialize)]
-pub struct RaceLaps(u32);
+pub struct PlayerCarClass(String);
 
-impl EmittableEvent for RaceLaps {
+impl EmittableEvent for PlayerCarClass {
     fn is_ready(&self, session: &SessionData) -> bool {
-        session.active && session.processed_slow
+        session.active && !session.player_car_class_name.is_empty()
     }
 
-    // TODO: Fix for multiclass races
     fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
-        Box::new(session.race_laps)
+        Box::new(session.player_car_class_name.clone())
     }
 }

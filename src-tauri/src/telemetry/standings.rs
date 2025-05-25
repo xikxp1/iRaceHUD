@@ -27,6 +27,7 @@ pub struct StandingsDriver {
     is_leader: bool,
     is_in_pits: bool,
     split_after: bool,
+    is_off_world: bool,
 }
 
 impl Serialize for StandingsDriver {
@@ -35,7 +36,7 @@ impl Serialize for StandingsDriver {
         S: Serializer,
     {
         use serde::ser::SerializeMap;
-        let mut map = serializer.serialize_map(Some(13))?;
+        let mut map = serializer.serialize_map(Some(14))?;
         map.serialize_entry("car_id", &self.car_id)?;
         map.serialize_entry("position", &self.position)?;
         map.serialize_entry("user_name", &self.user_name)?;
@@ -49,6 +50,7 @@ impl Serialize for StandingsDriver {
         map.serialize_entry("is_leader", &self.is_leader)?;
         map.serialize_entry("is_in_pits", &self.is_in_pits)?;
         map.serialize_entry("split_after", &self.split_after)?;
+        map.serialize_entry("is_off_world", &self.is_off_world)?;
         map.end()
     }
 }
@@ -170,6 +172,7 @@ impl EmittableEvent for Standings {
                 is_leader: driver.is_leader,
                 is_in_pits: driver.is_in_pits,
                 split_after: (driver.class_position as usize == top_drivers_count) && split_after,
+                is_off_world: driver.is_off_world,
             })
             .collect::<Vec<StandingsDriver>>();
         Box::new(drivers)

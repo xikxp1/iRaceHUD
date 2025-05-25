@@ -12,6 +12,7 @@ pub mod incidents;
 pub mod lap;
 pub mod lap_time;
 pub mod laps_total;
+pub mod player_car_class;
 pub mod player_lap_times;
 pub mod position;
 pub mod positions_total;

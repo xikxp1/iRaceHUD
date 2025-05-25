@@ -18,6 +18,7 @@ use crate::telemetry::incidents::Incidents;
 use crate::telemetry::lap::Lap;
 use crate::telemetry::lap_time::LapTime;
 use crate::telemetry::laps_total::LapsTotal;
+use crate::telemetry::player_car_class::PlayerCarClass;
 use crate::telemetry::player_lap_times::PlayerLapTimes;
 use crate::telemetry::position::Position;
 use crate::telemetry::positions_total::PositionsTotal;
@@ -103,4 +104,5 @@ pub enum TelemetryEvent {
     TelemetryGraph(TelemetryGraph),
     TrackId(TrackId),
     TrackMap(TrackMap),
+    PlayerCarClass(PlayerCarClass),
 }

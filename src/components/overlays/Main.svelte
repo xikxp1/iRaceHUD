@@ -90,7 +90,7 @@
             >
                 {$gear}
             </div>
-            <div class="text-primary text-2xl">{$speed}</div>
+            <div class="text-primary text-2xl -mt-1">{$speed}</div>
         </div>
         <div
             class="join-item flex flex-col items-center justify-evenly rounded-md w-3/4"
