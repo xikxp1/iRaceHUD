@@ -1,7 +1,11 @@
 <script lang="ts">
     import Badge from "../utils/Badge.svelte";
     import { getBadgeColor, getCarClassColors } from "$lib/utils";
-    import { relative } from "$lib/backend/telemetry.svelte";
+    import {
+        relative,
+        fastestLap,
+        currentTime,
+    } from "$lib/backend/telemetry.svelte";
     import type { RelativeOverlaySettings } from "$lib/types/telemetry";
 
     let { settings }: { settings: RelativeOverlaySettings } = $props();
@@ -23,71 +27,90 @@
     class="flex flex-row items-center justify-center"
     style="opacity: {settings.opacity / 100}"
 >
-    <table
-        class="bg-secondary-content rounded-md"
+    <div
+        class="flex flex-col bg-primary-content rounded-md"
         style="width: {settings.width}px"
     >
-        <tbody>
-            {#each $relative as rel}
-                <tr
-                    class="{rel?.is_player
-                        ? 'text-secondary'
-                        : 'text-primary'} odd:bg-secondary-content even:bg-primary-content h-[22px]"
-                >
-                    <td class="text text-sm text-right pr-2 w-[30px]">
-                        {#if rel?.position == 0}
-                            *
-                        {:else}
-                            {rel?.position}
-                        {/if}
-                    </td>
-                    <td class="text text-sm text-right pr-2 w-[48px]">
-                        <Badge
-                            outlineClasses="text-center ring ring-2 ring-inset ring-current"
-                            textClasses="text-sm text-right"
-                            extraStyles={`color: ${getCarClassColor(rel?.car_class_color ?? 0)}`}
-                            text={rel?.car_number ? "#" + rel?.car_number : ""}
-                        />
-                    </td>
-                    <td class="text text-sm">
-                        <span
-                            class="text text-sm tracking-tight"
-                            style="opacity: {rel?.is_player_car_class
-                                ? 1
-                                : 0.7}"
-                            >{rel?.user_name ?? ""}
-                        </span>
-                        {#if rel?.is_off_track}
-                            <span class="text text-sm text-error text-right"
-                                >&nbspOFF</span
-                            >
-                        {/if}
-                        {#if rel?.is_in_pits}
-                            <span class="text text-sm text-success text-right"
-                                >&nbspPIT</span
-                            >
-                        {/if}
-                    </td>
-                    <td class="text text-sm text-right pr-1 w-[80px]">
-                        {#if rel?.license && rel?.irating}
+        <div class="flex flex-row h-[22px] border-b-2 border-accent">
+            <div class="flex flex-row items-center justify-start w-3/4 pl-2">
+                <span class="text-sm text-primary text-opacity-70"
+                    >Best Lap:
+                </span>
+                <span class="text text-sm text-primary">&nbsp;{$fastestLap}</span>
+            </div>
+            <div class="flex flex-row items-center justify-end w-1/4 pr-2">
+                <img src="/icons/clock.svg" alt="" class="h-[16px]" />
+                <span class="text text-primary">&nbsp;{$currentTime}</span>
+            </div>
+        </div>
+        <table>
+            <tbody>
+                {#each $relative as rel}
+                    <tr
+                        class="{rel?.is_player
+                            ? 'text-secondary'
+                            : 'text-primary'} odd:bg-secondary-content even:bg-primary-content h-[22px]"
+                    >
+                        <td class="text text-sm text-right pr-2 w-[30px]">
+                            {#if rel?.position == 0}
+                                *
+                            {:else}
+                                {rel?.position}
+                            {/if}
+                        </td>
+                        <td class="text text-sm text-right pr-2 w-[48px]">
                             <Badge
-                                colorClasses={getBadgeColor(rel?.license ?? "")}
-                                outlineClasses="text-center"
-                                textClasses="text text-sm text-right text-primary"
-                                text="{(rel?.license).substring(
-                                    0,
-                                    5,
-                                )}&nbsp|&nbsp{rel?.irating}"
+                                outlineClasses="text-center ring ring-2 ring-inset ring-current"
+                                textClasses="text-sm text-right"
+                                extraStyles={`color: ${getCarClassColor(rel?.car_class_color ?? 0)}`}
+                                text={rel?.car_number
+                                    ? "#" + rel?.car_number
+                                    : ""}
                             />
-                        {/if}
-                    </td>
-                    <td class="text text-sm text-right pr-1 w-[40px]"
-                        >{rel?.player_relative_gap ?? ""}
-                    </td>
-                </tr>
-            {/each}
-        </tbody>
-    </table>
+                        </td>
+                        <td class="text text-sm">
+                            <span
+                                class="text text-sm tracking-tight"
+                                style="opacity: {rel?.is_player_car_class
+                                    ? 1
+                                    : 0.7}"
+                                >{rel?.user_name ?? ""}
+                            </span>
+                            {#if rel?.is_off_track}
+                                <span class="text text-sm text-error text-right"
+                                    >&nbspOFF</span
+                                >
+                            {/if}
+                            {#if rel?.is_in_pits}
+                                <span
+                                    class="text text-sm text-success text-right"
+                                    >&nbspPIT</span
+                                >
+                            {/if}
+                        </td>
+                        <td class="text text-sm text-right pr-1 w-[80px]">
+                            {#if rel?.license && rel?.irating}
+                                <Badge
+                                    colorClasses={getBadgeColor(
+                                        rel?.license ?? "",
+                                    )}
+                                    outlineClasses="text-center"
+                                    textClasses="text text-sm text-right text-primary"
+                                    text="{(rel?.license).substring(
+                                        0,
+                                        5,
+                                    )}&nbsp|&nbsp{rel?.irating}"
+                                />
+                            {/if}
+                        </td>
+                        <td class="text text-sm text-right pr-1 w-[40px]"
+                            >{rel?.player_relative_gap ?? ""}
+                        </td>
+                    </tr>
+                {/each}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <style>

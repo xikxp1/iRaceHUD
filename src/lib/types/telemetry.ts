@@ -6,6 +6,8 @@ export type DeltaLastTime = string
 
 export type PlayerLapTimesData = { lap: number; lap_time: string }
 
+export type FastestLap = string
+
 export type StrengthOfField = number
 
 export type SubTimerOverlaySettings = { enabled: boolean; x: number; y: number; session_state_width: number; gap_enabled: boolean; gap_width: number; opacity: number }

@@ -56,6 +56,8 @@ pub struct SessionData {
     pub processed_slow: bool,
     pub session_type: SessionType,
     pub player_car_class_name: String,
+    pub best_lap_time: Option<SignedDuration>,
+    pub best_lap_time_car_id: Option<u32>,
 }
 
 #[derive(PartialEq)]
@@ -94,8 +96,9 @@ impl SessionData {
                 if active { "active" } else { "inactive" }
             );
             if active {
-                self.player_lap_times.clear();
-                self.last_lap_time = SignedDuration::ZERO;
+                // TODO: save some data for reinitializing the session
+                // TODO: allow to show some data while player not on track
+                let _ = std::mem::take(self);
             }
             self.active = active;
         }
@@ -329,6 +332,13 @@ impl SessionData {
             if driver.car_class_id == self.player_car_class {
                 player_class_driver_positions.push(*car_id);
                 position_total += 1;
+            }
+            if driver.car_class_id == self.player_car_class
+                && driver.best_lap_time > SignedDuration::ZERO
+                && driver.best_lap_time < self.best_lap_time.unwrap_or(SignedDuration::MAX)
+            {
+                self.best_lap_time = Some(driver.best_lap_time);
+                self.best_lap_time_car_id = Some(*car_id);
             }
         }
 

@@ -76,17 +76,23 @@
         class="flex flex-col bg-primary-content rounded-l-md"
         style="width: {settings.width}px"
     >
-        <div class="flex flex-row items-center justify-center">
-            <div class="flex flex-row items-center justify-start w-2/6 pl-2">
+        <div
+            class="flex flex-row items-center justify-center border-b-2 border-accent"
+        >
+            <div class="flex flex-row items-center justify-start w-5/6 pl-2">
                 <span class="text text-primary">{$playerCarClass}</span>
-            </div>
-            <div class="flex flex-row items-center justify-center w-2/6">
-                <span class="text text-primary"
-                    >{$strengthOfField}&nbsp;SoF</span
+                <span class="text text-primary text-opacity-70"
+                    >&nbsp;|&nbsp;</span
                 >
-            </div>
-            <div class="flex flex-row items-center justify-center w-1/6">
-                <span class="text text-primary">Lap&nbsp;{$raceLaps}</span>
+                <span class="text text-primary text-opacity-70">SoF:&nbsp;</span
+                >
+                <span class="text text-primary">{$strengthOfField}</span>
+                <span class="text text-primary text-opacity-70"
+                    >&nbsp;|&nbsp;</span
+                >
+                <span class="text text-primary text-opacity-70">Lap:&nbsp;</span
+                >
+                <span class="text text-primary">{$raceLaps}</span>
             </div>
             <div class="flex flex-row items-center justify-end w-1/6 pr-2">
                 <span class="text text-primary">{$positionsTotal}&nbsp;</span>
@@ -101,10 +107,9 @@
                             ? 'text-secondary'
                             : 'text-primary'} odd:bg-secondary-content even:bg-primary-content h-[22px] {st?.is_off_world
                             ? 'text-opacity-70'
+                            : ''} {st?.split_after
+                            ? 'border-b-2 border-accent'
                             : ''}"
-                        style={st?.split_after
-                            ? `border-bottom: solid 2px ${splitBorderColor};`
-                            : ""}
                         animate:flip
                     >
                         <td
@@ -162,7 +167,9 @@
         </table>
     </div>
     <div class="flex flex-col bg-primary-content rounded-r-md w-[75px]">
-        <div class="flex flex-row items-center justify-end">
+        <div
+            class="flex flex-row items-center justify-end border-b-2 border-accent"
+        >
             <span class="text text-primary text-right pr-1">
                 {show_best_lap ? "BEST" : "LAST"}
             </span>

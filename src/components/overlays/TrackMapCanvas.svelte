@@ -57,14 +57,14 @@
     const inPitsCircleColor: string = `oklch(${css.getPropertyValue("--p")})`;
 
     function getCircleOutlineColor(car: TrackMapLocal): string {
+        if (car.is_off_track) {
+            return offtrackCircleColor;
+        }
         if (car.is_player) {
             return playerCircleColor;
         }
         if (car.is_leader) {
             return leaderCircleColor;
-        }
-        if (car.is_off_track) {
-            return offtrackCircleColor;
         }
         if (car.is_in_pits) {
             return inPitsCircleColor;
@@ -277,13 +277,13 @@
             ctx.fill();
 
             // Draw car outline
-            const circleSizeOutline = circleSize + 4;
+            const circleSizeOutline = circleSize + 3;
             const outlineColor = getCircleOutlineColor(car);
 
             ctx.beginPath();
             ctx.arc(0, 0, circleSizeOutline, 0, Math.PI * 2);
             ctx.strokeStyle = outlineColor;
-            ctx.lineWidth = 8;
+            ctx.lineWidth = 6;
             ctx.stroke();
 
             if (car.class_position != null) {

@@ -12,6 +12,11 @@ impl SignedDuration {
         duration: Duration::ZERO,
     };
 
+    pub const MAX: SignedDuration = SignedDuration {
+        is_positive: true,
+        duration: Duration::MAX,
+    };
+
     pub fn from_secs_f64(secs: f64) -> Self {
         Self {
             is_positive: secs >= 0.0,

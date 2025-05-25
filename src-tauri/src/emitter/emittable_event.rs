@@ -8,6 +8,7 @@ use crate::telemetry::active::Active;
 use crate::telemetry::current_time::CurrentTime;
 use crate::telemetry::delta_best_time::DeltaBestTime;
 use crate::telemetry::delta_last_time::DeltaLastTime;
+use crate::telemetry::fastest_lap::FastestLap;
 use crate::telemetry::gap_next::GapNext;
 use crate::telemetry::gap_prev::GapPrev;
 use crate::telemetry::gear::Gear;
@@ -105,4 +106,5 @@ pub enum TelemetryEvent {
     TrackId(TrackId),
     TrackMap(TrackMap),
     PlayerCarClass(PlayerCarClass),
+    FastestLap(FastestLap),
 }
