@@ -29,6 +29,7 @@ pub struct Driver {
     pub car_class_est_lap_time: SignedDuration,
     pub is_player_class: bool,
     pub car_class_color: u32,
+    pub team_name: String,
 }
 
 impl Driver {
@@ -42,6 +43,7 @@ impl Driver {
         car_class_est_lap_time: SignedDuration,
         is_player_class: bool,
         car_class_color: u32,
+        team_name: String,
     ) -> Self {
         Self {
             car_id,
@@ -53,6 +55,7 @@ impl Driver {
             car_class_est_lap_time,
             is_player_class,
             car_class_color,
+            team_name,
             ..Default::default()
         }
     }

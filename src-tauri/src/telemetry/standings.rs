@@ -161,7 +161,7 @@ impl EmittableEvent for Standings {
             .map(|driver| StandingsDriver {
                 car_id: driver.car_id,
                 position: driver.class_position,
-                user_name: driver.user_name.clone(),
+                user_name: driver.team_name.clone(),
                 car_number: driver.car_number.clone(),
                 irating: format_irating(driver.irating),
                 license: driver.lic_string.clone(),

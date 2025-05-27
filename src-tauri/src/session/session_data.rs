@@ -493,6 +493,13 @@ impl SessionData {
                         }
                         let user_name = user_name.unwrap().to_string();
 
+                        let team_name = driver["TeamName"].as_str();
+                        if team_name.is_none() {
+                            error!("TeamName not found");
+                            continue;
+                        }
+                        let team_name = team_name.unwrap().to_string();
+
                         // Skip pace car
                         if user_name == "Pace Car" {
                             continue;
@@ -568,6 +575,7 @@ impl SessionData {
                             car_class_est_lap_time,
                             self.player_car_class == car_class_id,
                             car_class_color,
+                            team_name,
                         );
 
                         self.drivers.insert(car_id, driver);
