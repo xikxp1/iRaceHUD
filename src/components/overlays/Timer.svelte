@@ -6,11 +6,33 @@
     } from "$lib/backend/telemetry.svelte";
     import { Duration } from "luxon";
     import type { TimerOverlaySettings } from "$lib/types/telemetry";
+    import { onMount, onDestroy } from "svelte";
 
     let { settings }: { settings: TimerOverlaySettings } = $props();
+    let animationFrameId: number;
+    let lTime = $state($lapTime);
+    let dLastTime = $state($deltaLastTime);
+    let dBestTime = $state($deltaBestTime);
+
+    function update() {
+        lTime = $lapTime;
+        dLastTime = $deltaLastTime;
+        dBestTime = $deltaBestTime;
+        animationFrameId = requestAnimationFrame(update);
+    }
+
+    onMount(() => {
+        animationFrameId = requestAnimationFrame(update);
+    });
+
+    onDestroy(() => {
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+        }
+    });
 
     let lapTimeFormatted = $derived(
-        Duration.fromObject({ seconds: $lapTime }).toFormat("m:ss.SSS"),
+        Duration.fromObject({ seconds: lTime }).toFormat("m:ss.SSS"),
     );
 </script>
 
@@ -25,7 +47,7 @@
                 style="width: {settings.delta_width}px"
             >
                 <div class="text-primary text-xl font-square">
-                    {$deltaBestTime}
+                    {dBestTime}
                 </div>
             </div>
             <div
@@ -49,7 +71,7 @@
                 style="width: {settings.delta_width}px"
             >
                 <div class="text-primary text-xl font-square">
-                    {$deltaLastTime}
+                    {dLastTime}
                 </div>
             </div>
         {/if}
