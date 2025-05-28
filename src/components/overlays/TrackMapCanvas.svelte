@@ -53,21 +53,14 @@
     const playerCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
     const leaderCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
     const standardCircleColor: string = `oklch(${css.getPropertyValue("--pc")})`;
-    const offtrackCircleColor: string = `oklch(${css.getPropertyValue("--er")})`;
-    const inPitsCircleColor: string = `oklch(${css.getPropertyValue("--p")})`;
+    const offTrackCircleColor: string = `oklch(${css.getPropertyValue("--wa")})`;
 
     function getCircleOutlineColor(car: TrackMapLocal): string {
-        if (car.is_off_track) {
-            return offtrackCircleColor;
-        }
         if (car.is_player) {
             return playerCircleColor;
         }
         if (car.is_leader) {
             return leaderCircleColor;
-        }
-        if (car.is_in_pits) {
-            return inPitsCircleColor;
         }
         return standardCircleColor;
     }
@@ -298,10 +291,23 @@
             ctx.restore();
         }
 
+        function drawOffTrackCarWarning(car: TrackMapLocal) {
+            ctx.save();
+            ctx.translate(car.x, car.y);
+            ctx.globalAlpha = 0.8;
+            ctx.beginPath();
+            ctx.arc(0, 0, 48, 0, Math.PI * 2);
+            ctx.strokeStyle = offTrackCircleColor;
+            ctx.lineWidth = 10;
+            ctx.stroke();
+            ctx.restore();
+        }
+
         // Sort cars by position in reverse order
         trackMapCars.sort((a, b) => b.position - a.position);
 
         const playerClassCarIndexes: number[] = [];
+        const offTrackCarIndexes: number[] = [];
         let playerIndex: number | null = null;
 
         for (let i = 0; i < trackMapCars.length; i++) {
@@ -312,10 +318,17 @@
             } else {
                 drawCar(trackMapCars[i]);
             }
+            if (trackMapCars[i].is_off_track) {
+                offTrackCarIndexes.push(i);
+            }
         }
 
         for (let i of playerClassCarIndexes) {
             drawCar(trackMapCars[i]);
+        }
+
+        for (let i of offTrackCarIndexes) {
+            drawOffTrackCarWarning(trackMapCars[i]);
         }
 
         if (playerIndex != null) {
