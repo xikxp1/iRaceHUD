@@ -13,9 +13,12 @@
         standings,
         strengthOfField,
         playerCarClass,
+        sessionType,
     } from "$lib/backend/telemetry.svelte";
 
     let { settings }: { settings: StandingsOverlaySettings } = $props();
+
+    let sessionTypeText = $derived($sessionType.at(0));
 
     type LocalStandings = StandingsDriver & {
         position_change: number;
@@ -80,6 +83,12 @@
             class="flex flex-row items-center justify-center border-b-2 border-accent"
         >
             <div class="flex flex-row items-center justify-start w-5/6 pl-2">
+                <span class="text text-primary font-square"
+                    >{sessionTypeText}</span
+                >
+                <span class="text text-primary text-opacity-70"
+                    >&nbsp;|&nbsp;</span
+                >
                 <span class="text text-primary">{$playerCarClass}</span>
                 <span class="text text-primary text-opacity-70"
                     >&nbsp;|&nbsp;</span
@@ -158,9 +167,11 @@
                                 />
                             {/if}
                         </td>
-                        <td class="text text-sm text-right pr-1 w-[35px]">
-                            {st?.leader_gap ?? ""}
-                        </td>
+                        {#if $sessionType === "Race"}
+                            <td class="text text-sm text-right pr-1 w-[35px]">
+                                {st?.leader_gap ?? ""}
+                            </td>
+                        {/if}
                     </tr>
                 {/each}
             </tbody>

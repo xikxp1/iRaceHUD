@@ -3,6 +3,7 @@
         gapNext,
         gapPrev,
         sessionState,
+        sessionType,
     } from "$lib/backend/telemetry.svelte";
     import type { SubTimerOverlaySettings } from "$lib/types/telemetry";
 
@@ -14,7 +15,7 @@
     style="opacity: {settings.opacity / 100}"
 >
     <div class="join flex flex-row bg-primary-content rounded-md">
-        {#if settings.gap_enabled}
+        {#if settings.gap_enabled && $sessionType === "Race"}
             <div
                 class="join-item flex flex-col items-end justify-center"
                 style="width: {settings.gap_width}px"
@@ -31,7 +32,7 @@
         >
             <div class="text-primary text-xl">{$sessionState}</div>
         </div>
-        {#if settings.gap_enabled}
+        {#if settings.gap_enabled && $sessionType === "Race"}
             <div
                 class="join-item divider divider-horizontal divider-primary w-[2px]"
             ></div>

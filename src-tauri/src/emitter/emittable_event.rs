@@ -30,6 +30,7 @@ use crate::telemetry::rpm::Rpm;
 use crate::telemetry::session_state::SessionState;
 use crate::telemetry::session_time::SessionTime;
 use crate::telemetry::session_time_total::SessionTimeTotal;
+use crate::telemetry::session_type::SessionType;
 use crate::telemetry::speed::Speed;
 use crate::telemetry::standings::Standings;
 use crate::telemetry::strength_of_field::StrengthOfField;
@@ -107,4 +108,5 @@ pub enum TelemetryEvent {
     TrackMap(TrackMap),
     PlayerCarClass(PlayerCarClass),
     FastestLap(FastestLap),
+    SessionType(SessionType),
 }

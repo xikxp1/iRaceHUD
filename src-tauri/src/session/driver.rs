@@ -30,6 +30,9 @@ pub struct Driver {
     pub is_player_class: bool,
     pub car_class_color: u32,
     pub team_name: String,
+    pub is_out: bool,
+    pub result_position: Option<u32>,
+    pub result_class_position: Option<u32>,
 }
 
 impl Driver {

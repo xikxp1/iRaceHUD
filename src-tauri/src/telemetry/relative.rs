@@ -86,7 +86,7 @@ impl Serialize for Relative {
 
 impl EmittableEvent for Relative {
     fn is_ready(&self, session: &SessionData) -> bool {
-        session.active && !session.drivers.is_empty()
+        session.active && !session.drivers.is_empty() && !session.driver_positions.is_empty()
     }
 
     fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {

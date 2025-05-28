@@ -1,14 +1,15 @@
-use std::{collections::HashMap, str::FromStr, time::Duration};
+use std::cmp::Ordering;
+use std::str::FromStr;
+use std::{collections::HashMap, time::Duration};
 
 use chrono::{DateTime, Local};
 use log::{debug, error, info};
 use simetry::iracing::{SimState, UNLIMITED_LAPS, UNLIMITED_TIME};
 
-use crate::util::{
-    get_strength_of_field::get_strength_of_field, session_type::SessionType,
-    signed_duration::SignedDuration,
-};
+use crate::session::session_type::SessionType;
+use crate::util::{get_strength_of_field::get_strength_of_field, signed_duration::SignedDuration};
 
+use super::results_position::ResultsPosition;
 use super::{driver::Driver, lap_time::LapTime};
 
 #[derive(Default)]
@@ -58,6 +59,10 @@ pub struct SessionData {
     pub player_car_class_name: String,
     pub best_lap_time: Option<SignedDuration>,
     pub best_lap_time_car_id: Option<u32>,
+    pub session_num: u32,
+    pub results_positions: Vec<ResultsPosition>,
+    pub results_positions_mapping: HashMap<u32, usize>,
+    pub results_official: bool,
 }
 
 #[derive(PartialEq)]
@@ -111,6 +116,11 @@ impl SessionData {
 
         // slow vars
         if should_process_slow {
+            // session_num
+            let raw_session_num_value = sim_state.read_name("SessionNum").unwrap_or(0);
+            let session_num_value = raw_session_num_value as u32;
+            self.session_num = session_num_value;
+
             // session_time_total
             let raw_session_time_total_value = match sim_state.read_name("SessionTimeTotal") {
                 Some(value) if value >= UNLIMITED_TIME => 0.0,
@@ -297,14 +307,37 @@ impl SessionData {
         let mut driver_positions = self
             .drivers
             .iter()
-            .map(|(car_id, driver)| (*car_id, driver.total_completed))
-            .collect::<Vec<(u32, f32)>>();
-        driver_positions.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-        self.driver_positions = driver_positions
-            .iter()
-            .rev()
-            .map(|(car_id, _)| *car_id)
-            .collect();
+            .map(|(car_id, driver)| (*car_id, driver))
+            .collect::<Vec<(u32, &Driver)>>();
+        driver_positions.sort_by(|a, b| {
+            a.1.result_position
+                .unwrap_or(0)
+                .partial_cmp(&b.1.result_position.unwrap_or(0))
+                .unwrap()
+        });
+        if self.session_type == SessionType::Race {
+            driver_positions.sort_by(|a, b| {
+                a.1.total_completed
+                    .partial_cmp(&b.1.total_completed)
+                    .unwrap()
+                    .reverse()
+            });
+        } else if self.session_type == SessionType::Practice
+            || self.session_type == SessionType::Qualify
+        {
+            driver_positions.sort_by(|a, b| {
+                if !a.1.best_lap_time.is_zero() && !b.1.best_lap_time.is_zero() {
+                    a.1.best_lap_time.partial_cmp(&b.1.best_lap_time).unwrap()
+                } else if a.1.best_lap_time.is_zero() && !b.1.best_lap_time.is_zero() {
+                    Ordering::Greater
+                } else if !a.1.best_lap_time.is_zero() && b.1.best_lap_time.is_zero() {
+                    Ordering::Less
+                } else {
+                    Ordering::Equal
+                }
+            });
+        }
+        self.driver_positions = driver_positions.iter().map(|(car_id, _)| *car_id).collect();
 
         let mut car_class_positions_count: HashMap<u32, u32> = HashMap::new();
         let mut position_total: u32 = 0;
@@ -463,14 +496,50 @@ impl SessionData {
             let sessions = session["SessionInfo"]["Sessions"].as_vec();
             if sessions.is_some() {
                 let sessions = sessions.unwrap();
-                let session = sessions.last();
-                if session.is_some() {
-                    let session = session.unwrap();
+                for session in sessions {
+                    let session_num = session["SessionNum"].as_i64();
                     let session_type = session["SessionType"].as_str();
-                    if session_type.is_some() {
-                        let session_type = session_type.unwrap().to_string();
-                        self.session_type = SessionType::from_str(&session_type).unwrap();
+                    if session_num.is_none()
+                        || session_type.is_none()
+                        || session_num.unwrap() as u32 != self.session_num
+                    {
+                        continue;
                     }
+                    let session_type = session_type.unwrap().to_string();
+                    self.session_type = SessionType::from_str(&session_type).unwrap();
+
+                    let results_positions = session["ResultsPositions"].as_vec();
+                    if results_positions.is_some() {
+                        let results_positions = results_positions.unwrap();
+                        for (i, result_position) in results_positions.iter().enumerate() {
+                            let car_id = result_position["CarIdx"].as_i64().unwrap_or(0) as u32;
+                            let position = result_position["Position"].as_i64().unwrap_or(0) as u32;
+                            let class_position =
+                                (result_position["ClassPosition"].as_i64().unwrap_or(0) + 1) as u32;
+                            let fastest_time =
+                                result_position["FastestTime"].as_f64().unwrap_or(0.0);
+                            let fastest_time = SignedDuration::from_secs_f64(fastest_time);
+                            let last_time = result_position["LastTime"].as_f64().unwrap_or(0.0);
+                            let last_time = SignedDuration::from_secs_f64(last_time);
+                            let reason_out_id =
+                                result_position["ReasonOutID"].as_i64().unwrap_or(0) as u32;
+
+                            let results_position = ResultsPosition {
+                                car_id,
+                                position,
+                                class_position,
+                                fastest_time,
+                                last_time,
+                                reason_out_id,
+                            };
+
+                            self.results_positions.push(results_position);
+                            self.results_positions_mapping.insert(car_id, i);
+                        }
+                    }
+
+                    let results_official = session["ResultsOfficial"].as_i64().unwrap_or(0) != 0;
+                    self.results_official = results_official;
                 }
             }
 
@@ -509,7 +578,14 @@ impl SessionData {
                             let car_class_short_name = driver["CarClassShortName"].as_str();
                             if car_class_short_name.is_none() {
                                 // iRacing doesn't provide this value in AI races: https://github.com/SHWotever/SimHub/issues/1847
-                                error!("CarClassShortName not found");
+                                let car_screen_name_short = driver["CarScreenNameShort"].as_str();
+                                if car_screen_name_short.is_none() {
+                                    error!("CarScreenNameShort not found");
+                                } else {
+                                    let car_screen_name_short =
+                                        car_screen_name_short.unwrap().to_string();
+                                    self.player_car_class_name = car_screen_name_short;
+                                }
                             } else {
                                 let car_class_short_name =
                                     car_class_short_name.unwrap().to_string();
@@ -561,24 +637,43 @@ impl SessionData {
                         }
                         let car_class_color = car_class_color.unwrap() as u32;
 
-                        if self.drivers.contains_key(&car_id) {
-                            continue;
+                        let driver_results_position = self.results_positions_mapping.get(&car_id);
+                        let mut result_position: Option<u32> = None;
+                        let mut result_class_position: Option<u32> = None;
+                        let mut is_out = false;
+                        if let Some(position) = driver_results_position {
+                            result_position = Some(self.results_positions[*position].position);
+                            result_class_position =
+                                Some(self.results_positions[*position].class_position);
+                            is_out = self.results_positions[*position].reason_out_id != 0;
                         }
 
-                        let driver = Driver::new(
-                            car_id,
-                            user_name,
-                            car_number,
-                            car_class_id,
-                            irating,
-                            lic_string.to_string(),
-                            car_class_est_lap_time,
-                            self.player_car_class == car_class_id,
-                            car_class_color,
-                            team_name,
-                        );
-
-                        self.drivers.insert(car_id, driver);
+                        let driver = self.drivers.get_mut(&car_id);
+                        let driver = match driver {
+                            Some(driver) => driver,
+                            None => {
+                                let mut new_driver = Driver::new(
+                                    car_id,
+                                    user_name,
+                                    car_number,
+                                    car_class_id,
+                                    irating,
+                                    lic_string.to_string(),
+                                    car_class_est_lap_time,
+                                    self.player_car_class == car_class_id,
+                                    car_class_color,
+                                    team_name,
+                                );
+                                new_driver.is_out = is_out;
+                                new_driver.result_position = result_position;
+                                new_driver.result_class_position = result_class_position;
+                                self.drivers.insert(car_id, new_driver);
+                                self.drivers.get_mut(&car_id).unwrap()
+                            }
+                        };
+                        driver.is_out = is_out;
+                        driver.result_position = result_position;
+                        driver.result_class_position = result_class_position;
                     }
                 }
                 None => {

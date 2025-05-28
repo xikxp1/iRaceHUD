@@ -24,6 +24,7 @@ pub mod rpm;
 pub mod session_state;
 pub mod session_time;
 pub mod session_time_total;
+pub mod session_type;
 pub mod speed;
 pub mod standings;
 pub mod strength_of_field;

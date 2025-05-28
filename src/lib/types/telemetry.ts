@@ -16,6 +16,8 @@ export type TelemetryOverlaySettings = { enabled: boolean; x: number; y: number;
 
 export type StandingsDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: string; license: string; leader_gap: string; best_lap: string; last_lap: string; is_player: boolean; is_leader: boolean; is_in_pits: boolean; split_after: boolean; is_off_world: boolean }
 
+export type SessionType = string
+
 export type TimerOverlaySettings = { enabled: boolean; x: number; y: number; lap_time_width: number; delta_enabled: boolean; delta_width: number; opacity: number }
 
 export type PlayerCarClass = string

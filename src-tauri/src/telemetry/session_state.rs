@@ -9,6 +9,9 @@ pub struct SessionState(String);
 
 impl EmittableEvent for SessionState {
     fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
+        if session.results_official {
+            return Box::new("Finished".to_string());
+        }
         let session_state = match session.laps_total {
             0 => {
                 let session_time_remaining = session.session_time_remaining;

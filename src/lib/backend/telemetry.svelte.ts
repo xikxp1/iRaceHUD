@@ -2,7 +2,7 @@ import type {
     Position, CurrentTime, PlayerLapTimes, Standings, StrengthOfField, Lap, Proximity, Relative,
     LapTime, DeltaBestTime, DeltaLastTime, TelemetryGraph, SessionState, GapNext, GapPrev,
     TrackId, TrackMap, Gear, Speed, Rpm, Active, GearShiftRpm, GearBlinkRpm, Incidents, RaceLaps,
-    LapsTotal, PlayerCarClass, FastestLap
+    LapsTotal, PlayerCarClass, FastestLap, SessionType
 } from "$lib/types/telemetry";
 import { invoke } from "@tauri-apps/api/core";
 import { readable } from 'svelte/store';
@@ -55,3 +55,4 @@ export const incidents = createTelemetryStore<Incidents>("incidents", 0);
 export const incidentLimit = createTelemetryStore<Incidents>("incident_limit", 0);
 export const playerCarClass = createTelemetryStore<PlayerCarClass>("player_car_class", "");
 export const fastestLap = createTelemetryStore<FastestLap>("fastest_lap", "-:--:--");
+export const sessionType = createTelemetryStore<SessionType>("session_type", "Unknown");
