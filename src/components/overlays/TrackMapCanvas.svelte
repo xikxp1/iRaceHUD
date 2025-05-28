@@ -54,6 +54,9 @@
     const leaderCircleColor: string = `oklch(${css.getPropertyValue("--su")})`;
     const standardCircleColor: string = `oklch(${css.getPropertyValue("--pc")})`;
     const offTrackCircleColor: string = `oklch(${css.getPropertyValue("--wa")})`;
+    const circleSize = 30;
+    const circleOutlineSize = 6;
+    const circleSizeOutline = circleSize + circleOutlineSize / 2;
 
     function getCircleOutlineColor(car: TrackMapLocal): string {
         if (car.is_player) {
@@ -257,7 +260,6 @@
             }
 
             // Draw car circle
-            const circleSize = 30;
             const colorString = `#${car.car_class_color.toString(16)}`;
             let classColor = carClassColors[colorString];
             if (classColor == null) {
@@ -270,7 +272,6 @@
             ctx.fill();
 
             // Draw car outline
-            const circleSizeOutline = circleSize + 3;
             const outlineColor = getCircleOutlineColor(car);
 
             ctx.beginPath();
@@ -294,11 +295,11 @@
         function drawOffTrackCarWarning(car: TrackMapLocal) {
             ctx.save();
             ctx.translate(car.x, car.y);
-            ctx.globalAlpha = 0.8;
+            ctx.globalAlpha = 0.7;
             ctx.beginPath();
-            ctx.arc(0, 0, 48, 0, Math.PI * 2);
+            ctx.arc(0, 0, circleSizeOutline, 0, Math.PI * 2);
             ctx.strokeStyle = offTrackCircleColor;
-            ctx.lineWidth = 10;
+            ctx.lineWidth = circleOutlineSize;
             ctx.stroke();
             ctx.restore();
         }
