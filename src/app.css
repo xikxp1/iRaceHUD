@@ -27,12 +27,12 @@
 
 @font-face {
     font-family: "iracing";
-    font-display: swap;
+    font-display: block;
     src: url("/fonts/iracing.otf");
 }
 
 @font-face {
     font-family: "iracing-square";
-    font-display: swap;
+    font-display: block;
     src: url("/fonts/iracing-square.ttf");
 }
