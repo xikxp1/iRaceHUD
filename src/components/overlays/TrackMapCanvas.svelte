@@ -277,7 +277,7 @@
             ctx.beginPath();
             ctx.arc(0, 0, circleSizeOutline, 0, Math.PI * 2);
             ctx.strokeStyle = outlineColor;
-            ctx.lineWidth = 6;
+            ctx.lineWidth = circleOutlineSize;
             ctx.stroke();
 
             if (car.class_position != null) {
