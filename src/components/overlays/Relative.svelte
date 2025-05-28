@@ -71,25 +71,32 @@
                             />
                         </td>
                         <td class="text text-sm">
-                            <span
-                                class="text text-sm tracking-tight {rel?.is_player_car_class
-                                    ? ''
-                                    : 'text-opacity-70'} {rel?.is_ahead
-                                    ? 'text-warning'
-                                    : ''} {rel?.is_behind ? 'text-info' : ''}"
-                                >{rel?.user_name ?? ""}
-                            </span>
-                            {#if rel?.is_off_track}
-                                <span class="text text-sm text-error text-right"
-                                    >&nbspOFF</span
-                                >
-                            {/if}
-                            {#if rel?.is_in_pits}
+                            <div class="flex flex-row items-center justify-between">
                                 <span
-                                    class="text text-sm text-success text-right"
-                                    >&nbspPIT</span
-                                >
-                            {/if}
+                                    class="text text-sm tracking-tight truncate {rel?.is_player_car_class
+                                        ? ''
+                                        : 'text-opacity-70'} {rel?.is_ahead
+                                        ? 'text-warning'
+                                        : ''} {rel?.is_behind ? 'text-info' : ''}"
+                                    >{rel?.user_name ?? ""}
+                                </span>
+                                <div class="flex flex-row gap-1 ml-2 mr-1">
+                                    {#if rel?.is_off_track}
+                                        <Badge
+                                            outlineClasses="ring ring-2 ring-inset ring-warning text-center"
+                                            textClasses="text text-xs tracking-tight text-warning ml-1 mr-1"
+                                            text="OFF"
+                                        />
+                                    {/if}
+                                    {#if rel?.is_in_pits}
+                                        <Badge
+                                            outlineClasses="ring ring-2 ring-inset ring-primary text-center"
+                                            textClasses="text text-xs text-primary ml-1 mr-1"
+                                            text="PIT"
+                                        />
+                                    {/if}
+                                </div>
+                            </div>
                         </td>
                         <td class="text text-sm text-right pr-1 w-[80px]">
                             {#if rel?.license && rel?.irating}

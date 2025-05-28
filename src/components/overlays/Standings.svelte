@@ -52,15 +52,22 @@
     }
 
     let unsubscribe_standings: () => void = () => {};
+    let unsubscribe_session_type: () => void = () => {};
 
     onMount(() => {
-        interval = setInterval(() => {
-            show_best_lap = !show_best_lap;
-        }, SWITCH_INTERVAL);
-
         unsubscribe_standings = standings.subscribe((value) =>
             on_standings(value),
         );
+
+        unsubscribe_session_type = sessionType.subscribe((value) => {
+            if (value != "Qualify") {
+                interval = setInterval(() => {
+                    show_best_lap = !show_best_lap;
+                }, SWITCH_INTERVAL);
+            } else {
+                show_best_lap = true;
+            }
+        });
 
         on_standings($standings);
     });
@@ -68,6 +75,7 @@
     onDestroy(() => {
         clearInterval(interval);
         unsubscribe_standings();
+        unsubscribe_session_type();
     });
 </script>
 
@@ -145,15 +153,29 @@
                             />
                         </td>
                         <td class="text text-sm">
-                            <span class="text text-sm tracking-tight"
-                                >{st?.user_name ?? ""}</span
+                            <div
+                                class="flex flex-row items-center justify-between"
                             >
-                            {#if st?.is_in_pits}
-                                <span
-                                    class="text text-sm text-success text-right"
-                                    >&nbspPIT</span
+                                <span class="text text-sm tracking-tight"
+                                    >{st?.user_name ?? ""}</span
                                 >
-                            {/if}
+                                <div class="flex flex-row gap-1 ml-2 mr-1">
+                                    {#if st?.is_off_track}
+                                        <Badge
+                                            outlineClasses="ring ring-2 ring-inset ring-warning text-center"
+                                            textClasses="text text-xs tracking-tight text-warning ml-1 mr-1"
+                                            text="OFF"
+                                        />
+                                    {/if}
+                                    {#if st?.is_in_pits}
+                                        <Badge
+                                            outlineClasses="ring ring-2 ring-inset ring-primary text-center"
+                                            textClasses="text text-xs text-primary ml-1 mr-1"
+                                            text="PIT"
+                                        />
+                                    {/if}
+                                </div>
+                            </div>
                         </td>
                         <td class="text text-sm text-right pr-1 w-[40px]">
                             {#if st?.license && st?.irating}
