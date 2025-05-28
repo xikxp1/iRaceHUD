@@ -66,10 +66,6 @@ impl SignedDuration {
     pub fn is_positive(&self) -> bool {
         self.is_positive
     }
-
-    pub fn is_zero(&self) -> bool {
-        self.duration == Duration::ZERO
-    }
 }
 
 impl std::fmt::Debug for SignedDuration {

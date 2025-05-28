@@ -274,6 +274,13 @@ impl SessionData {
             .unwrap_or_default();
 
         for (car_id, driver) in self.drivers.iter_mut() {
+            let result_position_idx = self.results_positions_mapping.get(car_id);
+            let result_position = if let Some(idx) = result_position_idx {
+                &self.results_positions[*idx]
+            } else {
+                &ResultsPosition::default()
+            };
+
             let lap_dist_pct_value = match lap_dist_pct[*car_id as usize] {
                 value if value < 0.0 => 0.0,
                 value => value,
@@ -296,8 +303,14 @@ impl SessionData {
             driver.estimated = SignedDuration::from_secs_f32(est_time_value);
             driver.best_lap_time =
                 SignedDuration::from_secs_f32(car_idx_best_lap_time_value[*car_id as usize]);
+            if !driver.best_lap_time.is_positive() && result_position.fastest_time.is_positive() {
+                driver.best_lap_time = result_position.fastest_time;
+            }
             driver.last_lap_time =
                 SignedDuration::from_secs_f32(car_idx_last_lap_time_value[*car_id as usize]);
+            if !driver.last_lap_time.is_positive() && result_position.last_time.is_positive() {
+                driver.last_lap_time = result_position.last_time;
+            }
             driver.is_in_pits = car_idx_track_surface_value[*car_id as usize] == 1
                 || car_idx_track_surface_value[*car_id as usize] == 2;
             driver.is_off_track = car_idx_track_surface_value[*car_id as usize] == 0;
@@ -326,11 +339,11 @@ impl SessionData {
             || self.session_type == SessionType::Qualify
         {
             driver_positions.sort_by(|a, b| {
-                if !a.1.best_lap_time.is_zero() && !b.1.best_lap_time.is_zero() {
+                if a.1.best_lap_time.is_positive() && b.1.best_lap_time.is_positive() {
                     a.1.best_lap_time.partial_cmp(&b.1.best_lap_time).unwrap()
-                } else if a.1.best_lap_time.is_zero() && !b.1.best_lap_time.is_zero() {
+                } else if !a.1.best_lap_time.is_positive() && b.1.best_lap_time.is_positive() {
                     Ordering::Greater
-                } else if !a.1.best_lap_time.is_zero() && b.1.best_lap_time.is_zero() {
+                } else if a.1.best_lap_time.is_positive() && !b.1.best_lap_time.is_positive() {
                     Ordering::Less
                 } else {
                     Ordering::Equal
@@ -441,12 +454,22 @@ impl SessionData {
                         },
                     };
                 };
-                let delta_dist_pct = match player_dist_pct - driver.lap_dist_pct {
+                let dist_pct_diff = player_dist_pct - driver.lap_dist_pct;
+                let delta_dist_pct = match dist_pct_diff {
                     value if value > 0.5 => value - 1.0,
                     value if value < -0.5 => value + 1.0,
                     value => value,
                 };
                 driver.player_relative_gap = player_car_class_est_lap_time * delta_dist_pct;
+
+                if self.session_type == SessionType::Race {
+                    let ahead_behind = match player_gap_laps {
+                        value if value > 0.5 => -1,
+                        value if value < -0.5 => 1,
+                        _ => 0,
+                    };
+                    driver.ahead_behind = ahead_behind;
+                }
             }
         }
 

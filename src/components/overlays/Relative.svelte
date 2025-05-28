@@ -36,7 +36,9 @@
                 <span class="text-sm text-primary text-opacity-70"
                     >Best Lap:
                 </span>
-                <span class="text text-sm text-primary">&nbsp;{$fastestLap}</span>
+                <span class="text text-sm text-primary"
+                    >&nbsp;{$fastestLap}</span
+                >
             </div>
             <div class="flex flex-row items-center justify-end w-1/4 pr-2">
                 <img src="/icons/clock.svg" alt="" class="h-[16px]" />
@@ -70,10 +72,11 @@
                         </td>
                         <td class="text text-sm">
                             <span
-                                class="text text-sm tracking-tight"
-                                style="opacity: {rel?.is_player_car_class
-                                    ? 1
-                                    : 0.7}"
+                                class="text text-sm tracking-tight {rel?.is_player_car_class
+                                    ? ''
+                                    : 'text-opacity-70'} {rel?.is_ahead
+                                    ? 'text-warning'
+                                    : ''} {rel?.is_behind ? 'text-info' : ''}"
                                 >{rel?.user_name ?? ""}
                             </span>
                             {#if rel?.is_off_track}

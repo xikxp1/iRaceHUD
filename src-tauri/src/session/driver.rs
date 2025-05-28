@@ -33,6 +33,7 @@ pub struct Driver {
     pub is_out: bool,
     pub result_position: Option<u32>,
     pub result_class_position: Option<u32>,
+    pub ahead_behind: i32,
 }
 
 impl Driver {

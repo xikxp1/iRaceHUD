@@ -26,6 +26,8 @@ pub struct RelativeDriver {
     is_off_world: bool,
     is_player_car_class: bool,
     car_class_color: u32,
+    is_ahead: bool,
+    is_behind: bool,
 }
 
 impl Serialize for RelativeDriver {
@@ -34,7 +36,7 @@ impl Serialize for RelativeDriver {
         S: Serializer,
     {
         use serde::ser::SerializeMap;
-        let mut map = serializer.serialize_map(Some(13))?;
+        let mut map = serializer.serialize_map(Some(15))?;
         map.serialize_entry("car_id", &self.car_id)?;
         map.serialize_entry("position", &self.position)?;
         map.serialize_entry("user_name", &self.user_name)?;
@@ -48,6 +50,8 @@ impl Serialize for RelativeDriver {
         map.serialize_entry("is_off_world", &self.is_off_world)?;
         map.serialize_entry("is_player_car_class", &self.is_player_car_class)?;
         map.serialize_entry("car_class_color", &self.car_class_color)?;
+        map.serialize_entry("is_ahead", &self.is_ahead)?;
+        map.serialize_entry("is_behind", &self.is_behind)?;
         map.end()
     }
 }
@@ -68,6 +72,8 @@ impl RelativeDriver {
             is_off_world: driver.is_off_world,
             is_player_car_class: driver.is_player_class,
             car_class_color: driver.car_class_color,
+            is_ahead: driver.ahead_behind == 1,
+            is_behind: driver.ahead_behind == -1,
         }
     }
 }
