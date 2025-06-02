@@ -79,14 +79,8 @@
     });
 </script>
 
-<div
-    class="flex flex-row items-center justify-center"
-    style="opacity: {settings.opacity / 100}"
->
-    <div
-        class="flex flex-col bg-primary-content rounded-l-md"
-        style="width: {settings.width}px"
-    >
+<div class="flex flex-row w-full h-fit">
+    <div class="flex flex-col bg-primary-content rounded-l-md w-full">
         <div
             class="flex flex-row items-center justify-center border-b-2 border-accent"
         >

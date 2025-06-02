@@ -32,40 +32,26 @@
     });
 </script>
 
-<div
-    class="flex flex-row items-center justify-center"
-    style="opacity: {settings.opacity / 100}"
->
-    <div class="join flex flex-row bg-primary-content rounded-md">
-        {#if settings.gap_enabled && $sessionType === "Race"}
-            <div
-                class="join-item flex flex-col items-end justify-center"
-                style="width: {settings.gap_width}px"
-            >
-                <div class="text-primary text-xl">{gapNextValue}</div>
-            </div>
-            <div
-                class="join-item divider divider-horizontal divider-primary w-[2px]"
-            ></div>
-        {/if}
+<div class="join flex flex-row bg-primary-content rounded-md w-full h-fit">
+    {#if settings.gap_enabled && $sessionType === "Race"}
         <div
-            class="join-item flex flex-col items-center justify-center"
-            style="width: {settings.session_state_width}px"
+            class="join-item flex flex-col items-end justify-center border-r-primary border-r-2"
+            style="width: {settings.gap_width}px"
         >
-            <div class="text-primary text-xl">{sessionStateValue}</div>
+            <span class="text-primary text-xl mr-2">{gapNextValue}</span>
         </div>
-        {#if settings.gap_enabled && $sessionType === "Race"}
-            <div
-                class="join-item divider divider-horizontal divider-primary w-[2px]"
-            ></div>
-            <div
-                class="join-item flex flex-col items-start justify-center"
-                style="width: {settings.gap_width}px"
-            >
-                <div class="text-primary text-xl">{gapPrevValue}</div>
-            </div>
-        {/if}
+    {/if}
+    <div class="join-item flex flex-col flex-grow items-center justify-center">
+        <span class="text-primary text-xl ml-1 mr-1">{sessionStateValue}</span>
     </div>
+    {#if settings.gap_enabled && $sessionType === "Race"}
+        <div
+            class="join-item flex flex-col items-start justify-center border-l-primary border-l-2"
+            style="width: {settings.gap_width}px"
+        >
+            <span class="text-primary text-xl ml-2">{gapPrevValue}</span>
+        </div>
+    {/if}
 </div>
 
 <style>

@@ -35,15 +35,17 @@
     });
 </script>
 
-<div class="flex flex-row items-center justify-center">
-    <div class="flex flex-row">
+<div class="flex flex-row w-full h-full">
+    <div class="ml-2">
         <img
             bind:this={left_icon}
             src="/icons/alert.svg"
             alt=""
             style="opacity: 0;"
         />
-        <div class="flex" style="width: {settings.gap_width}px"></div>
+    </div>
+    <div class="flex-grow"></div>
+    <div class="mr-2">
         <img
             bind:this={right_icon}
             src="/icons/alert.svg"

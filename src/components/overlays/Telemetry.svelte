@@ -132,61 +132,51 @@
 </script>
 
 <div
-    class="flex flex-row items-center justify-center"
-    style="opacity: {settings.opacity / 100}"
+    class="join bg-primary-content {abs
+        ? 'outline outline-2 outline-secondary'
+        : ''} w-full h-full"
 >
     <div
-        class="join bg-primary-content {abs
-            ? 'outline outline-2 outline-secondary'
-            : ''}"
-        style="width: {settings.width}px"
+        class="join-item flex flex-row items-center justify-center rounded-md w-[82%] h-20"
     >
-        <div
-            class="join-item flex flex-row items-center justify-center rounded-md w-[82%] h-20"
-        >
-            <div class="flex flex-col items-end justify-evenly w-[96%] h-[90%]">
-                <div class="flex flex-row w-[98%] h-[70%]">
-                    <canvas bind:this={telemetryCanvas} id="telemetry_chart"
-                    ></canvas>
-                </div>
-                <div
-                    class="{abs
-                        ? 'text-secondary'
-                        : 'text-neutral-600'} text-xs text-right w-[98%] h-[15%]"
-                >
-                    ABS
-                </div>
+        <div class="flex flex-col items-end justify-evenly w-[96%] h-[90%]">
+            <div class="flex flex-row w-[98%] h-[70%]">
+                <canvas bind:this={telemetryCanvas} id="telemetry_chart"
+                ></canvas>
+            </div>
+            <div
+                class="{abs
+                    ? 'text-secondary'
+                    : 'text-neutral-600'} text-xs text-right w-[98%] h-[15%]"
+            >
+                ABS
             </div>
         </div>
-        <div
-            class="join-item flex flex-rowitems-center justify-evenly rounded-md w-[18%] h-20"
-        >
+    </div>
+    <div
+        class="join-item flex flex-rowitems-center justify-evenly rounded-md w-[18%] h-20"
+    >
+        <div class="flex flex-col items-center justify-evenly w-2/5 h-[90%]">
+            <ProgressBar
+                value={brake}
+                cls="flex flex-col flex-nowrap justify-end w-1.5 h-[70%] rounded-full overflow-hidden outline outline-2 outline-offset-2 outline-primary mt-[8px] mb-[4px]"
+                elem_cls="rounded-full overflow-hidden bg-error"
+            ></ProgressBar>
             <div
-                class="flex flex-col items-center justify-evenly w-2/5 h-[90%]"
+                class="{abs
+                    ? 'text-secondary'
+                    : 'text-primary'} text-xs h-[15%]"
             >
-                <ProgressBar
-                    value={brake}
-                    cls="flex flex-col flex-nowrap justify-end w-1.5 h-[70%] rounded-full overflow-hidden outline outline-2 outline-offset-2 outline-primary mt-[8px] mb-[4px]"
-                    elem_cls="rounded-full overflow-hidden bg-error"
-                ></ProgressBar>
-                <div
-                    class="{abs
-                        ? 'text-secondary'
-                        : 'text-primary'} text-xs h-[15%]"
-                >
-                    {brake}
-                </div>
+                {brake}
             </div>
-            <div
-                class="flex flex-col items-center justify-evenly w-2/5 h-[90%]"
-            >
-                <ProgressBar
-                    value={throttle}
-                    cls="flex flex-col flex-nowrap justify-end w-1.5 h-[70%] rounded-full overflow-hidden outline outline-2 outline-offset-2 outline-primary mt-[8px] mb-[4px]"
-                    elem_cls="rounded-full overflow-hidden bg-success"
-                ></ProgressBar>
-                <div class="text-primary text-xs h-[15%]">{throttle}</div>
-            </div>
+        </div>
+        <div class="flex flex-col items-center justify-evenly w-2/5 h-[90%]">
+            <ProgressBar
+                value={throttle}
+                cls="flex flex-col flex-nowrap justify-end w-1.5 h-[70%] rounded-full overflow-hidden outline outline-2 outline-offset-2 outline-primary mt-[8px] mb-[4px]"
+                elem_cls="rounded-full overflow-hidden bg-success"
+            ></ProgressBar>
+            <div class="text-primary text-xs h-[15%]">{throttle}</div>
         </div>
     </div>
 </div>

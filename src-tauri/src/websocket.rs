@@ -17,6 +17,7 @@ use tokio_tungstenite::{accept_async, tungstenite::Message};
 type WsClients = Arc<StdMutex<HashMap<SocketAddr, mpsc::UnboundedSender<Vec<u8>>>>>;
 
 static WS_PORT: OnceLock<u16> = OnceLock::new();
+pub static WS_SERVER: OnceLock<WebSocketServer> = OnceLock::new();
 
 #[derive(Debug, Clone)]
 pub struct WebSocketServer {

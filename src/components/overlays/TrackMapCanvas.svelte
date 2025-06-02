@@ -188,7 +188,7 @@
             Math.min(
                 canvas.width / trackBounds.width,
                 canvas.height / trackBounds.height,
-            ) * 0.8; // 80% of the available space
+            ) * 0.9; // 80% of the available space
 
         // Set up transform to center and scale the track
         ctx.setTransform(
@@ -367,8 +367,8 @@
 
         // Set up canvas
         ctx = canvas.getContext("2d")!;
-        canvas.width = settings.width;
-        canvas.height = settings.width; // Square aspect ratio
+        canvas.width = settings.common_settings.width;
+        canvas.height = settings.common_settings.height;
 
         await Promise.all([
             fetch("/track_info_data/track_info.json")
@@ -409,21 +409,11 @@
     });
 </script>
 
-<div
-    class="flex flex-row items-center justify-center"
-    style="opacity: {settings.opacity / 100}"
->
-    <div
-        class="flex flex-col items-center justify-center"
-        style="width: {settings.width}px"
-    >
-        <canvas
-            bind:this={canvas}
-            width={settings.width}
-            height={settings.width}
-        ></canvas>
-    </div>
-</div>
+<canvas
+    bind:this={canvas}
+    width={settings.common_settings.width}
+    height={settings.common_settings.height}
+></canvas>
 
 <style>
 </style>

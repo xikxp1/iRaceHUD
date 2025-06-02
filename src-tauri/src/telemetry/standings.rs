@@ -1,6 +1,5 @@
 use serde::{Serialize, Serializer};
 use specta::Type;
-use tauri::Manager;
 
 use crate::emitter::emittable_event::{EmittableEvent, EmittableValue};
 use crate::session::driver::Driver;
@@ -10,7 +9,7 @@ use crate::util::format_irating::format_irating;
 use crate::util::format_laptime::format_laptime;
 use crate::util::get_gap::get_gap;
 use crate::util::settings_helper::get_settings;
-use crate::WINDOW;
+use crate::APP_HANDLE;
 
 #[derive(Default, Type, PartialEq)]
 pub struct StandingsDriver {
@@ -79,7 +78,7 @@ impl EmittableEvent for Standings {
     }
 
     fn get_event(&self, session: &SessionData) -> Box<dyn EmittableValue> {
-        let app_handle = WINDOW.get().unwrap().app_handle();
+        let app_handle = APP_HANDLE.get().unwrap();
         let settings = get_settings::<StandingsOverlaySettings>(app_handle.clone(), "standings");
         let max_drivers_count = settings.max_drivers as usize;
         let top_drivers_count = settings.top_drivers as usize;

@@ -4,6 +4,8 @@
 
 :root {
     font-family: iracing;
+    overflow-y: hidden;
+    overflow-x: hidden;
 
     -webkit-touch-callout: none;
     /* iOS Safari */
@@ -35,4 +37,32 @@
     font-family: "iracing-square";
     font-display: block;
     src: url("/fonts/iracing-square.ttf");
+}
+
+.scale-container {
+    position: relative;
+}
+
+.drag-region {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3;
+}
+
+.drag-region-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.overlay-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
 }
