@@ -3,7 +3,7 @@
     "common_settings": {
       "enabled": true,
       "height": 70,
-      "opacity": 100,
+      "opacity": 40,
       "scale": 100,
       "width": 700,
       "x": 100,
