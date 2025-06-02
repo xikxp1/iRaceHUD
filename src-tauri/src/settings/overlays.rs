@@ -1,3 +1,4 @@
+pub mod common_settings;
 pub mod lap_times;
 pub mod main;
 pub mod proximity;

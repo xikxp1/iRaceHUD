@@ -1,9 +1,13 @@
 {
   "settings": {
-    "enabled": true,
-    "opacity": 75,
-    "width": 300,
-    "x": 0,
-    "y": 150
+    "common_settings": {
+      "enabled": true,
+      "height": 80,
+      "opacity": 75,
+      "scale": 100,
+      "width": 300,
+      "x": 100,
+      "y": 100
+    }
   }
 }

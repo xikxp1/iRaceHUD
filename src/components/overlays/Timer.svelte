@@ -36,46 +36,32 @@
     );
 </script>
 
-<div
-    class="flex flex-row items-center justify-center"
-    style="opacity: {settings.opacity / 100}"
->
-    <div class="join flex flex-row bg-primary-content rounded-md">
-        {#if settings.delta_enabled}
-            <div
-                class="join-item flex flex-col items-end justify-center"
-                style="width: {settings.delta_width}px"
-            >
-                <div class="text-primary text-xl font-square">
-                    {dBestTime}
-                </div>
-            </div>
-            <div
-                class="join-item divider divider-horizontal divider-primary w-[2px]"
-            ></div>
-        {/if}
+<div class="join flex flex-row bg-primary-content rounded-md w-full h-fit">
+    {#if settings.delta_enabled}
         <div
-            class="join-item flex flex-col items-center justify-center"
-            style="width: {settings.lap_time_width}px"
+            class="join-item flex flex-col items-end justify-center border-r-primary border-r-2"
+            style="width: {settings.delta_width}px"
         >
-            <div class="text-primary text-3xl font-square">
-                {lapTimeFormatted}
-            </div>
+            <span class="text-primary text-xl font-square mr-3">
+                {dBestTime}
+            </span>
         </div>
-        {#if settings.delta_enabled}
-            <div
-                class="join-item divider divider-horizontal divider-primary w-[2px]"
-            ></div>
-            <div
-                class="join-item flex flex-col items-start justify-center"
-                style="width: {settings.delta_width}px"
-            >
-                <div class="text-primary text-xl font-square">
-                    {dLastTime}
-                </div>
-            </div>
-        {/if}
+    {/if}
+    <div class="join-item flex flex-col flex-grow items-center justify-center">
+        <span class="text-primary text-3xl font-square ml-1 mr-1">
+            {lapTimeFormatted}
+        </span>
     </div>
+    {#if settings.delta_enabled}
+        <div
+            class="join-item flex flex-col items-start justify-center border-l-primary border-l-2"
+            style="width: {settings.delta_width}px"
+        >
+            <span class="text-primary text-xl font-square ml-3">
+                {dLastTime}
+            </span>
+        </div>
+    {/if}
 </div>
 
 <style>

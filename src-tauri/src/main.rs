@@ -2,28 +2,29 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 pub mod emitter;
+pub mod overlay_manager;
 pub mod session;
 pub mod settings;
 pub mod telemetry;
 pub mod util;
 pub mod websocket;
 
-use eyre::{eyre, OptionExt, Result};
+use eyre::{OptionExt, Result};
 use log::{debug, error, info, warn};
+use overlay_manager::{AVAILABLE_OVERLAYS, OverlayManager};
 use simetry::iracing::Client;
 use std::{backtrace::Backtrace, sync::OnceLock, time::Duration};
 use tauri::{
-    async_runtime,
+    Manager, async_runtime,
     menu::{MenuBuilder, MenuItemBuilder},
     tray::TrayIconBuilder,
-    Manager,
 };
 use tauri::{WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 use tauri_plugin_log::{Target, TargetKind};
 use tokio::sync::Mutex;
-use websocket::WebSocketServer;
+use websocket::{WS_SERVER, WebSocketServer};
 
 use crate::emitter::telemetry_emitter::TelemetryEmitter;
 use crate::session::session_data::SessionData;
@@ -41,8 +42,8 @@ use crate::util::settings_helper::{get_settings, set_settings};
 #[cfg(not(debug_assertions))]
 use tauri_plugin_updater::UpdaterExt;
 
-static WINDOW: OnceLock<tauri::WebviewWindow> = OnceLock::new();
-static WS_SERVER: OnceLock<WebSocketServer> = OnceLock::new();
+static APP_HANDLE: OnceLock<tauri::AppHandle> = OnceLock::new();
+
 const RETRY_TIMEOUT_SECS: u64 = 5;
 const SESSION_UPDATE_PERIOD_MILLIS: u64 = 25;
 const SLOW_VAR_RESET_TICKS: u32 = 50;
@@ -65,7 +66,7 @@ fn open_settings_window(app_handle: tauri::AppHandle) {
                 WebviewUrl::App("/settings".into()),
             )
             .title("iRaceHUD Settings")
-            .focused(true)
+            .visible(true)
             .build()
             {
                 Ok(window) => {
@@ -80,6 +81,12 @@ fn open_settings_window(app_handle: tauri::AppHandle) {
     }
 }
 
+async fn lock_unlock_overlays_impl(app_handle: tauri::AppHandle) {
+    let overlay_manager = app_handle.state::<Mutex<OverlayManager>>();
+    let mut overlay_manager = overlay_manager.lock().await;
+    overlay_manager.set_locked_unlocked();
+}
+
 #[tokio::main]
 async fn main() {
     let _ = color_eyre::install();
@@ -90,6 +97,7 @@ async fn main() {
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
     let ctrl_f11_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::F11);
+    let ctrl_f10_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::F10);
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -99,6 +107,11 @@ async fn main() {
                     if shortcut == &ctrl_f11_shortcut && event.state() == ShortcutState::Pressed {
                         info!("Ctrl+F11 shortcut pressed, opening settings");
                         open_settings_window(app.clone());
+                    } else if shortcut == &ctrl_f10_shortcut
+                        && event.state() == ShortcutState::Pressed
+                    {
+                        info!("Ctrl+F10 shortcut pressed, locking/unlocking overlays");
+                        tauri::async_runtime::spawn(lock_unlock_overlays_impl(app.clone()));
                     }
                 })
                 .build(),
@@ -159,9 +172,13 @@ async fn main() {
             let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
             let settings =
                 MenuItemBuilder::with_id("settings", "Settings (Ctrl+F11)").build(app)?;
+            let lock_unlock_overlays =
+                MenuItemBuilder::with_id("lock_unlock_overlays", "Lock/Unlock Overlays (Ctrl+F10)")
+                    .build(app)?;
             let tray_menu = MenuBuilder::new(app)
                 .item(&version)
                 .item(&settings)
+                .item(&lock_unlock_overlays)
                 .separator()
                 .item(&quit)
                 .build()?;
@@ -173,10 +190,28 @@ async fn main() {
                     move |_, event| {
                         if event.id().as_ref() == "quit" {
                             info!("Quit menu item clicked, quitting application");
-                            app_handle.exit(0);
+                            let app_handle_clone = app_handle.clone();
+                            tauri::async_runtime::spawn(async move {
+                                let overlay_manager =
+                                    app_handle_clone.try_state::<Mutex<OverlayManager>>();
+                                if let Some(overlay_manager) = overlay_manager {
+                                    overlay_manager
+                                        .lock()
+                                        .await
+                                        .save_positions(&app_handle_clone);
+                                }
+                                app_handle_clone.exit(0);
+                            });
                         } else if event.id().as_ref() == "settings" {
                             info!("Settings menu item clicked, opening settings");
                             open_settings_window(app_handle.clone());
+                        } else if event.id().as_ref() == "lock_unlock_overlays" {
+                            info!(
+                                "Lock/Unlock overlays menu item clicked, locking/unlocking overlays"
+                            );
+                            tauri::async_runtime::spawn(lock_unlock_overlays_impl(
+                                app_handle.clone(),
+                            ));
                         }
                     }
                 })
@@ -198,20 +233,15 @@ async fn main() {
                 server_clone.run("127.0.0.1:0").await;
             });
 
-            let window = app
-                .get_webview_window("main")
-                .ok_or_eyre("Failed to get window")?;
+            APP_HANDLE.set(app.handle().clone()).unwrap();
 
-            #[cfg(debug_assertions)]
-            window.open_devtools();
+            let mut overlay_manager = OverlayManager::new();
 
-            window
-                .set_ignore_cursor_events(true)
-                .map_err(|err| eyre!("Failed to set ignore cursor events: {:?}", err))?;
+            for overlay in AVAILABLE_OVERLAYS {
+                overlay_manager.register_overlay(app.handle(), overlay);
+            }
 
-            WINDOW
-                .set(window)
-                .map_err(|err| eyre!("Failed to set window: {:?}", err))?;
+            app.manage(Mutex::new(overlay_manager));
 
             async_runtime::spawn(async move {
                 if let Err(err) = connect().await {
@@ -219,7 +249,8 @@ async fn main() {
                 }
             });
 
-            app.global_shortcut().register(ctrl_f11_shortcut)?;
+            app.global_shortcut()
+                .register_multiple([ctrl_f11_shortcut, ctrl_f10_shortcut])?;
 
             Ok(())
         })
@@ -248,6 +279,8 @@ async fn main() {
             get_track_map_overlay_settings,
             set_track_map_overlay_settings,
             get_app_version,
+            lock_unlock_overlays,
+            get_overlays_locked
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
@@ -270,8 +303,8 @@ async fn connect() -> Result<()> {
                 slow_var_ticks = 0;
             }
 
-            let window = WINDOW.get().ok_or_eyre("Failed to get window")?;
-            let emitter_state = window.app_handle().state::<Mutex<TelemetryEmitter>>();
+            let handle = APP_HANDLE.get().ok_or_eyre("Failed to get app handle")?;
+            let emitter_state = handle.state::<Mutex<TelemetryEmitter>>();
             let mut emitter = emitter_state.lock().await;
 
             if result == session::session_data::ProcessTickResult::StateChanged {
@@ -458,4 +491,21 @@ async fn set_track_map_overlay_settings(app: tauri::AppHandle, settings: TrackMa
 #[tauri::command]
 async fn get_app_version(app: tauri::AppHandle) -> String {
     app.package_info().version.to_string()
+}
+
+#[tauri::command]
+async fn lock_unlock_overlays(app: tauri::AppHandle) {
+    lock_unlock_overlays_impl(app).await;
+}
+
+#[tauri::command]
+async fn get_overlays_locked(app: tauri::AppHandle) -> bool {
+    let overlay_manager = app.try_state::<Mutex<OverlayManager>>();
+    match overlay_manager {
+        Some(overlay_manager) => {
+            let overlay_manager = overlay_manager.lock().await;
+            overlay_manager.get_locked()
+        }
+        None => true,
+    }
 }

@@ -1,11 +1,15 @@
 {
   "settings": {
-    "enabled": true,
+    "common_settings": {
+      "enabled": true,
+      "height": 30,
+      "opacity": 75,
+      "scale": 100,
+      "width": 270,
+      "x": 100,
+      "y": 100
+    },
     "gap_enabled": true,
-    "gap_width": 50,
-    "opacity": 75,
-    "session_state_width": 100,
-    "x": 0,
-    "y": -285
+    "gap_width": 60
   }
 }

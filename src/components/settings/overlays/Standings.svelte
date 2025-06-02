@@ -20,11 +20,9 @@
         });
 
     let settings = $state<StandingsOverlaySettings | undefined>(undefined);
-    let enabled = $derived(settings?.enabled ?? false);
-    let opacity = $derived(settings?.opacity ?? 0);
-    let width = $derived(settings?.width ?? 0);
-    let x = $derived(settings?.x ?? 0);
-    let y = $derived(settings?.y ?? 0);
+    let enabled = $derived(settings?.common_settings.enabled ?? false);
+    let opacity = $derived(settings?.common_settings.opacity ?? 100);
+    let scale = $derived(settings?.common_settings.scale ?? 100);
     let maxDrivers = $derived(settings?.max_drivers ?? 0);
     let topDrivers = $derived(settings?.top_drivers ?? 0);
     let error = $state<string | null>(null);
@@ -52,31 +50,9 @@
 
     function handleEnabledChange(event: Event) {
         if (!settings) return;
-        settings.enabled = (event.target as HTMLInputElement).checked;
-        if (validateSettings(settings)) {
-            invoke("set_standings_overlay_settings", { settings: settings });
-        }
-    }
-
-    function handleWidthChange(event: Event) {
-        if (!settings) return;
-        settings.width = parseInt((event.target as HTMLInputElement).value);
-        if (validateSettings(settings)) {
-            invoke("set_standings_overlay_settings", { settings: settings });
-        }
-    }
-
-    function handleHorizontalOffsetChange(event: Event) {
-        if (!settings) return;
-        settings.x = parseInt((event.target as HTMLInputElement).value);
-        if (validateSettings(settings)) {
-            invoke("set_standings_overlay_settings", { settings: settings });
-        }
-    }
-
-    function handleVerticalOffsetChange(event: Event) {
-        if (!settings) return;
-        settings.y = parseInt((event.target as HTMLInputElement).value);
+        settings.common_settings.enabled = (
+            event.target as HTMLInputElement
+        ).checked;
         if (validateSettings(settings)) {
             invoke("set_standings_overlay_settings", { settings: settings });
         }
@@ -84,7 +60,9 @@
 
     function handleOpacityChange(event: Event) {
         if (!settings) return;
-        settings.opacity = parseInt((event.target as HTMLInputElement).value);
+        settings.common_settings.opacity = parseInt(
+            (event.target as HTMLInputElement).value,
+        );
         if (validateSettings(settings)) {
             invoke("set_standings_overlay_settings", { settings: settings });
         }
@@ -103,6 +81,16 @@
     function handleTopDriversChange(event: Event) {
         if (!settings) return;
         settings.top_drivers = parseInt(
+            (event.target as HTMLInputElement).value,
+        );
+        if (validateSettings(settings)) {
+            invoke("set_standings_overlay_settings", { settings: settings });
+        }
+    }
+
+    function handleScaleChange(event: Event) {
+        if (!settings) return;
+        settings.common_settings.scale = parseInt(
             (event.target as HTMLInputElement).value,
         );
         if (validateSettings(settings)) {
@@ -139,35 +127,15 @@
                 </td>
             </tr>
             <tr>
-                <td class="text-sm font-bold text-right">Width</td>
+                <td class="text-sm font-bold text-right">Scale</td>
                 <td>
                     <input
                         type="number"
                         class="input input-sm w-24"
-                        bind:value={width}
-                        onchange={handleWidthChange}
-                    />
-                </td>
-            </tr>
-            <tr>
-                <td class="text-sm font-bold text-right">Horizontal offset</td>
-                <td>
-                    <input
-                        type="number"
-                        class="input input-sm w-24"
-                        bind:value={x}
-                        onchange={handleHorizontalOffsetChange}
-                    />
-                </td>
-            </tr>
-            <tr>
-                <td class="text-sm font-bold text-right">Vertical offset</td>
-                <td>
-                    <input
-                        type="number"
-                        class="input input-sm w-24"
-                        bind:value={y}
-                        onchange={handleVerticalOffsetChange}
+                        bind:value={scale}
+                        onchange={handleScaleChange}
+                        min="20"
+                        max="500"
                     />
                 </td>
             </tr>

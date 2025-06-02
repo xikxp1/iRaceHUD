@@ -4,13 +4,11 @@
     import { onMount } from "svelte";
 
     let settings = $state<SubTimerOverlaySettings | undefined>(undefined);
-    let enabled = $derived(settings?.enabled ?? false);
-    let opacity = $derived(settings?.opacity ?? 0);
-    let session_state_width = $derived(settings?.session_state_width ?? 0);
+    let enabled = $derived(settings?.common_settings.enabled ?? false);
+    let opacity = $derived(settings?.common_settings.opacity ?? 100);
+    let scale = $derived(settings?.common_settings.scale ?? 100);
     let gap_enabled = $derived(settings?.gap_enabled ?? false);
     let gap_width = $derived(settings?.gap_width ?? 0);
-    let x = $derived(settings?.x ?? 0);
-    let y = $derived(settings?.y ?? 0);
 
     onMount(() => {
         invoke<SubTimerOverlaySettings>("get_subtimer_overlay_settings").then(
@@ -20,47 +18,39 @@
         );
     });
 
-    async function handleEnabledChange(event: Event) {
+    function handleEnabledChange(event: Event) {
         if (!settings) return;
-        settings.enabled = (event.target as HTMLInputElement).checked;
+        settings.common_settings.enabled = (
+            event.target as HTMLInputElement
+        ).checked;
         invoke("set_subtimer_overlay_settings", { settings: settings });
     }
 
-    async function handleSessionStateWidthChange(event: Event) {
+    function handleOpacityChange(event: Event) {
         if (!settings) return;
-        settings.session_state_width = parseInt(
+        settings.common_settings.opacity = parseInt(
             (event.target as HTMLInputElement).value,
         );
         invoke("set_subtimer_overlay_settings", { settings: settings });
     }
 
-    async function handleGapEnabledChange(event: Event) {
+    function handleScaleChange(event: Event) {
+        if (!settings) return;
+        settings.common_settings.scale = parseInt(
+            (event.target as HTMLInputElement).value,
+        );
+        invoke("set_lap_times_overlay_settings", { settings: settings });
+    }
+
+    function handleGapEnabledChange(event: Event) {
         if (!settings) return;
         settings.gap_enabled = (event.target as HTMLInputElement).checked;
         invoke("set_subtimer_overlay_settings", { settings: settings });
     }
 
-    async function handleGapWidthChange(event: Event) {
+    function handleGapWidthChange(event: Event) {
         if (!settings) return;
         settings.gap_width = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_subtimer_overlay_settings", { settings: settings });
-    }
-
-    async function handleHorizontalOffsetChange(event: Event) {
-        if (!settings) return;
-        settings.x = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_subtimer_overlay_settings", { settings: settings });
-    }
-
-    async function handleVerticalOffsetChange(event: Event) {
-        if (!settings) return;
-        settings.y = parseInt((event.target as HTMLInputElement).value);
-        invoke("set_subtimer_overlay_settings", { settings: settings });
-    }
-
-    async function handleOpacityChange(event: Event) {
-        if (!settings) return;
-        settings.opacity = parseInt((event.target as HTMLInputElement).value);
         invoke("set_subtimer_overlay_settings", { settings: settings });
     }
 </script>
@@ -93,19 +83,20 @@
                 </td>
             </tr>
             <tr>
-                <td class="text-sm font-bold text-right">Session state width</td
-                >
+                <td class="text-sm font-bold text-right">Scale</td>
                 <td>
                     <input
                         type="number"
                         class="input input-sm w-24"
-                        bind:value={session_state_width}
-                        onchange={handleSessionStateWidthChange}
+                        bind:value={scale}
+                        onchange={handleScaleChange}
+                        min="20"
+                        max="500"
                     />
                 </td>
             </tr>
             <tr>
-                <td class="text-sm font-bold text-right">Gap enabled</td>
+                <td class="text-sm font-bold text-right">Gap Enabled</td>
                 <td>
                     <input
                         type="checkbox"
@@ -116,35 +107,14 @@
                 </td>
             </tr>
             <tr>
-                <td class="text-sm font-bold text-right">Gap width</td>
+                <td class="text-sm font-bold text-right">Gap Width</td>
                 <td>
                     <input
                         type="number"
                         class="input input-sm w-24"
                         bind:value={gap_width}
                         onchange={handleGapWidthChange}
-                    />
-                </td>
-            </tr>
-            <tr>
-                <td class="text-sm font-bold text-right">Horizontal offset</td>
-                <td>
-                    <input
-                        type="number"
-                        class="input input-sm w-24"
-                        bind:value={x}
-                        onchange={handleHorizontalOffsetChange}
-                    />
-                </td>
-            </tr>
-            <tr>
-                <td class="text-sm font-bold text-right">Vertical offset</td>
-                <td>
-                    <input
-                        type="number"
-                        class="input input-sm w-24"
-                        bind:value={y}
-                        onchange={handleVerticalOffsetChange}
+                        min="0"
                     />
                 </td>
             </tr>

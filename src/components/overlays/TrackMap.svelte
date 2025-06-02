@@ -232,179 +232,149 @@
     });
 </script>
 
-<div
-    class="flex flex-row items-center justify-center"
-    style="opacity: {settings.opacity / 100}"
->
-    <div
-        class="flex flex-col items-center justify-center"
-        style="width: {settings.width}px"
+<div class="flex flex-col items-center justify-center w-full h-full">
+    <svg
+        fill="none"
+        viewBox="{trackBounds.x} {trackBounds.y} {trackBounds.width} {trackBounds.height}"
+        width="70%"
+        height="70%"
+        preserveAspectRatio="xMidYMid meet"
+        xmlns="http://www.w3.org/2000/svg"
     >
-        <svg
-            fill="none"
-            viewBox="{trackBounds.x} {trackBounds.y} {trackBounds.width} {trackBounds.height}"
-            width="70%"
-            height="70%"
-            preserveAspectRatio="xMidYMid meet"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            <filter id="shadow">
-                <feDropShadow
-                    dx="2"
-                    dy="2"
-                    stdDeviation="2"
-                    flood-opacity="0.3"
-                />
-            </filter>
+        <filter id="shadow">
+            <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.3" />
+        </filter>
 
-            <!-- Track background with shadow -->
-            <path
-                d={trackPath}
-                stroke={trackBorderColor}
-                stroke-width="30"
-                filter="url(#shadow)"
+        <!-- Track background with shadow -->
+        <path
+            d={trackPath}
+            stroke={trackBorderColor}
+            stroke-width="30"
+            filter="url(#shadow)"
+        />
+
+        <defs>
+            <linearGradient
+                id="trackGradient"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="0%"
+            >
+                <stop
+                    offset="0%"
+                    style="stop-color: {trackColor}; stop-opacity: 0.8"
+                />
+                <stop
+                    offset="100%"
+                    style="stop-color: {trackColor}; stop-opacity: 1"
+                />
+            </linearGradient>
+        </defs>
+
+        <!-- Track surface -->
+        <path
+            bind:this={trackPathElement}
+            d={trackPath}
+            stroke="url(#trackGradient)"
+            stroke-width="20"
+        />
+
+        <!-- Start/Finish line -->
+        {#if startFinishPoint && startFinishPerp}
+            <line
+                x1={startFinishPoint.x - startFinishPerp.x * START_LINE_LENGTH}
+                y1={startFinishPoint.y - startFinishPerp.y * START_LINE_LENGTH}
+                x2={startFinishPoint.x + startFinishPerp.x * START_LINE_LENGTH}
+                y2={startFinishPoint.y + startFinishPerp.y * START_LINE_LENGTH}
+                stroke={trackColor}
+                stroke-width="16"
             />
-
-            <defs>
-                <linearGradient
-                    id="trackGradient"
-                    x1="0%"
-                    y1="0%"
-                    x2="100%"
-                    y2="0%"
-                >
-                    <stop
-                        offset="0%"
-                        style="stop-color: {trackColor}; stop-opacity: 0.8"
-                    />
-                    <stop
-                        offset="100%"
-                        style="stop-color: {trackColor}; stop-opacity: 1"
-                    />
-                </linearGradient>
-            </defs>
-
-            <!-- Track surface -->
-            <path
-                bind:this={trackPathElement}
-                d={trackPath}
-                stroke="url(#trackGradient)"
-                stroke-width="20"
+            <line
+                x1={startFinishPoint.x - startFinishPerp.x * START_LINE_LENGTH}
+                y1={startFinishPoint.y - startFinishPerp.y * START_LINE_LENGTH}
+                x2={startFinishPoint.x + startFinishPerp.x * START_LINE_LENGTH}
+                y2={startFinishPoint.y + startFinishPerp.y * START_LINE_LENGTH}
+                stroke={startFinishColor}
+                stroke-width="12"
             />
-
-            <!-- Start/Finish line -->
-            {#if startFinishPoint && startFinishPerp}
-                <line
-                    x1={startFinishPoint.x -
-                        startFinishPerp.x * START_LINE_LENGTH}
-                    y1={startFinishPoint.y -
-                        startFinishPerp.y * START_LINE_LENGTH}
-                    x2={startFinishPoint.x +
-                        startFinishPerp.x * START_LINE_LENGTH}
-                    y2={startFinishPoint.y +
-                        startFinishPerp.y * START_LINE_LENGTH}
-                    stroke={trackColor}
-                    stroke-width="16"
-                />
-                <line
-                    x1={startFinishPoint.x -
-                        startFinishPerp.x * START_LINE_LENGTH}
-                    y1={startFinishPoint.y -
-                        startFinishPerp.y * START_LINE_LENGTH}
-                    x2={startFinishPoint.x +
-                        startFinishPerp.x * START_LINE_LENGTH}
-                    y2={startFinishPoint.y +
-                        startFinishPerp.y * START_LINE_LENGTH}
-                    stroke={startFinishColor}
-                    stroke-width="12"
-                />
+        {/if}
+        {#each trackMapCars as car}
+            {#if !car.is_off_world && !car.is_leader && !car.is_player}
+                <g transform={car.transform} style="will-change: transform;">
+                    <circle r="32" fill={carCircleColor} />
+                    {#if car.is_off_track || car.is_in_pits}
+                        <circle
+                            r="36"
+                            stroke={car.is_off_track
+                                ? offtrackCircleColor
+                                : inPitsCircleColor}
+                            stroke-width="6"
+                        />
+                    {/if}
+                    <text
+                        y="5"
+                        fill={textColor}
+                        font-size="60"
+                        text-anchor="middle"
+                        alignment-baseline="middle"
+                    >
+                        {car.position}
+                    </text>
+                </g>
             {/if}
-            {#each trackMapCars as car}
-                {#if !car.is_off_world && !car.is_leader && !car.is_player}
-                    <g
-                        transform={car.transform}
-                        style="will-change: transform;"
+        {/each}
+        {#each trackMapCars as car}
+            {#if !car.is_off_world && car.is_leader && !car.is_player}
+                <g transform={car.transform} style="will-change: transform;">
+                    <circle r="32" fill={leaderCircleColor} />
+                    {#if car.is_off_track || car.is_in_pits}
+                        <circle
+                            r="36"
+                            stroke={car.is_off_track
+                                ? offtrackCircleColor
+                                : inPitsCircleColor}
+                            stroke-width="6"
+                        />
+                    {/if}
+                    <text
+                        y="5"
+                        fill={textColor}
+                        font-size="60"
+                        text-anchor="middle"
+                        alignment-baseline="middle"
                     >
-                        <circle r="32" fill={carCircleColor} />
-                        {#if car.is_off_track || car.is_in_pits}
-                            <circle
-                                r="36"
-                                stroke={car.is_off_track
-                                    ? offtrackCircleColor
-                                    : inPitsCircleColor}
-                                stroke-width="6"
-                            />
-                        {/if}
-                        <text
-                            y="5"
-                            fill={textColor}
-                            font-size="60"
-                            text-anchor="middle"
-                            alignment-baseline="middle"
-                        >
-                            {car.position}
-                        </text>
-                    </g>
-                {/if}
-            {/each}
-            {#each trackMapCars as car}
-                {#if !car.is_off_world && car.is_leader && !car.is_player}
-                    <g
-                        transform={car.transform}
-                        style="will-change: transform;"
+                        {car.position}
+                    </text>
+                </g>
+            {/if}
+        {/each}
+        {#each trackMapCars as car}
+            {#if !car.is_off_world && car.is_player}
+                <g transform={car.transform} style="will-change: transform;">
+                    <circle r="32" fill={playerCircleColor} />
+                    {#if car.is_off_track || car.is_in_pits}
+                        <circle
+                            r="36"
+                            stroke={car.is_off_track
+                                ? offtrackCircleColor
+                                : inPitsCircleColor}
+                            stroke-width="6"
+                        />
+                    {/if}
+                    <text
+                        y="5"
+                        fill={textColor}
+                        font-size="60"
+                        text-anchor="middle"
+                        alignment-baseline="middle"
                     >
-                        <circle r="32" fill={leaderCircleColor} />
-                        {#if car.is_off_track || car.is_in_pits}
-                            <circle
-                                r="36"
-                                stroke={car.is_off_track
-                                    ? offtrackCircleColor
-                                    : inPitsCircleColor}
-                                stroke-width="6"
-                            />
-                        {/if}
-                        <text
-                            y="5"
-                            fill={textColor}
-                            font-size="60"
-                            text-anchor="middle"
-                            alignment-baseline="middle"
-                        >
-                            {car.position}
-                        </text>
-                    </g>
-                {/if}
-            {/each}
-            {#each trackMapCars as car}
-                {#if !car.is_off_world && car.is_player}
-                    <g
-                        transform={car.transform}
-                        style="will-change: transform;"
-                    >
-                        <circle r="32" fill={playerCircleColor} />
-                        {#if car.is_off_track || car.is_in_pits}
-                            <circle
-                                r="36"
-                                stroke={car.is_off_track
-                                    ? offtrackCircleColor
-                                    : inPitsCircleColor}
-                                stroke-width="6"
-                            />
-                        {/if}
-                        <text
-                            y="5"
-                            fill={textColor}
-                            font-size="60"
-                            text-anchor="middle"
-                            alignment-baseline="middle"
-                        >
-                            {car.position}
-                        </text>
-                    </g>
-                {/if}
-            {/each}
-        </svg>
-    </div>
+                        {car.position}
+                    </text>
+                </g>
+            {/if}
+        {/each}
+    </svg>
 </div>
 
 <style>

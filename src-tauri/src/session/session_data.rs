@@ -675,18 +675,18 @@ impl SessionData {
                         let driver = match driver {
                             Some(driver) => driver,
                             None => {
-                                let mut new_driver = Driver::new(
-                                    car_id,
-                                    user_name,
-                                    car_number,
-                                    car_class_id,
-                                    irating,
-                                    lic_string.to_string(),
-                                    car_class_est_lap_time,
-                                    self.player_car_class == car_class_id,
-                                    car_class_color,
-                                    team_name,
-                                );
+                                let mut new_driver = Driver::builder()
+                                    .car_id(car_id)
+                                    .user_name(user_name)
+                                    .car_number(car_number)
+                                    .car_class_id(car_class_id)
+                                    .irating(irating)
+                                    .lic_string(lic_string.to_string())
+                                    .car_class_est_lap_time(car_class_est_lap_time)
+                                    .is_player_class(self.player_car_class == car_class_id)
+                                    .car_class_color(car_class_color)
+                                    .team_name(team_name)
+                                    .build();
                                 new_driver.is_out = is_out;
                                 new_driver.result_position = result_position;
                                 new_driver.result_class_position = result_class_position;

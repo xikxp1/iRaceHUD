@@ -1,11 +1,15 @@
 {
   "settings": {
+    "common_settings": {
+      "enabled": true,
+      "height": 50,
+      "opacity": 75,
+      "scale": 100,
+      "width": 360,
+      "x": 100,
+      "y": 100
+    },
     "delta_enabled": true,
-    "delta_width": 75,
-    "enabled": true,
-    "lap_time_width": 160,
-    "opacity": 75,
-    "x": 0,
-    "y": -320
+    "delta_width": 85
   }
 }

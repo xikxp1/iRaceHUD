@@ -1,9 +1,14 @@
 {
   "settings": {
-    "enabled": true,
-    "opacity": 75,
-    "width": 260,
-    "x": 0,
-    "y": 232
+    "common_settings": {
+      "enabled": true,
+      "height": 80,
+      "opacity": 75,
+      "scale": 100,
+      "width": 260,
+      "x": 100,
+      "y": 100
+    },
+    "show_reference_telemetry": true
   }
 }

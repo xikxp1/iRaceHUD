@@ -10,21 +10,19 @@ export type FastestLap = string
 
 export type StrengthOfField = number
 
-export type SubTimerOverlaySettings = { enabled: boolean; x: number; y: number; session_state_width: number; gap_enabled: boolean; gap_width: number; opacity: number }
+export type TelemetryOverlaySettings = { common_settings: CommonSettings; show_reference_telemetry: boolean }
 
-export type TelemetryOverlaySettings = { enabled: boolean; x: number; y: number; width: number; opacity: number; show_reference_telemetry: boolean | null }
+export type LapTimesOverlaySettings = { common_settings: CommonSettings }
 
-export type StandingsDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: string; license: string; leader_gap: string; best_lap: string; last_lap: string; is_player: boolean; is_leader: boolean; is_in_pits: boolean; split_after: boolean; is_off_world: boolean; is_off_track: boolean }
+export type TrackMapOverlaySettings = { common_settings: CommonSettings }
 
 export type SessionType = string
-
-export type TimerOverlaySettings = { enabled: boolean; x: number; y: number; lap_time_width: number; delta_enabled: boolean; delta_width: number; opacity: number }
-
-export type Standings = StandingsDriver[]
 
 export type PlayerCarClass = string
 
 export type GearBlinkRpm = number
+
+export type CommonSettings = { enabled: boolean; width: number; height: number; opacity: number; scale: number; x: number; y: number }
 
 export type DeltaBestTime = string
 
@@ -32,17 +30,19 @@ export type TelemetryGraph = { ts: number; throttle: number; brake: number; abs_
 
 export type Speed = number
 
-export type StandingsOverlaySettings = { enabled: boolean; x: number; y: number; width: number; opacity: number; max_drivers: number; top_drivers: number }
+export type StandingsDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: string; license: string; leader_gap: string; best_lap: string; last_lap: string; is_player: boolean; is_leader: boolean; is_in_pits: boolean; split_after: boolean; is_off_world: boolean; is_off_track: boolean }
+
+export type Standings = StandingsDriver[]
 
 export type GearShiftRpm = number
 
-export type ProximityOverlaySettings = { enabled: boolean; x: number; y: number; gap_width: number }
-
-export type MainOverlaySettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
+export type SubTimerOverlaySettings = { common_settings: CommonSettings; gap_enabled: boolean; gap_width: number }
 
 export type Lap = number
 
 export type LapsTotal = number
+
+export type StandingsOverlaySettings = { common_settings: CommonSettings; max_drivers: number; top_drivers: number }
 
 export type Active = boolean
 
@@ -58,15 +58,15 @@ export type Relative = RelativeDriver[]
 
 export type SessionState = string
 
-export type LapTimesOverlaySettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
-
 export type RaceLaps = number
 
 export type Gear = string
 
 export type TrackMapDriver = { car_id: number; position: number; class_position: number | null; is_leader: boolean; is_player: boolean; is_player_class: boolean; lap_dist_pct: number; is_in_pits: boolean; is_off_track: boolean; is_off_world: boolean; car_class_color: number }
 
-export type RelativeOverlaySettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
+export type MainOverlaySettings = { common_settings: CommonSettings }
+
+export type TimerOverlaySettings = { common_settings: CommonSettings; delta_enabled: boolean; delta_width: number }
 
 export type SessionTime = string
 
@@ -76,7 +76,7 @@ export type TrackMap = TrackMapDriver[]
 
 export type IncidentLimit = number
 
-export type TrackMapOverlaySettings = { enabled: boolean; x: number; y: number; width: number; opacity: number }
+export type RelativeOverlaySettings = { common_settings: CommonSettings }
 
 export type Incidents = number
 
@@ -89,6 +89,8 @@ export type Proximity = { is_left: boolean; is_right: boolean }
 export type GapPrev = string
 
 export type RelativeDriver = { car_id: number; position: number; user_name: string; car_number: string; irating: string; license: string; player_relative_gap: string; is_player: boolean; is_in_pits: boolean; is_off_track: boolean; is_off_world: boolean; is_player_car_class: boolean; car_class_color: number; is_ahead: boolean; is_behind: boolean }
+
+export type ProximityOverlaySettings = { common_settings: CommonSettings }
 
 export type SessionTimeTotal = string
 

@@ -1,10 +1,15 @@
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
+use super::common_settings::{CommonSettings, HasCommonSettings};
+
 #[derive(Default, Type, Serialize, Deserialize, Clone)]
 pub struct ProximityOverlaySettings {
-    pub enabled: bool,
-    pub x: i32,
-    pub y: i32,
-    pub gap_width: u32,
+    pub common_settings: CommonSettings,
+}
+
+impl HasCommonSettings for ProximityOverlaySettings {
+    fn common_settings(&self) -> &CommonSettings {
+        &self.common_settings
+    }
 }

@@ -5,8 +5,7 @@
     "windows"
   ],
   "windows": [
-    "main",
-    "settings"
+    "*"
   ],
   "permissions": [
     "core:default",
@@ -21,6 +20,9 @@
           "url": "https://github.com/xikxp1/iRaceHUD"
         }
       ]
-    }
+    },
+    "core:window:allow-start-dragging",
+    "core:window:allow-set-resizable",
+    "core:window:allow-set-size"
   ]
 }
