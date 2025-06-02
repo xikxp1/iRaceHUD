@@ -41,7 +41,7 @@
     {#if enabled && $active}
         <div
             class="overlay-container"
-            style="opacity: {opacity}%; width: {width}px; height: {height}px"
+            style="width: {width}px; height: {height}px"
         >
             <Proximity settings={$settings} />
         </div>
