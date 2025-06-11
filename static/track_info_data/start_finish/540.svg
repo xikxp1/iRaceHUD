@@ -1,0 +1,15 @@
+<svg id="a" data-name="Start / Finish" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+  <defs>
+    <style>
+      .d {
+        fill: oklch(80.1701% 0.156063 81.056275);
+      }
+    </style>
+  </defs>
+  <g id="b" data-name="Track Direction">
+    <polygon class="d" points="914.18 165.1 814.18 145.1 837.31 165.1 814.18 185.1 914.18 165.1"></polygon>
+  </g>
+  <g id="c" data-name="Start / Finish Line">
+    <rect class="d" x="847.94" y="95.67" width="6.28" height="28.44"></rect>
+  </g>
+</svg>

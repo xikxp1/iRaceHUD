@@ -1450,5 +1450,33 @@
     "537": {
         "direction": 1,
         "offset": 0.091
+    },
+    "540": {
+        "direction": -1,
+        "offset": 0.358
+    },
+    "541": {
+        "direction": 1,
+        "offset": 0.445
+    },
+    "542": {
+        "direction": 1,
+        "offset": 0.213
+    },
+    "543": {
+        "direction": 1,
+        "offset": 0.4825
+    },
+    "544": {
+        "direction": 1,
+        "offset": 0.449
+    },
+    "545": {
+        "direction": 1,
+        "offset": 0.588
+    },
+    "546": {
+        "direction": 1,
+        "offset": 0.388
     }
 }
