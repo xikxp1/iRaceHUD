@@ -2,7 +2,8 @@ import type {
     Position, CurrentTime, PlayerLapTimes, Standings, StrengthOfField, Lap, Proximity, Relative,
     LapTime, DeltaBestTime, DeltaLastTime, TelemetryGraph, SessionState, GapNext, GapPrev,
     TrackId, TrackMap, Gear, Speed, Rpm, Active, GearShiftRpm, GearBlinkRpm, Incidents, RaceLaps,
-    LapsTotal, PlayerCarClass, FastestLap, SessionType
+    LapsTotal, PlayerCarClass, FastestLap, SessionType,
+    TelemetryReference
 } from "$lib/types/telemetry";
 import { invoke } from "@tauri-apps/api/core";
 import { readable } from 'svelte/store';
@@ -38,6 +39,7 @@ export const lapTime = createTelemetryStore<LapTime>("lap_time", 0);
 export const deltaBestTime = createTelemetryStore<DeltaBestTime>("delta_best_time", "–");
 export const deltaLastTime = createTelemetryStore<DeltaLastTime>("delta_last_time", "–");
 export const telemetry = createTelemetryStore<TelemetryGraph>("telemetry_graph", { ts: 0, throttle: 0, brake: 0, abs_active: false });
+export const telemetryReference = createTelemetryStore<TelemetryReference>("telemetry_reference", { lap_dist: 0, throttle: 0, brake: 0 });
 export const sessionState = createTelemetryStore<SessionState>("session_state", "");
 export const gapNext = createTelemetryStore<GapNext>("gap_next", "-");
 export const gapPrev = createTelemetryStore<GapPrev>("gap_prev", "-");

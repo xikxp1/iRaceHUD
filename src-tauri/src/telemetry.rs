@@ -29,5 +29,6 @@ pub mod speed;
 pub mod standings;
 pub mod strength_of_field;
 pub mod telemetry_graph;
+pub mod telemetry_reference;
 pub mod track_id;
 pub mod track_map;

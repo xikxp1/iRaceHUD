@@ -6,5 +6,6 @@ pub mod relative;
 pub mod standings;
 pub mod subtimer;
 pub mod telemetry;
+pub mod telemetry_reference;
 pub mod timer;
 pub mod track_map;

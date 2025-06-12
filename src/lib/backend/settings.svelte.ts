@@ -1,4 +1,4 @@
-import type { LapTimesOverlaySettings, MainOverlaySettings, ProximityOverlaySettings, RelativeOverlaySettings, StandingsOverlaySettings, SubTimerOverlaySettings, TelemetryOverlaySettings, TimerOverlaySettings, TrackMapOverlaySettings } from "$lib/types/telemetry";
+import type { LapTimesOverlaySettings, MainOverlaySettings, ProximityOverlaySettings, RelativeOverlaySettings, StandingsOverlaySettings, SubTimerOverlaySettings, TelemetryOverlaySettings, TelemetryReferenceOverlaySettings, TimerOverlaySettings, TrackMapOverlaySettings } from "$lib/types/telemetry";
 import { invoke } from "@tauri-apps/api/core";
 import { readable } from "svelte/store";
 import { wsClient } from './ws_client';
@@ -30,5 +30,6 @@ export const relativeOverlaySettings = createSettingsStore<RelativeOverlaySettin
 export const standingsOverlaySettings = createSettingsStore<StandingsOverlaySettings>("standings");
 export const subtimerOverlaySettings = createSettingsStore<SubTimerOverlaySettings>("subtimer");
 export const telemetryOverlaySettings = createSettingsStore<TelemetryOverlaySettings>("telemetry");
+export const telemetryReferenceOverlaySettings = createSettingsStore<TelemetryReferenceOverlaySettings>("telemetry_reference");
 export const timerOverlaySettings = createSettingsStore<TimerOverlaySettings>("timer");
 export const trackMapOverlaySettings = createSettingsStore<TrackMapOverlaySettings>("track_map");

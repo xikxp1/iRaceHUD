@@ -133,7 +133,7 @@
 
 <div
     class="join bg-primary-content {abs
-        ? 'outline outline-2 outline-secondary'
+        ? 'ring-2 ring-secondary ring-inset'
         : ''} w-full h-full"
 >
     <div

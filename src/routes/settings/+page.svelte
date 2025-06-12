@@ -8,6 +8,7 @@
     import Standings from "../../components/settings/overlays/Standings.svelte";
     import SubTimer from "../../components/settings/overlays/SubTimer.svelte";
     import Telemetry from "../../components/settings/overlays/Telemetry.svelte";
+    import TelemetryReference from "../../components/settings/overlays/TelemetryReference.svelte";
     import Timer from "../../components/settings/overlays/Timer.svelte";
     import TrackMap from "../../components/settings/overlays/TrackMap.svelte";
     import { invoke } from "@tauri-apps/api/core";
@@ -34,11 +35,7 @@
                 class="btn btn-ghost p-0 w-full h-auto"
                 onclick={() => openUrl("https://github.com/xikxp1/iRaceHUD")}
             >
-                <img 
-                    src="/icons/logo.svg" 
-                    alt="" 
-                    class="w-full"
-                />
+                <img src="/icons/logo.svg" alt="" class="w-full" />
             </button>
             <p class="text-sm text-primary-content text-right mr-2">
                 v{appVersion}
@@ -75,6 +72,17 @@
                             : ''}"
                         onclick={() => setChosenPage("telemetry")}
                         >Telemetry Overlay</button
+                    >
+                </li>
+                <li class="mb-2">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline {chosenPage ===
+                        'telemetry_reference'
+                            ? 'btn-active'
+                            : ''}"
+                        onclick={() => setChosenPage("telemetry_reference")}
+                        >Telemetry Reference Overlay</button
                     >
                 </li>
                 <li class="mb-2">
@@ -161,6 +169,8 @@
             <Main />
         {:else if chosenPage === "telemetry"}
             <Telemetry />
+        {:else if chosenPage === "telemetry_reference"}
+            <TelemetryReference />
         {:else if chosenPage === "standings"}
             <Standings />
         {:else if chosenPage === "relative"}

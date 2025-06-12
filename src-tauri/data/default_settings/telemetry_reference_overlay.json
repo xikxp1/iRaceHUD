@@ -1,11 +1,11 @@
 {
   "settings": {
     "common_settings": {
-      "enabled": true,
+      "enabled": false,
       "height": 80,
       "opacity": 75,
       "scale": 100,
-      "width": 260,
+      "width": 220,
       "x": 100,
       "y": 100
     }

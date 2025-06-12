@@ -18,6 +18,7 @@ pub struct SessionData {
     pub activated: bool,
     pub active: bool,
     pub brake: u32,
+    pub lap_dist: u32, // in cm
     pub current_time: DateTime<Local>,
     pub delta_last_time: SignedDuration,
     pub delta_best_time: SignedDuration,
@@ -185,6 +186,11 @@ impl SessionData {
             sim_state.read_name("LapCurrentLapTime").unwrap_or(0.0);
         let lap_time_value = SignedDuration::from_secs_f32(raw_lap_current_lap_time_value);
         self.lap_time = lap_time_value;
+
+        // lap_dist
+        let raw_lap_dist_value: f32 = sim_state.read_name("LapDist").unwrap_or(0.0);
+        let lap_dist_value: u32 = ((raw_lap_dist_value * 100.0 / 20.0).round() * 20.0) as u32; // round to 20cm
+        self.lap_dist = lap_dist_value;
 
         // delta_last_time
         let raw_lap_delta_to_session_last_lap_value = sim_state

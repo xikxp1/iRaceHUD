@@ -35,6 +35,7 @@ use crate::telemetry::speed::Speed;
 use crate::telemetry::standings::Standings;
 use crate::telemetry::strength_of_field::StrengthOfField;
 use crate::telemetry::telemetry_graph::TelemetryGraph;
+use crate::telemetry::telemetry_reference::TelemetryReference;
 use crate::telemetry::track_id::TrackId;
 use crate::telemetry::track_map::TrackMap;
 
@@ -104,6 +105,7 @@ pub enum TelemetryEvent {
     Standings(Standings),
     StrengthOfField(StrengthOfField),
     TelemetryGraph(TelemetryGraph),
+    TelemetryReference(TelemetryReference),
     TrackId(TrackId),
     TrackMap(TrackMap),
     PlayerCarClass(PlayerCarClass),

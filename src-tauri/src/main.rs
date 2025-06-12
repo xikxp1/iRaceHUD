@@ -35,6 +35,7 @@ use crate::settings::overlays::relative::RelativeOverlaySettings;
 use crate::settings::overlays::standings::StandingsOverlaySettings;
 use crate::settings::overlays::subtimer::SubTimerOverlaySettings;
 use crate::settings::overlays::telemetry::TelemetryOverlaySettings;
+use crate::settings::overlays::telemetry_reference::TelemetryReferenceOverlaySettings;
 use crate::settings::overlays::timer::TimerOverlaySettings;
 use crate::settings::overlays::track_map::TrackMapOverlaySettings;
 use crate::util::settings_helper::{get_settings, set_settings};
@@ -274,6 +275,8 @@ async fn main() {
             set_subtimer_overlay_settings,
             get_telemetry_overlay_settings,
             set_telemetry_overlay_settings,
+            get_telemetry_reference_overlay_settings,
+            set_telemetry_reference_overlay_settings,
             get_timer_overlay_settings,
             set_timer_overlay_settings,
             get_track_map_overlay_settings,
@@ -486,6 +489,21 @@ async fn get_track_map_overlay_settings(app: tauri::AppHandle) -> TrackMapOverla
 #[tauri::command]
 async fn set_track_map_overlay_settings(app: tauri::AppHandle, settings: TrackMapOverlaySettings) {
     set_settings(app, "track_map", settings);
+}
+
+#[tauri::command]
+async fn get_telemetry_reference_overlay_settings(
+    app: tauri::AppHandle,
+) -> TelemetryReferenceOverlaySettings {
+    get_settings(app, "telemetry_reference")
+}
+
+#[tauri::command]
+async fn set_telemetry_reference_overlay_settings(
+    app: tauri::AppHandle,
+    settings: TelemetryReferenceOverlaySettings,
+) {
+    set_settings(app, "telemetry_reference", settings);
 }
 
 #[tauri::command]

@@ -9,12 +9,12 @@ use crate::settings::overlays::{
     lap_times::LapTimesOverlaySettings, main::MainOverlaySettings,
     proximity::ProximityOverlaySettings, relative::RelativeOverlaySettings,
     standings::StandingsOverlaySettings, subtimer::SubTimerOverlaySettings,
-    telemetry::TelemetryOverlaySettings, timer::TimerOverlaySettings,
-    track_map::TrackMapOverlaySettings,
+    telemetry::TelemetryOverlaySettings, telemetry_reference::TelemetryReferenceOverlaySettings,
+    timer::TimerOverlaySettings, track_map::TrackMapOverlaySettings,
 };
 use crate::util::settings_helper::{get_common_settings, get_settings, set_settings};
 
-pub const AVAILABLE_OVERLAYS: [&str; 9] = [
+pub const AVAILABLE_OVERLAYS: [&str; 10] = [
     "main",
     "standings",
     "lap_times",
@@ -22,6 +22,7 @@ pub const AVAILABLE_OVERLAYS: [&str; 9] = [
     "relative",
     "subtimer",
     "telemetry",
+    "telemetry_reference",
     "timer",
     "track_map",
 ];
@@ -72,6 +73,10 @@ impl OverlayManager {
             "telemetry" => {
                 get_common_settings::<TelemetryOverlaySettings>(app_handle.clone(), overlay_name)
             }
+            "telemetry_reference" => get_common_settings::<TelemetryReferenceOverlaySettings>(
+                app_handle.clone(),
+                overlay_name,
+            ),
             "timer" => {
                 get_common_settings::<TimerOverlaySettings>(app_handle.clone(), overlay_name)
             }
@@ -191,6 +196,15 @@ impl OverlayManager {
                     }
                     "telemetry" => {
                         let mut settings = get_settings::<TelemetryOverlaySettings>(
+                            app_handle.clone(),
+                            overlay_name,
+                        );
+                        settings.common_settings.x = position.x as u32;
+                        settings.common_settings.y = position.y as u32;
+                        set_settings(app_handle.clone(), overlay_name, settings);
+                    }
+                    "telemetry_reference" => {
+                        let mut settings = get_settings::<TelemetryReferenceOverlaySettings>(
                             app_handle.clone(),
                             overlay_name,
                         );
