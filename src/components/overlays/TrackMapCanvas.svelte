@@ -125,7 +125,7 @@
 
     function onTrackId(trackId: TrackId) {
         track_id = trackId;
-        let path = trackInfo[track_id]?.activePath;
+        let path = trackSettings[track_id]?.customTrackPath ?? trackInfo[track_id]?.activePath;
         if (path != null) {
             trackPath = path;
         }

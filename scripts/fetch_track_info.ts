@@ -10,6 +10,9 @@ const trackPathFile = "./static/track_info_data/track_info.json";
 const newStartFinishColor = "oklch(80.1701% 0.156063 81.056275)";
 const oldStartFinishColor = "#D82520";
 
+const newTrackColor = "#141414";
+const oldTrackColor = "#FFFFFF";
+
 async function fetchSvg(svgUrl: string): Promise<string | null> {
     try {
         const response = await axios.get(svgUrl, { responseType: 'document' })
@@ -28,20 +31,19 @@ async function fetchSvg(svgUrl: string): Promise<string | null> {
     }
 }
 
-async function fetchAndExtractSvgPath(svgUrl: string): Promise<string | null> {
+async function extractSvgPath(svg: string): Promise<string | null> {
     try {
-        const response = await axios.get(svgUrl, { responseType: 'document' })
-        const dom = new JSDOM(response.data)
+        const dom = new JSDOM(svg)
         const svgElement = dom.window.document.querySelector('svg path')
 
         if (svgElement) {
             return svgElement.getAttribute('d')
         } else {
-            console.error(`No <path> element found in SVG at ${svgUrl}`)
+            console.error(`No <path> element found in SVG`)
             return null
         }
     } catch (error) {
-        console.error(`Error fetching SVG from ${svgUrl}: ${error}`)
+        console.error(`Error extracting SVG path: ${error}`)
         return null
     }
 }
@@ -76,18 +78,26 @@ async function fetchTrackInfo() {
         for (const trackId in trackAssets) {
             console.log(`Fetching track path for trackId: ${trackId}`);
             const track = trackAssets[trackId];
-            let activePath = await fetchAndExtractSvgPath(`${track.trackMap}${track.trackMapLayers.active}`);
-            activePath = activePath ? activePath.split(/[zZ]/)[0] : null;
-            activePath = activePath ? activePath?.replace(/\n/g, " ") : null;
-            activePath = activePath ? activePath?.replace(/\t/g, "") : null;
-            activePath += "Z";
-            trackPaths[track.trackId] = {
-                "id": track.trackId,
-                "trackName": trackInfo.get(track.trackId).trackName,
-                "configName": trackInfo.get(track.trackId).configName,
-                "activePath": activePath,
-            };
-            let svg = await fetchSvg(`${track.trackMap}${track.trackMapLayers.startFinish}`);
+            let svg = await fetchSvg(`${track.trackMap}${track.trackMapLayers.active}`);
+            if (svg) {
+                const regex = new RegExp(`${oldTrackColor}`, "gi");
+                svg = svg.replace(regex, newTrackColor);
+                fs.writeFileSync(`./static/track_info_data/active/${track.trackId}.svg`, svg);
+                let activePath = await extractSvgPath(svg);
+                activePath = activePath ? activePath.split(/[zZ]/)[0] : null;
+                activePath = activePath ? activePath?.replace(/\n/g, " ") : null;
+                activePath = activePath ? activePath?.replace(/\t/g, "") : null;
+                activePath += "Z";
+                trackPaths[track.trackId] = {
+                    "id": track.trackId,
+                    "trackName": trackInfo.get(track.trackId).trackName,
+                    "configName": trackInfo.get(track.trackId).configName,
+                    "activePath": activePath,
+                };
+            } else {
+                console.error(`Failed to fetch SVG for trackId: ${track.trackId}`);
+            }
+            svg = await fetchSvg(`${track.trackMap}${track.trackMapLayers.startFinish}`);
             if (svg) {
                 const regex = new RegExp(`${oldStartFinishColor}`, "gi");
                 svg = svg.replace(regex, newStartFinishColor);

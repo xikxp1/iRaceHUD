@@ -56,7 +56,7 @@
         >
             <path
                 bind:this={path}
-                d={trackInfoState.data[trackId].activePath}
+                d={trackSettingsState.data[trackId]?.customTrackPath ?? trackInfoState.data[trackId].activePath}
                 stroke="black"
                 stroke-width="30"
             />
