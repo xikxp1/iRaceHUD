@@ -39,6 +39,7 @@ use crate::settings::overlays::telemetry::TelemetryOverlaySettings;
 use crate::settings::overlays::telemetry_reference::TelemetryReferenceOverlaySettings;
 use crate::settings::overlays::timer::TimerOverlaySettings;
 use crate::settings::overlays::track_map::TrackMapOverlaySettings;
+use crate::telemetry::telemetry_reference::TelemetryReference;
 use crate::util::settings_helper::{get_settings, set_settings};
 use crate::websocket::{WS_SERVER, WebSocketServer};
 
@@ -176,6 +177,17 @@ async fn main() {
                 default_panic(info);
             }));
 
+            // Initialize database synchronously
+            let app_handle = app.handle().clone();
+            let (tx, rx) = std::sync::mpsc::sync_channel(1);
+            tauri::async_runtime::spawn_blocking(move || {
+                tx.send(tauri::async_runtime::block_on(async {
+                    db::Database::new(&app_handle).await
+                })).unwrap();
+            });
+            let database = rx.recv().unwrap();
+            app.manage(db::DatabaseState(database.pool));
+
             #[cfg(not(debug_assertions))]
             {
                 let handle = app.handle().clone();
@@ -185,13 +197,6 @@ async fn main() {
                     }
                 });
             }
-
-            let app_handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                let database = db::Database::new(&app_handle).await;
-                // Store database pool in app state
-                app_handle.manage(db::DatabaseState(database.pool));
-            });
 
             let app_handle = app.handle().clone();
             let version = MenuItemBuilder::with_id(
@@ -327,6 +332,7 @@ async fn main() {
             lock_unlock_overlays,
             get_overlays_locked,
             record_telemetry,
+            get_telemetry_reference_points,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
@@ -596,4 +602,38 @@ async fn record_telemetry(app: tauri::AppHandle) {
     let emitter_state = app.app_handle().state::<Mutex<TelemetryEmitter>>();
     let mut emitter = emitter_state.lock().await;
     emitter.enable_recording();
+}
+
+#[tauri::command]
+async fn get_telemetry_reference_points(
+    app: tauri::AppHandle,
+    track_id: u32,
+) -> Vec<TelemetryReference> {
+    let db = app.try_state::<db::DatabaseState>().unwrap();
+    let stmt = r#"
+        SELECT recording_id
+        FROM telemetry_reference_meta
+        WHERE track_id = $1;
+    "#;
+    // fetch recording_id if it exists
+    let recording_id = sqlx::query_scalar::<_, u32>(stmt)
+        .bind(track_id)
+        .fetch_optional(&db.0)
+        .await
+        .unwrap();
+    if recording_id.is_none() {
+        return vec![];
+    }
+    let recording_id = recording_id.unwrap();
+    let stmt = r#"
+        SELECT lap_dist, throttle, brake, steering_angle, gear
+        FROM telemetry_reference_data
+        WHERE recording_id = $1
+        ORDER BY lap_dist ASC;
+    "#;
+    sqlx::query_as::<_, TelemetryReference>(stmt)
+        .bind(recording_id)
+        .fetch_all(&db.0)
+        .await
+        .unwrap()
 }

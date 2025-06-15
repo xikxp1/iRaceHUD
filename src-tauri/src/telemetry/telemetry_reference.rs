@@ -100,7 +100,7 @@ impl EmittableEvent for TelemetryReference {
             data
         };
 
-        let db = APP_HANDLE
+        let db: tauri::State<'_, db::DatabaseState> = APP_HANDLE
             .get()
             .unwrap()
             .try_state::<db::DatabaseState>()
@@ -109,7 +109,9 @@ impl EmittableEvent for TelemetryReference {
         let mut tx = db.0.begin().await.unwrap();
 
         let stmt = r#"
-            INSERT OR REPLACE INTO telemetry_reference_data (recording_id, lap_dist, throttle, brake, steering_angle, gear) VALUES ($1, $2, $3, $4, $5, $6);
+            INSERT OR REPLACE INTO telemetry_reference_data
+            (recording_id, lap_dist, throttle, brake, steering_angle, gear)
+            VALUES ($1, $2, $3, $4, $5, $6);
         "#;
 
         for telemetry in telemetry_data.iter() {
@@ -126,7 +128,9 @@ impl EmittableEvent for TelemetryReference {
         }
 
         let stmt = r#"
-            INSERT OR REPLACE INTO telemetry_reference_meta (track_id, car_class_id, car_id, recording_id) VALUES ($1, $2, $3, $4);
+            INSERT OR REPLACE INTO telemetry_reference_meta
+            (track_id, car_class_id, car_id, recording_id)
+            VALUES ($1, $2, $3, $4);
         "#;
 
         let _ = sqlx::query(stmt)

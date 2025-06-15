@@ -2,6 +2,7 @@
     import { Chart } from "chart.js/auto";
     import { onDestroy, onMount } from "svelte";
     import { telemetryReference } from "$lib/backend/telemetry.svelte";
+    import { telemetryReferencePoints } from "$lib/backend/telemetry_reference.svelte";
     import type { TelemetryReferenceOverlaySettings } from "$lib/types/telemetry";
 
     let { settings }: { settings: TelemetryReferenceOverlaySettings } =
@@ -10,17 +11,31 @@
     let telemetryCanvas: HTMLCanvasElement | undefined = $state();
     let chart: Chart | undefined = $state();
 
-    const WINDOW_SIZE = 300 * 100; // 300m
-    const STEP_SIZE = 20;
+    const WINDOW_SIZE = 600 * 100; // 600m
     const HALF_WINDOW = WINDOW_SIZE / 2;
+
     const throttleData = [] as { x: number; y: number }[];
     const brakeData = [] as { x: number; y: number }[];
     const steeringAngleData = [] as { x: number; y: number }[];
+
+    const referenceThrottleData = [] as { x: number; y: number }[];
+    const referenceBrakeData = [] as { x: number; y: number }[];
+    const referenceSteeringAngleData = [] as { x: number; y: number }[];
+
+    const currentReferenceThrottleData = [] as { x: number; y: number }[];
+    const currentReferenceBrakeData = [] as { x: number; y: number }[];
+    const currentReferenceSteeringAngleData = [] as { x: number; y: number }[];
+
+    let currentReferenceStartIndex = -1;
+    let currentReferenceEndIndex = -1;
 
     const css = window.getComputedStyle(document.documentElement);
     const throttleColor: string = `oklch(${css.getPropertyValue("--su")})`;
     const brakeColor: string = `oklch(${css.getPropertyValue("--er")})`;
     const steeringAngleColor: string = `oklch(${css.getPropertyValue("--p")})`;
+    const throttleReferenceColor: string = `oklch(${css.getPropertyValue("--in")} / 0.6)`;
+    const brakeReferenceColor: string = `oklch(${css.getPropertyValue("--a")} / 0.6)`;
+    const steeringAngleReferenceColor: string = `oklch(${css.getPropertyValue("--p")} / 0.5)`;
 
     const telemetryOptions = {
         plugins: {
@@ -74,19 +89,48 @@
     const telemetryData = {
         datasets: [
             {
+                type: "line" as const,
+                order: 2,
                 borderColor: throttleColor,
                 borderWidth: 2,
                 data: throttleData,
             },
             {
+                type: "line" as const,
+                order: 1,
                 borderColor: brakeColor,
                 borderWidth: 2,
                 data: brakeData,
             },
             {
+                type: "line" as const,
+                order: 5,
                 borderColor: steeringAngleColor,
                 borderWidth: 2,
                 data: steeringAngleData,
+            },
+            {
+                type: "line" as const,
+                order: 4,
+                borderColor: throttleReferenceColor,
+                borderWidth: 2,
+                data: currentReferenceThrottleData,
+            },
+            {
+                type: "line" as const,
+                order: 3,
+                borderColor: brakeReferenceColor,
+                borderWidth: 2,
+                fill: true,
+                backgroundColor: brakeReferenceColor,
+                data: currentReferenceBrakeData,
+            },
+            {
+                type: "line" as const,
+                order: 6,
+                borderColor: steeringAngleReferenceColor,
+                borderWidth: 2,
+                data: currentReferenceSteeringAngleData,
             },
         ],
     };
@@ -96,7 +140,6 @@
         if (telemetryCanvas && !chart) {
             const ctx = telemetryCanvas.getContext("2d")!;
             chart = new Chart(ctx, {
-                type: "line",
                 data: telemetryData,
                 options: telemetryOptions,
             });
@@ -109,6 +152,7 @@
     let lap_dist = $state(0);
 
     let unsubscribe_telemetry: () => void = () => {};
+    let unsubscribe_reference: () => void = () => {};
 
     onMount(async () => {
         unsubscribe_telemetry = telemetryReference.subscribe((data) => {
@@ -153,44 +197,53 @@
                         throttleData[i].x > maxDist
                     ) {
                         throttleData.splice(i, 1);
-                    } else {
-                        i++;
-                    }
-                }
-
-                i = 0;
-                while (i < brakeData.length) {
-                    if (brakeData[i].x < minDist || brakeData[i].x > maxDist) {
                         brakeData.splice(i, 1);
-                    } else {
-                        i++;
-                    }
-                }
-
-                i = 0;
-                while (i < steeringAngleData.length) {
-                    if (
-                        steeringAngleData[i].x < minDist ||
-                        steeringAngleData[i].x > maxDist
-                    ) {
                         steeringAngleData.splice(i, 1);
                     } else {
                         i++;
                     }
                 }
 
-                // Limit the number of points to prevent performance issues
-                const maxPoints = WINDOW_SIZE / STEP_SIZE;
-                if (throttleData.length > maxPoints) {
-                    throttleData.splice(0, throttleData.length - maxPoints);
+                let found_start = false;
+                let found_end = false;
+                for (let i = 0; i < referenceThrottleData.length; i++) {
+                    if (!found_start && referenceThrottleData[i].x >= minDist) {
+                        found_start = true;
+                        currentReferenceStartIndex = i;
+                    }
+                    if (
+                        found_start &&
+                        !found_end &&
+                        referenceThrottleData[i].x >= maxDist
+                    ) {
+                        found_end = true;
+                        currentReferenceEndIndex = i - 1;
+                        break;
+                    }
                 }
-                if (brakeData.length > maxPoints) {
-                    brakeData.splice(0, brakeData.length - maxPoints);
-                }
-                if (steeringAngleData.length > maxPoints) {
-                    steeringAngleData.splice(
-                        0,
-                        steeringAngleData.length - maxPoints,
+
+                currentReferenceThrottleData.splice(
+                    0,
+                    currentReferenceThrottleData.length,
+                );
+                currentReferenceBrakeData.splice(
+                    0,
+                    currentReferenceBrakeData.length,
+                );
+                currentReferenceSteeringAngleData.splice(
+                    0,
+                    currentReferenceSteeringAngleData.length,
+                );
+
+                for (
+                    let i = currentReferenceStartIndex;
+                    i <= currentReferenceEndIndex;
+                    i++
+                ) {
+                    currentReferenceThrottleData.push(referenceThrottleData[i]);
+                    currentReferenceBrakeData.push(referenceBrakeData[i]);
+                    currentReferenceSteeringAngleData.push(
+                        referenceSteeringAngleData[i],
                     );
                 }
 
@@ -207,10 +260,28 @@
                 chart.update("none");
             }
         });
+
+        unsubscribe_reference = telemetryReferencePoints.subscribe((points) => {
+            for (const point of points) {
+                referenceThrottleData.push({
+                    x: point.lap_dist,
+                    y: point.throttle,
+                });
+                referenceBrakeData.push({
+                    x: point.lap_dist,
+                    y: point.brake,
+                });
+                referenceSteeringAngleData.push({
+                    x: point.lap_dist,
+                    y: 50 + (50 * -point.steering_angle) / 170,
+                });
+            }
+        });
     });
 
     onDestroy(() => {
         unsubscribe_telemetry();
+        unsubscribe_reference();
         if (chart) {
             chart.destroy();
         }
