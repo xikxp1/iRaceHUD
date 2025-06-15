@@ -90,6 +90,14 @@ async fn lock_unlock_overlays_impl(app_handle: tauri::AppHandle) {
     overlay_manager.set_locked_unlocked();
 }
 
+async fn toggle_force_active_impl(app_handle: tauri::AppHandle) {
+    let force_active_state = app_handle.try_state::<Mutex<bool>>();
+    if let Some(force_active_state) = force_active_state {
+        let mut force_active = force_active_state.lock().await;
+        *force_active = !*force_active;
+    }
+}
+
 #[tokio::main]
 async fn main() {
     let _ = color_eyre::install();
@@ -101,6 +109,7 @@ async fn main() {
 
     let ctrl_f11_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::F11);
     let ctrl_f10_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::F10);
+    let ctrl_f9_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::F9);
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -116,6 +125,11 @@ async fn main() {
                     {
                         info!("Ctrl+F10 shortcut pressed, locking/unlocking overlays");
                         tauri::async_runtime::spawn(lock_unlock_overlays_impl(app.clone()));
+                    } else if shortcut == &ctrl_f9_shortcut
+                        && event.state() == ShortcutState::Pressed
+                    {
+                        info!("Ctrl+F9 shortcut pressed, toggling force active");
+                        tauri::async_runtime::spawn(toggle_force_active_impl(app.clone()));
                     }
                 })
                 .build(),
@@ -192,10 +206,14 @@ async fn main() {
             let lock_unlock_overlays =
                 MenuItemBuilder::with_id("lock_unlock_overlays", "Lock/Unlock Overlays (Ctrl+F10)")
                     .build(app)?;
+            let toggle_force_active =
+                MenuItemBuilder::with_id("toggle_force_active", "Toggle Forceful Overlays Activation (Ctrl+F9)")
+                    .build(app)?;
             let tray_menu = MenuBuilder::new(app)
                 .item(&version)
                 .item(&settings)
                 .item(&lock_unlock_overlays)
+                .item(&toggle_force_active)
                 .separator()
                 .item(&quit)
                 .build()?;
@@ -229,6 +247,11 @@ async fn main() {
                             tauri::async_runtime::spawn(lock_unlock_overlays_impl(
                                 app_handle.clone(),
                             ));
+                        } else if event.id().as_ref() == "toggle_force_active" {
+                            info!(
+                                "Toggle forceful overlays activation menu item clicked, toggling forceful overlays activation"
+                            );
+                            tauri::async_runtime::spawn(toggle_force_active_impl(app_handle.clone()));
                         }
                     }
                 })
@@ -252,6 +275,9 @@ async fn main() {
 
             APP_HANDLE.set(app.handle().clone()).unwrap();
 
+            let force_active = false;
+            app.manage(Mutex::new(force_active));
+
             let mut overlay_manager = OverlayManager::new();
 
             for overlay in AVAILABLE_OVERLAYS {
@@ -267,7 +293,7 @@ async fn main() {
             });
 
             app.global_shortcut()
-                .register_multiple([ctrl_f11_shortcut, ctrl_f10_shortcut])?;
+                .register_multiple([ctrl_f11_shortcut, ctrl_f10_shortcut, ctrl_f9_shortcut])?;
 
             Ok(())
         })
@@ -319,6 +345,13 @@ async fn connect() -> Result<()> {
             let mut force_active = false;
 
             {
+                let force_active_state = handle.try_state::<Mutex<bool>>();
+                if let Some(force_active_state) = force_active_state {
+                    force_active = *force_active_state.lock().await;
+                }
+            }
+
+            if !force_active {
                 let emitter_state = handle.state::<Mutex<TelemetryEmitter>>();
                 let emitter = emitter_state.lock().await;
                 if emitter.get_recording_state() == TelemetryRecordingState::InProgress

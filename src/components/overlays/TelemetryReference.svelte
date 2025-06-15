@@ -15,10 +15,12 @@
     const HALF_WINDOW = WINDOW_SIZE / 2;
     const throttleData = [] as { x: number; y: number }[];
     const brakeData = [] as { x: number; y: number }[];
+    const steeringAngleData = [] as { x: number; y: number }[];
 
     const css = window.getComputedStyle(document.documentElement);
     const throttleColor: string = `oklch(${css.getPropertyValue("--su")})`;
     const brakeColor: string = `oklch(${css.getPropertyValue("--er")})`;
+    const steeringAngleColor: string = `oklch(${css.getPropertyValue("--p")})`;
 
     const telemetryOptions = {
         plugins: {
@@ -81,6 +83,11 @@
                 borderWidth: 2,
                 data: brakeData,
             },
+            {
+                borderColor: steeringAngleColor,
+                borderWidth: 2,
+                data: steeringAngleData,
+            },
         ],
     };
 
@@ -96,16 +103,9 @@
         }
     });
 
-    // Data storage for telemetry relative to lap distance
-    const telemetryPoints: {
-        lap_dist: number;
-        throttle: number;
-        brake: number;
-    }[] = [];
-
-    // Use regular variables for values that don't need reactivity
     let throttle = $state(0);
     let brake = $state(0);
+    let steering_angle = $state(50);
     let lap_dist = $state(0);
 
     let unsubscribe_telemetry: () => void = () => {};
@@ -115,11 +115,22 @@
             lap_dist = data.lap_dist;
             throttle = data.throttle;
             brake = data.brake;
+            // TODO: make configurable
+            steering_angle = 50 + (50 * -data.steering_angle) / 170; // 0 is -1.7 radian, 50 is 0 radian, 100 is 1.7 radian; left is negative, right is positive
+            if (steering_angle > 100) {
+                steering_angle = 100;
+            } else if (steering_angle < 0) {
+                steering_angle = 0;
+            }
 
             if (chart) {
                 // Add new data point
                 const newThrottlePoint = { x: lap_dist, y: throttle };
                 const newBrakePoint = { x: lap_dist, y: brake };
+                const newSteeringAnglePoint = {
+                    x: lap_dist,
+                    y: steering_angle,
+                };
 
                 // Keep only data points within the window
                 let minDist = lap_dist - HALF_WINDOW;
@@ -132,11 +143,15 @@
                 // Update datasets and filter in place
                 throttleData.push(newThrottlePoint);
                 brakeData.push(newBrakePoint);
+                steeringAngleData.push(newSteeringAnglePoint);
 
                 // Filter points outside the window in place
                 let i = 0;
                 while (i < throttleData.length) {
-                    if (throttleData[i].x < minDist || throttleData[i].x > maxDist) {
+                    if (
+                        throttleData[i].x < minDist ||
+                        throttleData[i].x > maxDist
+                    ) {
                         throttleData.splice(i, 1);
                     } else {
                         i++;
@@ -152,6 +167,18 @@
                     }
                 }
 
+                i = 0;
+                while (i < steeringAngleData.length) {
+                    if (
+                        steeringAngleData[i].x < minDist ||
+                        steeringAngleData[i].x > maxDist
+                    ) {
+                        steeringAngleData.splice(i, 1);
+                    } else {
+                        i++;
+                    }
+                }
+
                 // Limit the number of points to prevent performance issues
                 const maxPoints = WINDOW_SIZE / STEP_SIZE;
                 if (throttleData.length > maxPoints) {
@@ -159,6 +186,12 @@
                 }
                 if (brakeData.length > maxPoints) {
                     brakeData.splice(0, brakeData.length - maxPoints);
+                }
+                if (steeringAngleData.length > maxPoints) {
+                    steeringAngleData.splice(
+                        0,
+                        steeringAngleData.length - maxPoints,
+                    );
                 }
 
                 // Update x-axis range to center on current position
