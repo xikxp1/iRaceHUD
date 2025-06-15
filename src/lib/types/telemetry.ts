@@ -50,6 +50,8 @@ export type Active = boolean
 
 export type TrackId = number
 
+export type TelemetryReference = { lap_dist: number; throttle: number; brake: number; steering_angle: number; gear: number }
+
 export type PositionsTotal = number
 
 export type Rpm = number
@@ -79,8 +81,6 @@ export type TrackMap = TrackMapDriver[]
 export type IncidentLimit = number
 
 export type RelativeOverlaySettings = { common_settings: CommonSettings }
-
-export type TelemetryReference = { lap_dist: number; throttle: number; brake: number }
 
 export type Incidents = number
 

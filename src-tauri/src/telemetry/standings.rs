@@ -1,6 +1,7 @@
 use serde::{Serialize, Serializer};
 use specta::Type;
 
+use crate::APP_HANDLE;
 use crate::emitter::emittable_event::{EmittableEvent, EmittableValue};
 use crate::session::driver::Driver;
 use crate::session::session_data::SessionData;
@@ -9,7 +10,6 @@ use crate::util::format_irating::format_irating;
 use crate::util::format_laptime::format_laptime;
 use crate::util::get_gap::get_gap;
 use crate::util::settings_helper::get_settings;
-use crate::APP_HANDLE;
 
 #[derive(Default, Type, PartialEq)]
 pub struct StandingsDriver {

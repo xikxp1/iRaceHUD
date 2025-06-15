@@ -47,9 +47,13 @@
             settings: settings,
         });
     }
+
+    async function handleRecordTelemetry() {
+        invoke("record_telemetry");
+    }
 </script>
 
-<div class="flex w-full h-full items-center justify-center">
+<div class="flex w-full h-full items-center justify-center flex-col">
     <table>
         <tbody>
             <tr>
@@ -91,6 +95,12 @@
             </tr>
         </tbody>
     </table>
+    <button
+        class="btn btn-secondary btn-sm mt-4"
+        onclick={handleRecordTelemetry}
+    >
+        Record Telemetry
+    </button>
 </div>
 
 <style>

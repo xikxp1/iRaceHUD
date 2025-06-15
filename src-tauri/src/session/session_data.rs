@@ -12,7 +12,7 @@ use crate::util::{get_strength_of_field::get_strength_of_field, signed_duration:
 use super::results_position::ResultsPosition;
 use super::{driver::Driver, lap_time::LapTime};
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SessionData {
     pub abs_active: bool,
     pub activated: bool,
@@ -64,6 +64,7 @@ pub struct SessionData {
     pub results_positions: Vec<ResultsPosition>,
     pub results_positions_mapping: HashMap<u32, usize>,
     pub results_official: bool,
+    pub steering_angle: i32, // in radian * 100
 }
 
 #[derive(PartialEq)]
@@ -77,8 +78,9 @@ impl SessionData {
         &mut self,
         sim_state: &SimState,
         should_process_slow: bool,
+        force_active: bool,
     ) -> ProcessTickResult {
-        self.processed_slow = should_process_slow;
+        self.processed_slow = force_active || should_process_slow;
 
         // current_time
         let current_time = Local::now();
@@ -94,7 +96,7 @@ impl SessionData {
         let raw_is_on_track_value = sim_state.read_name("IsOnTrack").unwrap_or(false);
         let raw_is_on_track_car_value = sim_state.read_name("IsOnTrackCar").unwrap_or(false);
 
-        let active = raw_is_on_track_value && raw_is_on_track_car_value;
+        let active = force_active || (raw_is_on_track_value && raw_is_on_track_car_value);
         let activated = active != self.active;
         if activated {
             info!(
@@ -241,9 +243,13 @@ impl SessionData {
         let raw_throttle_value: f32 = sim_state.read_name("Throttle").unwrap_or(0.0);
         let throttle_value = (raw_throttle_value * 100.0).round() as u32;
         let abs_active_value = sim_state.read_name("BrakeABSactive").unwrap_or(false);
+        let raw_steering_angle_value: f32 =
+            sim_state.read_name("SteeringWheelAngle").unwrap_or(0.0);
+        let steering_angle_value = (raw_steering_angle_value * 100.0).round() as i32;
         self.brake = brake_value;
         self.throttle = throttle_value;
         self.abs_active = abs_active_value;
+        self.steering_angle = steering_angle_value;
 
         // proximity
         // TODO: bitfield parsing doesn't work

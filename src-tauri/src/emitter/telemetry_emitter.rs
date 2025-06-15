@@ -4,26 +4,60 @@ use std::{
 };
 
 use eyre::Result;
-use log::error;
+use log::{error, info};
 use strum::IntoEnumIterator;
 
 use crate::{
+    WS_SERVER,
     emitter::emittable_event::{EmittableEvent, EmittableValue, TelemetryEvent},
     session::session_data::SessionData,
-    WS_SERVER,
 };
 
 use super::ws_event::WsEvent;
+
+const TELEMETRY_RECORDING_START_DISTANCE: u32 = 400; // 4m
+
+#[derive(Default, PartialEq, Clone, Copy)]
+pub enum TelemetryRecordingState {
+    #[default]
+    NotRecording,
+    WaitingForStart,
+    InProgress,
+    Finished,
+}
 
 #[derive(Default)]
 pub struct TelemetryEmitter {
     latest_events: HashMap<String, Box<dyn EmittableValue>>,
     registered_events: HashSet<String>,
     forced_events: HashSet<String>,
+    recording_state: TelemetryRecordingState,
+    recording_last_lap_dist: u32,
 }
 
 impl TelemetryEmitter {
-    pub fn emit_all(&mut self, session: &SessionData) -> Result<()> {
+    pub async fn emit_all(&mut self, session: &SessionData) -> Result<()> {
+        let mut should_start_recording = false;
+        let mut should_record = false;
+        let mut should_stop_recording = false;
+        if self.recording_state == TelemetryRecordingState::WaitingForStart
+            && session.lap_dist <= TELEMETRY_RECORDING_START_DISTANCE
+        {
+            self.recording_state = TelemetryRecordingState::InProgress;
+            self.recording_last_lap_dist = session.lap_dist;
+            should_start_recording = true;
+            info!("Recording telemetry started");
+        } else if self.recording_state == TelemetryRecordingState::InProgress
+            && session.lap_dist <= TELEMETRY_RECORDING_START_DISTANCE
+            && session.lap_dist < self.recording_last_lap_dist
+        {
+            self.recording_state = TelemetryRecordingState::Finished;
+            should_stop_recording = true;
+            info!("Recording telemetry finished");
+        } else if self.recording_state == TelemetryRecordingState::InProgress {
+            self.recording_last_lap_dist = session.lap_dist;
+            should_record = true;
+        }
         let ws_server = match WS_SERVER.get() {
             Some(ws_server) => ws_server,
             None => {
@@ -59,6 +93,15 @@ impl TelemetryEmitter {
                 self.latest_events.insert(event.to_string(), event_data);
                 self.forced_events.remove(event);
             }
+
+            if should_start_recording {
+                telemetry_event.start_recording(session);
+                telemetry_event.record(session);
+            } else if should_record {
+                telemetry_event.record(session);
+            } else if should_stop_recording {
+                telemetry_event.stop_recording(session).await;
+            }
         }
 
         Ok(())
@@ -90,5 +133,13 @@ impl TelemetryEmitter {
         for event in TelemetryEvent::iter() {
             self.forced_events.insert(event.to_string());
         }
+    }
+
+    pub fn enable_recording(&mut self) {
+        self.recording_state = TelemetryRecordingState::WaitingForStart;
+    }
+
+    pub fn get_recording_state(&self) -> TelemetryRecordingState {
+        self.recording_state
     }
 }

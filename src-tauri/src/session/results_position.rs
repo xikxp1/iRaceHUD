@@ -1,6 +1,6 @@
 use crate::util::signed_duration::SignedDuration;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ResultsPosition {
     pub car_id: u32,
     pub position: u32,

@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+pub mod db;
 pub mod emitter;
 pub mod overlay_manager;
 pub mod session;
@@ -11,7 +12,6 @@ pub mod websocket;
 
 use eyre::{OptionExt, Result};
 use log::{debug, error, info, warn};
-use overlay_manager::{AVAILABLE_OVERLAYS, OverlayManager};
 use simetry::iracing::Client;
 use std::{backtrace::Backtrace, sync::OnceLock, time::Duration};
 use tauri::{
@@ -24,9 +24,10 @@ use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 use tauri_plugin_log::{Target, TargetKind};
 use tokio::sync::Mutex;
-use websocket::{WS_SERVER, WebSocketServer};
 
 use crate::emitter::telemetry_emitter::TelemetryEmitter;
+use crate::emitter::telemetry_emitter::TelemetryRecordingState;
+use crate::overlay_manager::{AVAILABLE_OVERLAYS, OverlayManager};
 use crate::session::session_data::SessionData;
 use crate::settings::overlays::lap_times::LapTimesOverlaySettings;
 use crate::settings::overlays::main::MainOverlaySettings;
@@ -39,6 +40,7 @@ use crate::settings::overlays::telemetry_reference::TelemetryReferenceOverlaySet
 use crate::settings::overlays::timer::TimerOverlaySettings;
 use crate::settings::overlays::track_map::TrackMapOverlaySettings;
 use crate::util::settings_helper::{get_settings, set_settings};
+use crate::websocket::{WS_SERVER, WebSocketServer};
 
 #[cfg(not(debug_assertions))]
 use tauri_plugin_updater::UpdaterExt;
@@ -101,6 +103,7 @@ async fn main() {
     let ctrl_f10_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::F10);
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
@@ -134,7 +137,12 @@ async fn main() {
                 .target(Target::new(TargetKind::LogDir { file_name: None }))
                 .target(Target::new(TargetKind::Stdout))
                 .target(Target::new(TargetKind::Webview))
-                .filter(|metadata| !metadata.target().contains("tungstenite"))
+                .filter(|metadata| {
+                    !(metadata.target().contains("tungstenite")
+                        || metadata.target() == "sqlx::query")
+                        && (metadata.level() == log::Level::Debug
+                            || metadata.level() == log::Level::Info)
+                })
                 .build(),
         )
         .plugin(
@@ -164,9 +172,17 @@ async fn main() {
                 });
             }
 
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let database = db::Database::new(&app_handle).await;
+                // Store database pool in app state
+                app_handle.manage(db::DatabaseState(database.pool));
+            });
+
+            let app_handle = app.handle().clone();
             let version = MenuItemBuilder::with_id(
                 "version",
-                format!("iRaceHUD v{}", app.package_info().version),
+                format!("iRaceHUD v{}", app_handle.package_info().version),
             )
             .enabled(false)
             .build(app)?;
@@ -283,7 +299,8 @@ async fn main() {
             set_track_map_overlay_settings,
             get_app_version,
             lock_unlock_overlays,
-            get_overlays_locked
+            get_overlays_locked,
+            record_telemetry,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
@@ -298,15 +315,27 @@ async fn connect() -> Result<()> {
         while let Some(sim_state) = client.next_sim_state().await {
             slow_var_ticks += 1;
 
+            let handle = APP_HANDLE.get().ok_or_eyre("Failed to get app handle")?;
+            let mut force_active = false;
+
+            {
+                let emitter_state = handle.state::<Mutex<TelemetryEmitter>>();
+                let emitter = emitter_state.lock().await;
+                if emitter.get_recording_state() == TelemetryRecordingState::InProgress
+                    || emitter.get_recording_state() == TelemetryRecordingState::WaitingForStart
+                {
+                    force_active = true;
+                }
+            }
+
             let should_process_slow = slow_var_ticks >= SLOW_VAR_RESET_TICKS;
 
-            let result = data.process_tick(&sim_state, should_process_slow);
+            let result = data.process_tick(&sim_state, should_process_slow, force_active);
 
             if should_process_slow {
                 slow_var_ticks = 0;
             }
 
-            let handle = APP_HANDLE.get().ok_or_eyre("Failed to get app handle")?;
             let emitter_state = handle.state::<Mutex<TelemetryEmitter>>();
             let mut emitter = emitter_state.lock().await;
 
@@ -314,7 +343,7 @@ async fn connect() -> Result<()> {
                 emitter.reset();
             }
 
-            emitter.emit_all(&data)?;
+            emitter.emit_all(&data).await?;
 
             tokio::time::sleep(Duration::from_millis(SESSION_UPDATE_PERIOD_MILLIS)).await;
         }
@@ -526,4 +555,12 @@ async fn get_overlays_locked(app: tauri::AppHandle) -> bool {
         }
         None => true,
     }
+}
+
+#[tauri::command]
+async fn record_telemetry(app: tauri::AppHandle) {
+    info!("Recording telemetry");
+    let emitter_state = app.app_handle().state::<Mutex<TelemetryEmitter>>();
+    let mut emitter = emitter_state.lock().await;
+    emitter.enable_recording();
 }

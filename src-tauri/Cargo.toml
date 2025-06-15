@@ -1,6 +1,6 @@
 [package]
 name = "iracehud"
-version = "0.5.4"
+version = "0.5.5"
 description = "iRacing HUD overlay built in Tauri"
 authors = ["Ivan Kachalkin<xikxp1@gmail.com>"]
 edition = "2024"
@@ -26,6 +26,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 simetry = { version = "0.2.3", features = [] }
 specta = { version = "1.0.5", features = ["export"] }
+sqlx = { version = "0.8.6", features = ["runtime-tokio", "sqlite", "chrono"] }
 strum = "0.27.1"
 strum_macros = "0.27.1"
 tauri = { version = "2.5.1", features = ["tray-icon"] }
@@ -35,6 +36,8 @@ tauri-plugin-prevent-default = { version = "2.1.1", features = ["unstable-window
 tokio = { version = "1.45.1", features = ["full"] }
 tokio-tungstenite = "0.26.2"
 tauri-plugin-opener = "2.2.7"
+tauri-plugin-dialog = "2.2.2"
+rand = "0.9.1"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

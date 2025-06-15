@@ -50,6 +50,19 @@ pub trait EmittableEvent {
     fn is_forced(&self) -> bool {
         false
     }
+
+    fn start_recording(&self, _session: &SessionData) {
+        // do nothing
+    }
+
+    fn record(&self, _session: &SessionData) {
+        // do nothing
+    }
+
+    #[allow(async_fn_in_trait)]
+    async fn stop_recording(&self, _session: &SessionData) {
+        // do nothing
+    }
 }
 
 pub trait EmittableValue: erased_serde::Serialize + Any + Send + Sync {

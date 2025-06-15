@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use strum_macros::{Display, EnumIter};
 
-#[derive(EnumIter, Display, PartialEq)]
+#[derive(EnumIter, Display, PartialEq, Debug)]
 #[strum(serialize_all = "PascalCase")]
 pub enum SessionType {
     #[strum(default)]

@@ -1,6 +1,6 @@
 use crate::util::signed_duration::SignedDuration;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct Driver {
     pub car_id: u32,
     pub position: u32,

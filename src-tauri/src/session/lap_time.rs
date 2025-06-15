@@ -1,6 +1,6 @@
 use crate::util::signed_duration::SignedDuration;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct LapTime {
     lap: u32,
     lap_time: SignedDuration,
