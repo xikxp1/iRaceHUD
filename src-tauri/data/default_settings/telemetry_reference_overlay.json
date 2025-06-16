@@ -8,6 +8,8 @@
       "width": 220,
       "x": 100,
       "y": 100
-    }
+    },
+    "show_throttle": true,
+    "show_steering": true
   }
 }

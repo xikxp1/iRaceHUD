@@ -9,6 +9,8 @@
     let enabled = $derived(settings?.common_settings.enabled ?? false);
     let opacity = $derived(settings?.common_settings.opacity ?? 100);
     let scale = $derived(settings?.common_settings.scale ?? 100);
+    let showThrottle = $derived(settings?.show_throttle ?? true);
+    let showSteering = $derived(settings?.show_steering ?? true);
 
     onMount(() => {
         invoke<TelemetryReferenceOverlaySettings>(
@@ -43,6 +45,22 @@
         settings.common_settings.scale = parseInt(
             (event.target as HTMLInputElement).value,
         );
+        invoke("set_telemetry_reference_overlay_settings", {
+            settings: settings,
+        });
+    }
+
+    function handleShowThrottleChange(event: Event) {
+        if (!settings) return;
+        settings.show_throttle = (event.target as HTMLInputElement).checked;
+        invoke("set_telemetry_reference_overlay_settings", {
+            settings: settings,
+        });
+    }
+
+    function handleShowSteeringChange(event: Event) {
+        if (!settings) return;
+        settings.show_steering = (event.target as HTMLInputElement).checked;
         invoke("set_telemetry_reference_overlay_settings", {
             settings: settings,
         });
@@ -90,6 +108,28 @@
                         onchange={handleScaleChange}
                         min="20"
                         max="500"
+                    />
+                </td>
+            </tr>
+            <tr>
+                <td class="text-sm font-bold text-right">Show throttle</td>
+                <td>
+                    <input
+                        type="checkbox"
+                        class="toggle toggle-sm w-24 ml-3"
+                        bind:checked={showThrottle}
+                        onchange={handleShowThrottleChange}
+                    />
+                </td>
+            </tr>
+            <tr>
+                <td class="text-sm font-bold text-right">Show steering</td>
+                <td>
+                    <input
+                        type="checkbox"
+                        class="toggle toggle-sm w-24 ml-3"
+                        bind:checked={showSteering}
+                        onchange={handleShowSteeringChange}
                     />
                 </td>
             </tr>

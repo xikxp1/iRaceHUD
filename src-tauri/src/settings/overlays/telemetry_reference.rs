@@ -6,6 +6,8 @@ use super::common_settings::{CommonSettings, HasCommonSettings};
 #[derive(Default, Type, Serialize, Deserialize, Clone)]
 pub struct TelemetryReferenceOverlaySettings {
     pub common_settings: CommonSettings,
+    pub show_throttle: bool,
+    pub show_steering: bool,
 }
 
 impl HasCommonSettings for TelemetryReferenceOverlaySettings {

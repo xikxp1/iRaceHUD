@@ -185,20 +185,29 @@
                 }
 
                 // Update datasets and filter in place
-                throttleData.push(newThrottlePoint);
+                if (settings.show_throttle) {
+                    throttleData.push(newThrottlePoint);
+                }
+
                 brakeData.push(newBrakePoint);
-                steeringAngleData.push(newSteeringAnglePoint);
+
+                if (settings.show_steering) {
+                    steeringAngleData.push(newSteeringAnglePoint);
+                }
 
                 // Filter points outside the window in place
                 let i = 0;
-                while (i < throttleData.length) {
-                    if (
-                        throttleData[i].x < minDist ||
-                        throttleData[i].x > maxDist
-                    ) {
-                        throttleData.splice(i, 1);
+                while (i < brakeData.length) {
+                    if (brakeData[i].x < minDist || brakeData[i].x > maxDist) {
+                        if (settings.show_throttle) {
+                            throttleData.splice(i, 1);
+                        }
+
                         brakeData.splice(i, 1);
-                        steeringAngleData.splice(i, 1);
+
+                        if (settings.show_steering) {
+                            steeringAngleData.splice(i, 1);
+                        }
                     } else {
                         i++;
                     }
@@ -206,15 +215,15 @@
 
                 let found_start = false;
                 let found_end = false;
-                for (let i = 0; i < referenceThrottleData.length; i++) {
-                    if (!found_start && referenceThrottleData[i].x >= minDist) {
+                for (let i = 0; i < referenceBrakeData.length; i++) {
+                    if (!found_start && referenceBrakeData[i].x >= minDist) {
                         found_start = true;
                         currentReferenceStartIndex = i;
                     }
                     if (
                         found_start &&
                         !found_end &&
-                        referenceThrottleData[i].x >= maxDist
+                        referenceBrakeData[i].x >= maxDist
                     ) {
                         found_end = true;
                         currentReferenceEndIndex = i - 1;
@@ -222,29 +231,43 @@
                     }
                 }
 
-                currentReferenceThrottleData.splice(
-                    0,
-                    currentReferenceThrottleData.length,
-                );
+                if (settings.show_throttle) {
+                    currentReferenceThrottleData.splice(
+                        0,
+                        currentReferenceThrottleData.length,
+                    );
+                }
+
                 currentReferenceBrakeData.splice(
                     0,
                     currentReferenceBrakeData.length,
                 );
-                currentReferenceSteeringAngleData.splice(
-                    0,
-                    currentReferenceSteeringAngleData.length,
-                );
+
+                if (settings.show_steering) {
+                    currentReferenceSteeringAngleData.splice(
+                        0,
+                        currentReferenceSteeringAngleData.length,
+                    );
+                }
 
                 for (
                     let i = currentReferenceStartIndex;
                     i <= currentReferenceEndIndex;
                     i++
                 ) {
-                    currentReferenceThrottleData.push(referenceThrottleData[i]);
+                    if (settings.show_throttle) {
+                        currentReferenceThrottleData.push(
+                            referenceThrottleData[i],
+                        );
+                    }
+
                     currentReferenceBrakeData.push(referenceBrakeData[i]);
-                    currentReferenceSteeringAngleData.push(
-                        referenceSteeringAngleData[i],
-                    );
+
+                    if (settings.show_steering) {
+                        currentReferenceSteeringAngleData.push(
+                            referenceSteeringAngleData[i],
+                        );
+                    }
                 }
 
                 // Update x-axis range to center on current position
@@ -263,18 +286,24 @@
 
         unsubscribe_reference = telemetryReferencePoints.subscribe((points) => {
             for (const point of points) {
-                referenceThrottleData.push({
-                    x: point.lap_dist,
-                    y: point.throttle,
-                });
+                if (settings.show_throttle) {
+                    referenceThrottleData.push({
+                        x: point.lap_dist,
+                        y: point.throttle,
+                    });
+                }
+
                 referenceBrakeData.push({
                     x: point.lap_dist,
                     y: point.brake,
                 });
-                referenceSteeringAngleData.push({
-                    x: point.lap_dist,
-                    y: 50 + (50 * -point.steering_angle) / 170,
-                });
+
+                if (settings.show_steering) {
+                    referenceSteeringAngleData.push({
+                        x: point.lap_dist,
+                        y: 50 + (50 * -point.steering_angle) / 170,
+                    });
+                }
             }
         });
     });
