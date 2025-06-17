@@ -21,9 +21,17 @@ struct RecordingMetaData {
     recording_id: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct RecordingData {
     telemetry: Vec<TelemetryReference>,
+    brake_points: Vec<BrakePoint>,
+    total_brake: u32,
+    brake_dist_start: Option<u32>,
+}
+
+#[derive(Default, Type, PartialEq, Debug, sqlx::FromRow, Clone, Serialize)]
+pub struct BrakePoint {
+    pub lap_dist: u32,
 }
 
 #[derive(Default, Type, PartialEq, Debug, sqlx::FromRow, Clone)]
@@ -33,6 +41,12 @@ pub struct TelemetryReference {
     brake: u32,
     steering_angle: i32, // in radian * 100
     gear: i32,
+}
+
+#[derive(Default, Type, PartialEq, Debug, Clone, Serialize)]
+pub struct TelemetryReferenceOutput {
+    pub reference: Vec<TelemetryReference>,
+    pub brake_points: Vec<BrakePoint>,
 }
 
 // Custom serialization to ensure we get a MessagePack map/object
@@ -78,6 +92,9 @@ impl EmittableEvent for TelemetryReference {
         let recording_data = RECORDING_DATA.get_or_init(|| {
             Mutex::new(RecordingData {
                 telemetry: Vec::new(),
+                brake_points: Vec::new(),
+                total_brake: 0,
+                brake_dist_start: None,
             })
         });
         let telemetry = TelemetryReference {
@@ -87,16 +104,35 @@ impl EmittableEvent for TelemetryReference {
             steering_angle: session.steering_angle,
             gear: session.gear,
         };
-        recording_data.lock().unwrap().telemetry.push(telemetry);
+        let mut recording_data = recording_data.lock().unwrap();
+        let brake_dist_start = recording_data.brake_dist_start;
+        recording_data.telemetry.push(telemetry);
+        if session.brake > 0 {
+            recording_data.total_brake += session.brake;
+            if recording_data.brake_dist_start.is_none() {
+                recording_data.brake_dist_start = Some(session.lap_dist);
+            }
+        } else {
+            if recording_data.total_brake > 0 && brake_dist_start.is_some() {
+                recording_data.brake_points.push(BrakePoint {
+                    lap_dist: brake_dist_start.unwrap(),
+                });
+                recording_data.brake_dist_start = None;
+            }
+            recording_data.total_brake = 0;
+        }
     }
 
     async fn stop_recording(&self, _session: &SessionData) {
         let meta_data = RECORDING_META_DATA.get().unwrap();
-        let telemetry_data = {
+        let recording_data = {
             let recording_data = RECORDING_DATA.get().unwrap();
             let mut recording_data = recording_data.lock().unwrap();
-            let data = recording_data.telemetry.clone();
+            let data = recording_data.clone();
             recording_data.telemetry.clear();
+            recording_data.brake_points.clear();
+            recording_data.total_brake = 0;
+            recording_data.brake_dist_start = None;
             data
         };
 
@@ -114,7 +150,7 @@ impl EmittableEvent for TelemetryReference {
             VALUES ($1, $2, $3, $4, $5, $6);
         "#;
 
-        for telemetry in telemetry_data.iter() {
+        for telemetry in recording_data.telemetry.iter() {
             let _ = sqlx::query(stmt)
                 .bind(meta_data.recording_id)
                 .bind(telemetry.lap_dist)
@@ -122,6 +158,21 @@ impl EmittableEvent for TelemetryReference {
                 .bind(telemetry.brake)
                 .bind(telemetry.steering_angle)
                 .bind(telemetry.gear)
+                .execute(&mut *tx)
+                .await
+                .unwrap();
+        }
+
+        let stmt = r#"
+            INSERT OR REPLACE INTO telemetry_reference_brake_points
+            (recording_id, lap_dist)
+            VALUES ($1, $2);
+        "#;
+
+        for brake_point in recording_data.brake_points.iter() {
+            let _ = sqlx::query(stmt)
+                .bind(meta_data.recording_id)
+                .bind(brake_point.lap_dist)
                 .execute(&mut *tx)
                 .await
                 .unwrap();

@@ -8,6 +8,11 @@
     let { settings }: { settings: TelemetryReferenceOverlaySettings } =
         $props();
 
+    const brake0 = new Audio("/audio/brake_0.wav");
+    const brake1 = new Audio("/audio/brake_1.wav");
+    const brake2 = new Audio("/audio/brake_2.wav");
+    const brake3 = new Audio("/audio/brake_3.wav");
+
     let telemetryCanvas: HTMLCanvasElement | undefined = $state();
     let chart: Chart | undefined = $state();
 
@@ -25,6 +30,14 @@
     const currentReferenceThrottleData = [] as { x: number; y: number }[];
     const currentReferenceBrakeData = [] as { x: number; y: number }[];
     const currentReferenceSteeringAngleData = [] as { x: number; y: number }[];
+
+    type BrakePoint = {
+        dist: number;
+        type: "que_0" | "que_1" | "que_2" | "que_3";
+    };
+
+    const brakePoints = [] as BrakePoint[];
+    let lastBrakePoint = -1;
 
     let currentReferenceStartIndex = -1;
     let currentReferenceEndIndex = -1;
@@ -167,6 +180,31 @@
                 steering_angle = 0;
             }
 
+            if (
+                lastBrakePoint == brakePoints.length - 1 &&
+                lap_dist <= HALF_WINDOW
+            ) {
+                lastBrakePoint = -1;
+            }
+
+            for (let i = lastBrakePoint + 1; i < brakePoints.length; i++) {
+                const dist = brakePoints[i].dist;
+                if (dist < lap_dist) {
+                    lastBrakePoint = i;
+                    const type = brakePoints[i].type;
+                    if (type === "que_0") {
+                        brake0.play();
+                    } else if (type === "que_1") {
+                        brake1.play();
+                    } else if (type === "que_2") {
+                        brake2.play();
+                    } else if (type === "que_3") {
+                        brake3.play();
+                    }
+                    break;
+                }
+            }
+
             if (chart) {
                 // Add new data point
                 const newThrottlePoint = { x: lap_dist, y: throttle };
@@ -284,8 +322,8 @@
             }
         });
 
-        unsubscribe_reference = telemetryReferencePoints.subscribe((points) => {
-            for (const point of points) {
+        unsubscribe_reference = telemetryReferencePoints.subscribe((data) => {
+            for (const point of data.reference) {
                 if (settings.show_throttle) {
                     referenceThrottleData.push({
                         x: point.lap_dist,
@@ -302,6 +340,40 @@
                     referenceSteeringAngleData.push({
                         x: point.lap_dist,
                         y: 50 + (50 * -point.steering_angle) / 170,
+                    });
+                }
+            }
+
+            for (const point of data.brake_points) {
+                const point_3_dist =
+                    point.lap_dist - settings.brake_que_3_distance * 100;
+                if (settings.brake_que_3_enabled && point_3_dist > 0) {
+                    brakePoints.push({
+                        dist: point_3_dist,
+                        type: "que_3",
+                    });
+                }
+                const point_2_dist =
+                    point.lap_dist - settings.brake_que_2_distance * 100;
+                if (settings.brake_que_2_enabled && point_2_dist > 0) {
+                    brakePoints.push({
+                        dist: point_2_dist,
+                        type: "que_2",
+                    });
+                }
+                const point_1_dist =
+                    point.lap_dist - settings.brake_que_1_distance * 100;
+                if (settings.brake_que_1_enabled && point_1_dist > 0) {
+                    brakePoints.push({
+                        dist: point_1_dist,
+                        type: "que_1",
+                    });
+                }
+                const point_0_dist = point.lap_dist - 100;
+                if (settings.brake_que_0_enabled && point_0_dist > 0) {
+                    brakePoints.push({
+                        dist: point_0_dist,
+                        type: "que_0",
                     });
                 }
             }

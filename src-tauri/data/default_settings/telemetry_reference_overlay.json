@@ -10,6 +10,13 @@
       "y": 100
     },
     "show_throttle": true,
-    "show_steering": true
+    "show_steering": true,
+    "brake_que_0_enabled": true,
+    "brake_que_1_enabled": true,
+    "brake_que_1_distance": 40,
+    "brake_que_2_enabled": true,
+    "brake_que_2_distance": 80,
+    "brake_que_3_enabled": true,
+    "brake_que_3_distance": 120
   }
 }

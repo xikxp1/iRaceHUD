@@ -1,0 +1,1 @@
+CREATE INDEX idx_telemetry_reference_data_recording_id ON telemetry_reference_data (recording_id);

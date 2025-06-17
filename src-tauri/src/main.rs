@@ -39,7 +39,9 @@ use crate::settings::overlays::telemetry::TelemetryOverlaySettings;
 use crate::settings::overlays::telemetry_reference::TelemetryReferenceOverlaySettings;
 use crate::settings::overlays::timer::TimerOverlaySettings;
 use crate::settings::overlays::track_map::TrackMapOverlaySettings;
+use crate::telemetry::telemetry_reference::BrakePoint;
 use crate::telemetry::telemetry_reference::TelemetryReference;
+use crate::telemetry::telemetry_reference::TelemetryReferenceOutput;
 use crate::util::settings_helper::{get_settings, set_settings};
 use crate::websocket::{WS_SERVER, WebSocketServer};
 
@@ -608,22 +610,26 @@ async fn record_telemetry(app: tauri::AppHandle) {
 async fn get_telemetry_reference_points(
     app: tauri::AppHandle,
     track_id: u32,
-) -> Vec<TelemetryReference> {
+) -> TelemetryReferenceOutput {
     let db = app.try_state::<db::DatabaseState>().unwrap();
+
     let stmt = r#"
         SELECT recording_id
         FROM telemetry_reference_meta
         WHERE track_id = $1;
     "#;
+
     // fetch recording_id if it exists
     let recording_id = sqlx::query_scalar::<_, u32>(stmt)
         .bind(track_id)
         .fetch_optional(&db.0)
         .await
         .unwrap();
+
     if recording_id.is_none() {
-        return vec![];
+        return TelemetryReferenceOutput::default();
     }
+
     let recording_id = recording_id.unwrap();
     let stmt = r#"
         SELECT lap_dist, throttle, brake, steering_angle, gear
@@ -631,9 +637,28 @@ async fn get_telemetry_reference_points(
         WHERE recording_id = $1
         ORDER BY lap_dist ASC;
     "#;
-    sqlx::query_as::<_, TelemetryReference>(stmt)
+
+    let reference = sqlx::query_as::<_, TelemetryReference>(stmt)
         .bind(recording_id)
         .fetch_all(&db.0)
         .await
-        .unwrap()
+        .unwrap();
+
+    let stmt = r#"
+        SELECT lap_dist
+        FROM telemetry_reference_brake_points
+        WHERE recording_id = $1
+        ORDER BY lap_dist ASC;
+    "#;
+
+    let brake_points = sqlx::query_as::<_, BrakePoint>(stmt)
+        .bind(recording_id)
+        .fetch_all(&db.0)
+        .await
+        .unwrap();
+
+    TelemetryReferenceOutput {
+        reference,
+        brake_points,
+    }
 }
