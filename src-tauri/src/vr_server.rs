@@ -6,12 +6,13 @@ use std::{
 
 use axum::{
     Router,
+    body::Body,
     extract::{Path, State},
-    http::{StatusCode, header},
+    http::{StatusCode, header, Request},
     response::{IntoResponse, Json, Response},
     routing::get,
 };
-use log::{error, info};
+use log::{error, info, warn};
 use serde::Serialize;
 use tauri::Manager;
 use tokio::sync::RwLock;
@@ -36,10 +37,15 @@ use crate::{
 
 static VR_SERVER_PORT: OnceLock<u16> = OnceLock::new();
 
+// Default Vite dev server URL
+const VITE_DEV_SERVER: &str = "http://localhost:5173";
+
 #[derive(Clone)]
 pub struct VrServerState {
     pub app_handle: Arc<RwLock<Option<tauri::AppHandle>>>,
     pub static_dir: PathBuf,
+    pub dev_mode: bool,
+    pub vite_url: String,
 }
 
 #[derive(Serialize)]
@@ -66,11 +72,17 @@ pub fn get_vr_server_port() -> Option<u16> {
     VR_SERVER_PORT.get().copied()
 }
 
-pub async fn run_vr_server(addr: &str, static_dir: PathBuf) {
+pub async fn run_vr_server(addr: &str, static_dir: PathBuf, dev_mode: bool) {
     let state = VrServerState {
         app_handle: Arc::new(RwLock::new(None)),
         static_dir,
+        dev_mode,
+        vite_url: VITE_DEV_SERVER.to_string(),
     };
+
+    if dev_mode {
+        info!("VR server running in development mode, proxying to {}", VITE_DEV_SERVER);
+    }
 
     let cors = CorsLayer::new()
         .allow_origin(Any)
@@ -81,10 +93,7 @@ pub async fn run_vr_server(addr: &str, static_dir: PathBuf) {
         .route("/api/ports", get(get_ports))
         .route("/api/settings", get(get_all_settings))
         .route("/api/settings/{overlay}", get(get_overlay_settings))
-        .route("/vr", get(serve_vr_page))
-        .route("/vr/", get(serve_vr_page))
-        .route("/vr/{overlay}", get(serve_vr_overlay_page))
-        .fallback(get(serve_static))
+        .fallback(get(serve_request))
         .layer(cors)
         .with_state(state);
 
@@ -115,13 +124,19 @@ pub fn set_app_handle(app_handle: tauri::AppHandle) {
 
 static APP_STATE: OnceLock<VrServerState> = OnceLock::new();
 
-pub async fn run_vr_server_with_state(addr: &str, static_dir: PathBuf, app_handle: tauri::AppHandle) {
+pub async fn run_vr_server_with_state(addr: &str, static_dir: PathBuf, app_handle: tauri::AppHandle, dev_mode: bool) {
     let state = VrServerState {
         app_handle: Arc::new(RwLock::new(Some(app_handle))),
         static_dir,
+        dev_mode,
+        vite_url: VITE_DEV_SERVER.to_string(),
     };
 
     let _ = APP_STATE.set(state.clone());
+
+    if dev_mode {
+        info!("VR server running in development mode, proxying to {}", VITE_DEV_SERVER);
+    }
 
     let cors = CorsLayer::new()
         .allow_origin(Any)
@@ -132,10 +147,7 @@ pub async fn run_vr_server_with_state(addr: &str, static_dir: PathBuf, app_handl
         .route("/api/ports", get(get_ports))
         .route("/api/settings", get(get_all_settings))
         .route("/api/settings/{overlay}", get(get_overlay_settings))
-        .route("/vr", get(serve_vr_page))
-        .route("/vr/", get(serve_vr_page))
-        .route("/vr/{overlay}", get(serve_vr_overlay_page))
-        .fallback(get(serve_static))
+        .fallback(get(serve_request))
         .layer(cors)
         .with_state(state);
 
@@ -206,40 +218,97 @@ async fn get_overlay_settings(
     }
 }
 
-async fn serve_vr_page(State(state): State<VrServerState>) -> impl IntoResponse {
-    match serve_file(&state.static_dir, "vr.html").await {
-        Ok(response) => response,
-        Err(_) => (StatusCode::NOT_FOUND, "VR page not found").into_response(),
-    }
-}
-
-async fn serve_vr_overlay_page(
-    State(state): State<VrServerState>,
-    Path(overlay): Path<String>,
-) -> impl IntoResponse {
-    // Serve the specific overlay page for VR
-    let path = format!("overlay/{}/index.html", overlay);
-    match serve_file(&state.static_dir, &path).await {
-        Ok(response) => response,
-        Err(_) => (StatusCode::NOT_FOUND, "Overlay not found").into_response(),
-    }
-}
-
-async fn serve_static(
+/// Unified request handler that either proxies to Vite (dev mode) or serves static files (production)
+async fn serve_request(
     State(state): State<VrServerState>,
     uri: axum::http::Uri,
 ) -> impl IntoResponse {
-    let path = uri.path().trim_start_matches('/');
+    if state.dev_mode {
+        // In dev mode, proxy to Vite dev server
+        proxy_to_vite(&state.vite_url, uri.path()).await
+    } else {
+        // In production, serve static files
+        serve_static_file(&state.static_dir, uri.path()).await
+    }
+}
+
+/// Proxy request to Vite dev server
+async fn proxy_to_vite(vite_url: &str, path: &str) -> Response {
+    let url = format!("{}{}", vite_url, path);
+
+    let client = match reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+    {
+        Ok(client) => client,
+        Err(e) => {
+            error!("Failed to create HTTP client: {}", e);
+            return (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create HTTP client").into_response();
+        }
+    };
+
+    match client.get(&url).send().await {
+        Ok(response) => {
+            let status = StatusCode::from_u16(response.status().as_u16())
+                .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+
+            // Get content-type from response
+            let content_type = response
+                .headers()
+                .get(reqwest::header::CONTENT_TYPE)
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("application/octet-stream")
+                .to_string();
+
+            match response.bytes().await {
+                Ok(body) => {
+                    (
+                        status,
+                        [(header::CONTENT_TYPE, content_type)],
+                        body.to_vec()
+                    ).into_response()
+                }
+                Err(e) => {
+                    error!("Failed to read response body from Vite: {}", e);
+                    (StatusCode::BAD_GATEWAY, "Failed to read response from dev server").into_response()
+                }
+            }
+        }
+        Err(e) => {
+            warn!("Failed to proxy request to Vite dev server at {}: {}", url, e);
+            (
+                StatusCode::BAD_GATEWAY,
+                format!("Vite dev server not available. Make sure 'pnpm dev' is running. Error: {}", e)
+            ).into_response()
+        }
+    }
+}
+
+/// Serve static files from the build directory (production mode)
+async fn serve_static_file(static_dir: &PathBuf, path: &str) -> Response {
+    let path = path.trim_start_matches('/');
 
     // Try to serve the file directly
-    if let Ok(response) = serve_file(&state.static_dir, path).await {
+    if let Ok(response) = read_file(static_dir, path).await {
         return response;
     }
 
-    // If not found and it looks like a route, try serving index.html
+    // If not found and it looks like a route (no file extension), try serving index.html
     if !path.contains('.') {
-        let index_path = format!("{}/index.html", path);
-        if let Ok(response) = serve_file(&state.static_dir, &index_path).await {
+        // Try path/index.html first
+        let index_path = if path.is_empty() {
+            "index.html".to_string()
+        } else {
+            format!("{}/index.html", path)
+        };
+
+        if let Ok(response) = read_file(static_dir, &index_path).await {
+            return response;
+        }
+
+        // For SPA routes like /vr, try vr.html
+        let html_path = format!("{}.html", path);
+        if let Ok(response) = read_file(static_dir, &html_path).await {
             return response;
         }
     }
@@ -247,11 +316,18 @@ async fn serve_static(
     (StatusCode::NOT_FOUND, "Not found").into_response()
 }
 
-async fn serve_file(static_dir: &PathBuf, path: &str) -> Result<Response, StatusCode> {
+/// Read a file from the static directory
+async fn read_file(static_dir: &PathBuf, path: &str) -> Result<Response, StatusCode> {
     let file_path = static_dir.join(path);
 
     // Security: prevent directory traversal
-    if !file_path.starts_with(static_dir) {
+    let canonical_static = static_dir.canonicalize().unwrap_or_else(|_| static_dir.clone());
+    let canonical_file = match file_path.canonicalize() {
+        Ok(p) => p,
+        Err(_) => return Err(StatusCode::NOT_FOUND),
+    };
+
+    if !canonical_file.starts_with(&canonical_static) {
         return Err(StatusCode::FORBIDDEN);
     }
 

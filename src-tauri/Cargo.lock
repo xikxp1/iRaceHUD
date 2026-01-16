@@ -2430,6 +2430,7 @@ dependencies = [
  "log",
  "mime_guess",
  "rand 0.9.1",
+ "reqwest",
  "rmp-serde",
  "serde",
  "serde_json",

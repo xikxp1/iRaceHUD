@@ -317,12 +317,19 @@ async fn main() {
                     .map(|p| p.join("_up_/build"))
                     .unwrap_or_else(|_| std::path::PathBuf::from("../build"));
 
+                // Detect if we're in development mode (debug build without custom-protocol)
+                let dev_mode = cfg!(debug_assertions) && !cfg!(feature = "custom-protocol");
+
                 let app_handle_for_vr = app.handle().clone();
                 tokio::spawn(async move {
-                    vr_server::run_vr_server_with_state(&http_bind_addr, static_dir, app_handle_for_vr).await;
+                    vr_server::run_vr_server_with_state(&http_bind_addr, static_dir, app_handle_for_vr, dev_mode).await;
                 });
 
-                info!("VR mode enabled, HTTP server starting on {}", http_bind_addr);
+                if dev_mode {
+                    info!("VR mode enabled in DEV mode, HTTP server starting on {} (proxying to Vite)", http_bind_addr);
+                } else {
+                    info!("VR mode enabled, HTTP server starting on {}", http_bind_addr);
+                }
             }
 
             APP_HANDLE.set(app.handle().clone()).unwrap();
