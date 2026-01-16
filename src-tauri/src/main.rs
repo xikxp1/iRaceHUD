@@ -8,6 +8,7 @@ pub mod session;
 pub mod settings;
 pub mod telemetry;
 pub mod util;
+pub mod vr_server;
 pub mod websocket;
 
 use eyre::{OptionExt, Result};
@@ -39,10 +40,12 @@ use crate::settings::overlays::telemetry::TelemetryOverlaySettings;
 use crate::settings::overlays::telemetry_reference::TelemetryReferenceOverlaySettings;
 use crate::settings::overlays::timer::TimerOverlaySettings;
 use crate::settings::overlays::track_map::TrackMapOverlaySettings;
+use crate::settings::vr::VrSettings;
 use crate::telemetry::telemetry_reference::BrakePoint;
 use crate::telemetry::telemetry_reference::TelemetryReference;
 use crate::telemetry::telemetry_reference::TelemetryReferenceOutput;
 use crate::util::settings_helper::{get_settings, set_settings};
+use crate::vr_server::get_vr_server_port;
 use crate::websocket::{WS_SERVER, WebSocketServer};
 
 #[cfg(not(debug_assertions))]
@@ -268,6 +271,24 @@ async fn main() {
             let emitter = TelemetryEmitter::default();
             app.manage(Mutex::new(emitter));
 
+            // Load VR settings
+            let vr_settings = {
+                let store = app.store("vr_settings.json").unwrap();
+                let settings = store.get("settings");
+                match settings {
+                    Some(settings) => serde_json::from_value::<VrSettings>(settings)
+                        .unwrap_or_else(|_| VrSettings::default_settings()),
+                    None => VrSettings::default_settings(),
+                }
+            };
+
+            // Determine WebSocket bind address based on VR settings
+            let ws_bind_addr = if vr_settings.enabled && vr_settings.external_access {
+                "0.0.0.0:0"
+            } else {
+                "127.0.0.1:0"
+            };
+
             // Initialize WebSocket server
             let server = WebSocketServer::new();
             let server_clone = server.clone();
@@ -276,9 +297,33 @@ async fn main() {
                 .map_err(|err| error!("Failed to set WebSocket server: {:?}", err));
 
             // Run WebSocket server in a separate task
+            let ws_addr = ws_bind_addr.to_string();
             tokio::spawn(async move {
-                server_clone.run("127.0.0.1:0").await;
+                server_clone.run(&ws_addr).await;
             });
+
+            // Initialize VR HTTP server if enabled
+            if vr_settings.enabled {
+                let http_bind_addr = if vr_settings.external_access {
+                    format!("0.0.0.0:{}", vr_settings.http_port)
+                } else {
+                    format!("127.0.0.1:{}", vr_settings.http_port)
+                };
+
+                // Get the path to static files (the built frontend)
+                let static_dir = app
+                    .path()
+                    .resource_dir()
+                    .map(|p| p.join("_up_/build"))
+                    .unwrap_or_else(|_| std::path::PathBuf::from("../build"));
+
+                let app_handle_for_vr = app.handle().clone();
+                tokio::spawn(async move {
+                    vr_server::run_vr_server_with_state(&http_bind_addr, static_dir, app_handle_for_vr).await;
+                });
+
+                info!("VR mode enabled, HTTP server starting on {}", http_bind_addr);
+            }
 
             APP_HANDLE.set(app.handle().clone()).unwrap();
 
@@ -335,6 +380,9 @@ async fn main() {
             get_overlays_locked,
             record_telemetry,
             get_telemetry_reference_points,
+            get_vr_settings,
+            set_vr_settings,
+            get_vr_server_port_cmd,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
@@ -661,4 +709,33 @@ async fn get_telemetry_reference_points(
         reference,
         brake_points,
     }
+}
+
+#[tauri::command]
+async fn get_vr_settings(app: tauri::AppHandle) -> VrSettings {
+    let store = app.store("vr_settings.json").unwrap();
+    let settings = store.get("settings");
+    match settings {
+        Some(settings) => serde_json::from_value(settings).unwrap_or_else(|_| VrSettings::default_settings()),
+        None => {
+            let default = VrSettings::default_settings();
+            store.set("settings", serde_json::to_value(&default).unwrap());
+            store.save().unwrap();
+            default
+        }
+    }
+}
+
+#[tauri::command]
+async fn set_vr_settings(app: tauri::AppHandle, settings: VrSettings) {
+    info!("Setting VR settings: enabled={}, port={}, external={}",
+          settings.enabled, settings.http_port, settings.external_access);
+    let store = app.store("vr_settings.json").unwrap();
+    store.set("settings", serde_json::to_value(&settings).unwrap());
+    store.save().unwrap();
+}
+
+#[tauri::command]
+async fn get_vr_server_port_cmd() -> Option<u16> {
+    get_vr_server_port()
 }

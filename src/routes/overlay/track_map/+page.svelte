@@ -2,10 +2,8 @@
     import { isLocked } from "$lib/backend/overlay_manager.svelte";
     import { trackMapOverlaySettings } from "$lib/backend/settings.svelte";
     import { active } from "$lib/backend/telemetry.svelte";
-    import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
+    import { isTauri } from "$lib/backend/vr_mode";
     import TrackMapCanvas from "../../../components/overlays/TrackMapCanvas.svelte";
-
-    const window = getCurrentWindow();
 
     let settings = $derived(trackMapOverlaySettings);
 
@@ -17,9 +15,14 @@
     let scale = $derived(($settings?.common_settings?.scale ?? 100) / 100.0);
 
     $effect(() => {
-        window.setResizable(true);
-        window.setSize(new LogicalSize(width * scale, height * scale));
-        window.setResizable(false);
+        if (isTauri() && width > 0 && height > 0) {
+            import("@tauri-apps/api/window").then(({ getCurrentWindow, LogicalSize }) => {
+                const window = getCurrentWindow();
+                window.setResizable(true);
+                window.setSize(new LogicalSize(width * scale, height * scale));
+                window.setResizable(false);
+            });
+        }
     });
 </script>
 
