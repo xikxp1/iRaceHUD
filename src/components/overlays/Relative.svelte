@@ -26,7 +26,7 @@
 <div class="flex flex-col bg-primary-content rounded-md w-full h-fit">
     <div class="flex flex-row h-[22px] border-b-2 border-accent">
         <div class="flex flex-row items-center justify-start w-3/4 pl-2">
-            <span class="text-sm text-primary text-opacity-70">Best Lap: </span>
+            <span class="text-sm text-primary/70">Best Lap: </span>
             <span class="text text-sm text-primary">&nbsp;{$fastestLap}</span>
         </div>
         <div class="flex flex-row items-center justify-end w-1/4 pr-2">
@@ -60,11 +60,17 @@
                     <td class="text text-sm">
                         <div class="flex flex-row items-center justify-between">
                             <span
-                                class="text text-sm tracking-tight truncate {rel?.is_player_car_class
-                                    ? ''
-                                    : 'text-opacity-70'} {rel?.is_ahead
-                                    ? 'text-warning'
-                                    : ''} {rel?.is_behind ? 'text-info' : ''}"
+                                class="text text-sm tracking-tight truncate {rel?.is_ahead
+                                    ? rel?.is_player_car_class
+                                        ? 'text-warning'
+                                        : 'text-warning/70'
+                                    : rel?.is_behind
+                                      ? rel?.is_player_car_class
+                                          ? 'text-info'
+                                          : 'text-info/70'
+                                      : rel?.is_player_car_class
+                                        ? ''
+                                        : 'opacity-70'}"
                                 >{rel?.user_name ?? ""}
                             </span>
                             <div class="flex flex-row gap-1 ml-2 mr-1">

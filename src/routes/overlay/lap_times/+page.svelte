@@ -28,7 +28,7 @@
 >
     {#if !$isLocked}
         <div
-            class="drag-region bg-primary-content bg-opacity-20"
+            class="drag-region bg-primary-content/20"
             style="width: {width}px; height: {height}px"
         ></div>
         <div
