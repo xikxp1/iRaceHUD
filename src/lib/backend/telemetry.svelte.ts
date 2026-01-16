@@ -5,13 +5,30 @@ import type {
     LapsTotal, PlayerCarClass, FastestLap, SessionType,
     TelemetryReference
 } from "$lib/types/telemetry";
-import { invoke } from "@tauri-apps/api/core";
 import { readable } from 'svelte/store';
 import { wsClient } from './ws_client';
+import { isTauri } from './vr_mode';
+
+// Register event emitter via Tauri IPC (only in Tauri mode)
+async function registerEventEmitter(event: string): Promise<void> {
+    if (isTauri()) {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke("register_event_emitter", { event });
+    }
+    // In VR mode, events are always emitted (no registration needed)
+}
+
+// Unregister event emitter via Tauri IPC (only in Tauri mode)
+async function unregisterEventEmitter(event: string): Promise<void> {
+    if (isTauri()) {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke("unregister_event_emitter", { event });
+    }
+}
 
 function createTelemetryStore<T>(event: string, initialValue: T) {
     return readable<T>(initialValue, (set) => {
-        invoke("register_event_emitter", { event });
+        registerEventEmitter(event);
 
         // Set up WebSocket subscription
         wsClient.subscribe(event, (message: T) => {
@@ -20,7 +37,7 @@ function createTelemetryStore<T>(event: string, initialValue: T) {
 
         return () => {
             // Cleanup
-            invoke("unregister_event_emitter", { event });
+            unregisterEventEmitter(event);
             wsClient.unsubscribe(event);
         };
     });
