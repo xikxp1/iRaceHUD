@@ -88,21 +88,13 @@
                 <span class="text text-primary font-square"
                     >{sessionTypeText}</span
                 >
-                <span class="text text-primary text-opacity-70"
-                    >&nbsp;|&nbsp;</span
-                >
+                <span class="text text-primary/70">&nbsp;|&nbsp;</span>
                 <span class="text text-primary">{$playerCarClass}</span>
-                <span class="text text-primary text-opacity-70"
-                    >&nbsp;|&nbsp;</span
-                >
-                <span class="text text-primary text-opacity-70">SoF:&nbsp;</span
-                >
+                <span class="text text-primary/70">&nbsp;|&nbsp;</span>
+                <span class="text text-primary/70">SoF:&nbsp;</span>
                 <span class="text text-primary">{$strengthOfField}</span>
-                <span class="text text-primary text-opacity-70"
-                    >&nbsp;|&nbsp;</span
-                >
-                <span class="text text-primary text-opacity-70">Lap:&nbsp;</span
-                >
+                <span class="text text-primary/70">&nbsp;|&nbsp;</span>
+                <span class="text text-primary/70">Lap:&nbsp;</span>
                 <span class="text text-primary">{$raceLaps}</span>
             </div>
             <div class="flex flex-row items-center justify-end w-1/6 pr-2">
@@ -115,10 +107,12 @@
                 {#each current_standings as st, index (st.car_id)}
                     <tr
                         class="{st?.is_player
-                            ? 'text-secondary'
-                            : 'text-primary'} odd:bg-secondary-content even:bg-primary-content h-[22px] {st?.is_off_world
-                            ? 'text-opacity-70'
-                            : ''} {st?.split_after
+                            ? st?.is_off_world
+                                ? 'text-secondary/70'
+                                : 'text-secondary'
+                            : st?.is_off_world
+                              ? 'text-primary/70'
+                              : 'text-primary'} odd:bg-secondary-content even:bg-primary-content h-[22px] {st?.split_after
                             ? 'border-b-2 border-accent'
                             : ''}"
                         animate:flip

@@ -1,10 +1,12 @@
 import { defineConfig } from "vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import devtoolsJson from "vite-plugin-devtools-json";
+import tailwindcss from "@tailwindcss/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
   plugins: [
+    tailwindcss(),
     sveltekit(),
     devtoolsJson(),
   ],
