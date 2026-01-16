@@ -3,6 +3,7 @@
     import { proximityOverlaySettings } from "$lib/backend/settings.svelte";
     import { active } from "$lib/backend/telemetry.svelte";
     import { isTauri } from "$lib/backend/vr_mode";
+    import { isOpenKneeboard, setPreferredPixelSize } from "$lib/backend/openkneeboard";
     import Proximity from "../../../components/overlays/Proximity.svelte";
 
     let settings = $derived(proximityOverlaySettings);
@@ -13,14 +14,20 @@
     let height = $derived($settings?.common_settings?.height ?? 0);
     let scale = $derived(($settings?.common_settings?.scale ?? 100) / 100.0);
 
+    let isOKB = isOpenKneeboard();
+
     $effect(() => {
-        if (isTauri() && width > 0 && height > 0) {
-            import("@tauri-apps/api/window").then(({ getCurrentWindow, LogicalSize }) => {
-                const window = getCurrentWindow();
-                window.setResizable(true);
-                window.setSize(new LogicalSize(width * scale, height * scale));
-                window.setResizable(false);
-            });
+        if (width > 0 && height > 0) {
+            if (isTauri()) {
+                import("@tauri-apps/api/window").then(({ getCurrentWindow, LogicalSize }) => {
+                    const window = getCurrentWindow();
+                    window.setResizable(true);
+                    window.setSize(new LogicalSize(width * scale, height * scale));
+                    window.setResizable(false);
+                });
+            } else if (isOKB) {
+                setPreferredPixelSize(width * scale, height * scale);
+            }
         }
     });
 </script>

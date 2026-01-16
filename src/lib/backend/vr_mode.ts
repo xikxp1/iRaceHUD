@@ -1,5 +1,7 @@
 // VR Mode utilities for detecting and configuring VR web overlay mode
 
+import { isOpenKneeboard } from './openkneeboard';
+
 // Check if running inside Tauri
 export function isTauri(): boolean {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -9,6 +11,9 @@ export function isTauri(): boolean {
 export function isVrMode(): boolean {
   return !isTauri();
 }
+
+// Check if running in OpenKneeBoard
+export { isOpenKneeboard } from './openkneeboard';
 
 // Get the VR host (HTTP server origin)
 // In VR mode, we use the same host that served the page
